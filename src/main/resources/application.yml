@@ -29,7 +29,7 @@ spring:
 nongjiale:
   contact-phone: "13651814168"
   upload-dir: data/uploads
-  cors-allowed-origins: "http://localhost:5173,http://localhost:5174,http://localhost:5175,http://localhost:43123,http://localhost:43124"
+  cors-allowed-origins: "http://localhost:5173,http://localhost:5174,http://localhost:5175,http://localhost:43123,http://localhost:43124,http://localhost:43125"
 logging:
   pattern:
     console: "%d{HH:mm:ss} %-5level %logger{36} - %msg%n"

@@ -124,7 +124,7 @@ Demo 已签发的游客 token 里 `role` 字面量是 `TOURIST`。v1.1 把 `TOUR
 
 ### CORS 与启动（Demo）
 
-已放行源：`5173` / `5174` / `43123` / `43124`。
+已放行源：`5173` / `5174` / `5175` / `43123`（门户）/ `43124`（运营）/ `43125`（商家）。
 
 ```bash
 cd nongjiale-api
@@ -412,7 +412,7 @@ body / 公开 `data`：
 
 ## 实现备注
 
-- 商家端本地源已放行 `http://localhost:5175`。
+- 商家端本地源已放行 `http://localhost:5175` 与 `http://localhost:43125`。
 - 证照图片：`POST /api/merchant-applications/media`，仅图片，上限 5MB，返回 `/uploads/licenses/...`。
 - 商家意向 `newIntentCount` 计本主体门店下 `PENDING` 意向。
 - 不提供支付、结算、锁房、短信、IM 路径。
