@@ -50,13 +50,18 @@ public class SecurityConfig {
                         })
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**", "/api/admin/auth/**", "/h2-console/**").permitAll()
+                        .requestMatchers("/api/auth/**", "/api/admin/auth/**", "/api/merchant/auth/login",
+                                "/h2-console/**").permitAll()
                         .requestMatchers(HttpMethod.GET,
                                 "/api/regions", "/api/home/**", "/api/homestays/**", "/api/articles/**",
-                                "/api/config/**").permitAll()
+                                "/api/config/**", "/uploads/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/merchant-applications",
+                                "/api/merchant-applications/media").permitAll()
                         .requestMatchers("/api/admin/**").hasAnyRole("OPERATOR", "AGENT")
+                        .requestMatchers("/api/merchant/**").hasRole("MERCHANT")
                         .requestMatchers(HttpMethod.POST, "/api/booking-intents", "/api/contact-messages")
                             .hasRole("TOURIST")
+                        .requestMatchers("/api/me/**").hasRole("TOURIST")
                         .anyRequest().authenticated()
                 )
                 .headers(h -> h.frameOptions(f -> f.sameOrigin()))

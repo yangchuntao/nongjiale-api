@@ -8,7 +8,7 @@
 mvn spring-boot:run
 ```
 
-默认 H2 内存库 + Flyway 种子（长三角地区、演示游客 `13800000001` / `password`，运营 `operator` / `password`，客服 `agent` / `password`）。
+默认 H2 内存库 + Flyway 种子（长三角地区、演示游客 `13800000001` / `password`，运营 `operator` / `password`，客服 `agent` / `password`）。商家甲 `13800001111`、商家乙 `13800002222`，密码同为 `password`。v1.1 路径见 `docs/API.md`。
 
 ## 关键接口
 

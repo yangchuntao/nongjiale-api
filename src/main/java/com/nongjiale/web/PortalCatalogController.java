@@ -3,9 +3,12 @@ package com.nongjiale.web;
 import com.nongjiale.domain.Homestay;
 import com.nongjiale.domain.HomestayRoom;
 import com.nongjiale.domain.Region;
+import com.nongjiale.repository.ArticleRepository;
 import com.nongjiale.repository.HomestayRepository;
 import com.nongjiale.repository.HomestayRoomRepository;
 import com.nongjiale.repository.RegionRepository;
+import com.nongjiale.service.ArticleService;
+import com.nongjiale.service.JsonStrings;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -23,11 +26,18 @@ public class PortalCatalogController {
     private final RegionRepository regions;
     private final HomestayRepository homestays;
     private final HomestayRoomRepository rooms;
+    private final ArticleRepository articles;
+    private final ArticleService articleService;
+    private final JsonStrings json;
 
-    public PortalCatalogController(RegionRepository regions, HomestayRepository homestays, HomestayRoomRepository rooms) {
+    public PortalCatalogController(RegionRepository regions, HomestayRepository homestays, HomestayRoomRepository rooms,
+                                   ArticleRepository articles, ArticleService articleService, JsonStrings json) {
         this.regions = regions;
         this.homestays = homestays;
         this.rooms = rooms;
+        this.articles = articles;
+        this.articleService = articleService;
+        this.json = json;
     }
 
     @GetMapping("/regions")
@@ -40,16 +50,19 @@ public class PortalCatalogController {
 
     @GetMapping("/home/feed")
     public ApiResponse<Map<String, Object>> homeFeed() {
-        Page<Homestay> hot = homestays.search(null, null, null, null,
+        Page<Homestay> hot = homestays.search(null, null, null, null, null,
                 PageRequest.of(0, 8, Sort.by(Sort.Direction.DESC, "salesCount")));
         List<Map<String, Object>> hotCards = hot.getContent().stream().map(this::card).toList();
+        List<Map<String, Object>> articleCards = articles
+                .findByStatusOrderByPublishedAtDesc("PUBLISHED", PageRequest.of(0, 6))
+                .map(articleService::card).getContent();
         return ApiResponse.ok(Map.of(
                 "regions", regions.findByEnabledTrueOrderBySortOrderAsc().stream()
                         .map(r -> Map.<String, Object>of("id", r.getId(), "slug", r.getSlug(), "name", r.getName()))
                         .toList(),
                 "hotHomestays", hotCards,
                 "topics", List.of(),
-                "articles", List.of()
+                "articles", articleCards
         ));
     }
 
@@ -60,6 +73,8 @@ public class PortalCatalogController {
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) BigDecimal priceMin,
             @RequestParam(required = false) BigDecimal priceMax,
+            @RequestParam(required = false) String tag,
+            @RequestParam(required = false, defaultValue = "default") String sort,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int pageSize) {
         Long rid = regionId;
@@ -68,8 +83,11 @@ public class PortalCatalogController {
         }
         int p = Math.max(page, 1) - 1;
         int size = Math.min(Math.max(pageSize, 1), 50);
-        Page<Homestay> result = homestays.search(rid, blankToNull(keyword), priceMin, priceMax,
-                PageRequest.of(p, size, Sort.by(Sort.Direction.DESC, "salesCount")));
+        Sort order = "price".equals(sort)
+                ? Sort.by(Sort.Direction.ASC, "priceFrom")
+                : Sort.by(Sort.Direction.DESC, "salesCount");
+        Page<Homestay> result = homestays.search(rid, blankToNull(keyword), priceMin, priceMax, blankToNull(tag),
+                PageRequest.of(p, size, order));
         return ApiResponse.ok(new PageResult<>(result.map(this::card).getContent(), result.getTotalElements()));
     }
 
@@ -83,8 +101,13 @@ public class PortalCatalogController {
         List<Map<String, Object>> roomList = rooms.findByHomestayIdOrderBySortOrderAsc(id).stream()
                 .map(this::roomDto).toList();
         Map<String, Object> body = new HashMap<>(card(h));
+        body.put("phone", h.getPhone());
+        body.put("summary", h.getSummary());
+        body.put("gallery", json.read(h.getGallery()));
         body.put("facilities", h.getFacilities());
         body.put("notice", h.getNotice());
+        body.put("traffic", h.getTraffic());
+        body.put("surroundings", h.getSurroundings());
         body.put("rooms", roomList);
         body.put("reviews", List.of());
         body.put("nearby", List.of());
@@ -106,12 +129,13 @@ public class PortalCatalogController {
     }
 
     private Map<String, Object> roomDto(HomestayRoom r) {
-        return Map.of(
-                "id", r.getId(),
-                "name", r.getName(),
-                "roomCount", r.getRoomCount() == null ? 0 : r.getRoomCount(),
-                "priceFrom", r.getPriceFrom()
-        );
+        Map<String, Object> m = new HashMap<>();
+        m.put("id", r.getId());
+        m.put("name", r.getName());
+        m.put("description", r.getDescription() == null ? "" : r.getDescription());
+        m.put("roomCount", r.getRoomCount() == null ? 0 : r.getRoomCount());
+        m.put("priceFrom", r.getPriceFrom());
+        return m;
     }
 
     private static String blankToNull(String s) {

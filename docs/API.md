@@ -1,7 +1,7 @@
 # 农家乐 API / 数据说明
 
 > **Demo 基线（B1）已实现，下文「Demo 基线」仍然有效。**  
-> **印程正式版 v1.1（商家第三端）只在本文定契约，本增量不实现 Java、不改 Flyway。**  
+> **印程正式版 v1.1（商家第三端）契约已在本仓库实现**（Flyway `V3`/`V4` + `/api/merchant/**` 等）。  
 > 更新：2026-10-14
 
 对齐：
@@ -21,10 +21,12 @@
 |------|------|------|
 | `V1__init_schema.sql` | 用户、管理端、地区、房源、房型、评价、资讯、推荐位、意向单、备注、留言 | Demo 已有 |
 | `V2__seed_yangtze_delta.sql` | 长三角地区 + 演示账号 + 样例房源 | Demo 已有 |
+| `V3__merchant_v11.sql` | 商家主体/账号、入驻申请、上下架申请、标签、站点配置；房源补归属与文案列 | v1.1 |
+| `V4__seed_merchants.sql` | 演示商家甲/乙，并挂到两家已上架样例房源 | v1.1 |
 
-v1.1 需要的商家主体、入驻申请、上下架申请、标签、站点配置等表 **不在本文件对应的 PR 里加迁移**。实现另开 PR。
+门店复用 `homestay`：`storeId` = `homestay.id`。套餐复用 `homestay_room`。
 
-演示账号（仅开发/测试）：游客 `13800000001` / `password`；运营 `operator` / 客服 `agent` / `password`。商家 A/B 账号随 v1.1 实现再种子，本文不新增。
+演示账号（仅开发/测试）：游客 `13800000001` / `password`；运营 `operator` / 客服 `agent` / `password`。商家甲 `13800001111`、商家乙 `13800002222`，密码均为 `password`（种子账号已改过初始密码）。入驻审核开通的账号仍 `mustChangePassword=true`。
 
 ## 统一约定
 
@@ -132,7 +134,7 @@ mvn spring-boot:run
 
 ---
 
-## v1.1 增量（契约 · 未实现）
+## v1.1 增量（已实现）
 
 给 `apps/merchant` 以及门户/运营端补页用。路径、方法、鉴权、关键字段以下表为准。门店在商家 API 里叫 store，**等于**门户/运营的 homestay（`storeId` = `homestayId`）。
 
@@ -408,8 +410,10 @@ body / 公开 `data`：
 
 ---
 
-## 实现备注（非本 PR 范围）
+## 实现备注
 
-- 商家端本地源建议放行 `http://localhost:5175`（改 `nongjiale.cors-allowed-origins`）。本 PR 不改配置。
-- 登录响应与 claim 扩展、`/api/me/intents`、`/api/merchant/**`、入驻/上下架审核、站点配置读写，都等后续实现 PR。
+- 商家端本地源已放行 `http://localhost:5175`。
+- 证照图片：`POST /api/merchant-applications/media`，仅图片，上限 5MB，返回 `/uploads/licenses/...`。
+- 商家意向 `newIntentCount` 计本主体门店下 `PENDING` 意向。
+- 不提供支付、结算、锁房、短信、IM 路径。
 - 文档中心就绪后迁入统一目录；变更同步项目经理。

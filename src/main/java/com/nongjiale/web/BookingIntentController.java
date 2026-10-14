@@ -3,11 +3,11 @@ package com.nongjiale.web;
 import com.nongjiale.domain.BookingIntent;
 import com.nongjiale.security.AuthPrincipal;
 import com.nongjiale.service.BookingIntentService;
+import com.nongjiale.service.SiteConfigService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,12 +18,11 @@ import java.util.Map;
 @RequestMapping("/api/booking-intents")
 public class BookingIntentController {
     private final BookingIntentService service;
+    private final SiteConfigService siteConfig;
 
-    @Value("${nongjiale.contact-phone}")
-    private String contactPhone;
-
-    public BookingIntentController(BookingIntentService service) {
+    public BookingIntentController(BookingIntentService service, SiteConfigService siteConfig) {
         this.service = service;
+        this.siteConfig = siteConfig;
     }
 
     public record CreateReq(
@@ -45,7 +44,7 @@ public class BookingIntentController {
                 "intentId", bi.getId(),
                 "intentNo", bi.getIntentNo(),
                 "status", bi.getStatus(),
-                "contactPhone", contactPhone
+                "contactPhone", siteConfig.contactPhone()
         ));
     }
 
