@@ -224,7 +224,25 @@ class T9MerchantV11ApiTest {
 
         mockMvc.perform(get("/api/homestays/" + storeId))
                 .andExpect(status().isGone())
-                .andExpect(jsonPath("$.code").value(410));
+                .andExpect(jsonPath("$.code").value(410))
+                .andExpect(jsonPath("$.message").value("该农家乐暂不可预订"))
+                .andExpect(jsonPath("$.data").value(nullValue()));
+
+        String tourist = loginTourist("13800000001");
+        mockMvc.perform(post("/api/booking-intents")
+                        .header("Authorization", "Bearer " + tourist)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of(
+                                "homestayId", storeId,
+                                "checkIn", LocalDate.now().plusDays(240).toString(),
+                                "checkOut", LocalDate.now().plusDays(242).toString(),
+                                "guests", 2,
+                                "contactName", "演示游客",
+                                "contactPhone", "13800000001"))))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value(409))
+                .andExpect(jsonPath("$.message").value("该农家乐暂不可预订"))
+                .andExpect(jsonPath("$.data").value(nullValue()));
 
         mockMvc.perform(get("/api/merchant/stores/" + storeId)
                         .header("Authorization", "Bearer " + tokenB))
@@ -266,6 +284,28 @@ class T9MerchantV11ApiTest {
     }
 
     @Test
+    @DisplayName("A9: 入驻仍待审时商家登录 401，与没有账号相同")
+    void pending_applicant_cannot_login_as_merchant() throws Exception {
+        mockMvc.perform(post("/api/merchant-applications")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"subjectName":"待审农庄","contactName":"李四","phone":"13900009999","proposedStoreName":"李四农庄","regionId":1}
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("PENDING"));
+
+        mockMvc.perform(post("/api/merchant/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"phone":"13900009999","password":"password"}
+                                """))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value(401))
+                .andExpect(jsonPath("$.message").value("手机号或密码错误"))
+                .andExpect(jsonPath("$.data").value(nullValue()));
+    }
+
+    @Test
     @DisplayName("客服不能审入驻；运营通过后首次登录必须改密，初始密码不出现在列表")
     void agent_cannot_review_merchant_application_and_first_login_must_change_password() throws Exception {
         mockMvc.perform(post("/api/merchant-applications")
@@ -281,7 +321,10 @@ class T9MerchantV11ApiTest {
                         .content("""
                                 {"phone":"13900008888","password":"password"}
                                 """))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value(401))
+                .andExpect(jsonPath("$.message").value("手机号或密码错误"))
+                .andExpect(jsonPath("$.data").value(nullValue()));
 
         String agent = loginAdmin("agent");
         mockMvc.perform(get("/api/admin/merchant-applications")

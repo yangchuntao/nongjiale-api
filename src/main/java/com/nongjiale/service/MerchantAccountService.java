@@ -35,6 +35,7 @@ public class MerchantAccountService {
     }
 
     public Map<String, Object> login(String phone, String password) {
+        // 入驻未通过时没有 merchant_user，与密码错误一样 401，不暴露申请是否存在。
         MerchantUser user = users.findByPhone(phone).orElse(null);
         if (user == null || !encoder.matches(password, user.getPasswordHash())) {
             throw new BusinessException(HttpStatus.UNAUTHORIZED, 401, "手机号或密码错误");

@@ -55,12 +55,12 @@ Demo 已签发的游客 token 里 `role` 字面量是 `TOURIST`。v1.1 把 `TOUR
 
 | HTTP | `code` | 何时 |
 |------|--------|------|
-| 401 | 401 | 未登录、token 无效或过期、账号停用后的登录失败 |
+| 401 | 401 | 未登录、token 无效或过期、账号停用后的登录失败；商家登录没有已开通账号（入驻未通过、仍待审、已驳回）与密码错误相同，也是 401 |
 | 403 | 403 | 已登录但角色不够；商家改意向/写跟进；客服做入驻审、上下架审、站点配置、商家账号 |
 | 400 | 400 | 字段校验失败（信息与 Demo 一样，可多条用 `; ` 拼接） |
 | 404 | 404 | 资源不存在；**或资源存在但不属于当前商家**（不暴露他人数据） |
-| 409 | 409 | `version` 冲突、重复待审、手机号/登录名冲突 |
-| 410 | 410 | 门户房源详情不可订（下架或尚未上架生效） |
+| 409 | 409 | `version` 冲突、重复待审、手机号/登录名冲突；**游客提交意向时房源不可订**（见下，不是 410） |
+| 410 | 410 | **仅**门户房源详情不可订（下架或尚未上架生效）。提交意向不用 410 |
 | 422 | 422 | 调用方有权访问该资源，但当前状态不允许（已上架再申请上架、上架中删除门店等） |
 
 未登录与无权限的 body 与现实现一致：
@@ -94,7 +94,7 @@ Demo 已签发的游客 token 里 `role` 字面量是 `TOURIST`。v1.1 把 `TOUR
 | GET | `/api/home/feed` | GUEST | `regions`,`hotHomestays`,`topics`(空),`articles` |
 | GET | `/api/homestays` | GUEST | 仅已上架。`regionId`/`regionSlug`/`keyword`/`priceMin`/`priceMax`/`page`/`pageSize`。门户 URL 的 `q` 由前端映射为 `keyword` |
 | GET | `/api/homestays/{id}` | GUEST | 详情；不可订 **410**「该农家乐暂不可预订」 |
-| POST | `/api/booking-intents` | 门户用户 | 提交意向；幂等键 `userId:homestayId:checkIn` |
+| POST | `/api/booking-intents` | 门户用户 | 提交意向；幂等键 `userId:homestayId:checkIn`。房源不可订时 **409**（详情仍是 410） |
 | POST | `/api/contact-messages` | 门户用户 | 咨询留言 |
 
 登录/注册成功 `data`：`token`,`userId`,`phone`,`displayName`。v1.1 额外加 `role:"USER"`。
@@ -102,6 +102,11 @@ Demo 已签发的游客 token 里 `role` 字面量是 `TOURIST`。v1.1 把 `TOUR
 提交意向 body：`homestayId`,`checkIn`,`checkOut`,`guests`(≥1),`travelMode?`,`contactName`,`contactPhone`。  
 成功 `data`：`intentId`,`intentNo`,`status`,`contactPhone`（站点客服电话，不是游客填写的手机）。  
 同用户、同房源、同到店日再次提交：不新增，返回已有单。
+
+不可订（草稿、`OFF_SALE`、上架申请尚未通过，即不是 `ON_SALE`）分成两个 HTTP，不要混用：
+
+- 详情 `GET /api/homestays/{id}` → **410**，`{ "code": 410, "message": "该农家乐暂不可预订", "data": null }`
+- 提交 `POST /api/booking-intents` → **409**，`{ "code": 409, "message": "该农家乐暂不可预订", "data": null }`，不入库
 
 ### 管理端
 
@@ -118,7 +123,7 @@ Demo 已签发的游客 token 里 `role` 字面量是 `TOURIST`。v1.1 把 `TOUR
 | POST | `/api/admin/contact-messages/{id}/done` | OPERATOR、AGENT | 标记已处理 |
 
 意向状态：`PENDING` → `CONFIRMED` | `RESCHEDULED` | `CLOSED`。  
-房源对客状态：`ON_SALE` 门户可订；`OFF_SALE` / `DRAFT` 详情 410，且不进门户列表。
+房源对客状态：`ON_SALE` 门户可订；`OFF_SALE` / `DRAFT` 详情 **410**、提交意向 **409**，且不进门户列表。
 
 意向列表字段（运营/客服，含完整手机号）：`id`,`intentNo`,`userId`,`homestayId`,`checkIn`,`checkOut`,`guests`,`contactName`,`contactPhone`,`status`,`version`,`createdAt`。备注：`id`,`adminId`,`action`,`note`,`createdAt`。
 
@@ -197,7 +202,7 @@ media 成功 `data`：`{ "url": "..." }`。仅图片；大小上限实现时定�
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| POST | `/api/merchant/auth/login` | body：`phone`,`password` |
+| POST | `/api/merchant/auth/login` | body：`phone`,`password`。无已开通账号（含入驻未通过）**401** |
 | GET | `/api/merchant/auth/me` | 当前主体 |
 | POST | `/api/merchant/auth/password` | body：`oldPassword`,`newPassword`。成功后 `mustChangePassword=false` |
 | GET | `/api/merchant/dashboard` | `storeCount`,`pendingListingApplications`,`newIntentCount`（只读计数） |
@@ -217,6 +222,14 @@ media 成功 `data`：`{ "url": "..." }`。仅图片；大小上限实现时定�
 ```
 
 停用账号：401「账号已停用，请联系运营」。无短信验证码登录。
+
+入驻尚未通过、或根本没有商家账号（申请仍是 `PENDING` / `REJECTED`，审核通过前不会开通登录）：与密码错误相同，**401**
+
+```json
+{ "code": 401, "message": "手机号或密码错误", "data": null }
+```
+
+不要用 403，也不要返回「审核中」之类能区分申请是否存在的文案。提交入驻申请本身不会变成商家。
 
 `me` 的 `data`：`merchantUserId`,`merchantId`,`subjectName`,`phone`,`role`,`mustChangePassword`。
 
