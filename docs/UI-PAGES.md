@@ -5,7 +5,7 @@
 > 对齐：[PRODUCT-INCHENG-v1.1.md](./PRODUCT-INCHENG-v1.1.md)  
 > 更新：2026-10-14（上海）
 
-说明：线框级结构（区块自上而下），非像素稿。前端按组件库实现；墨刀线框链接齐后补本文末。
+说明：线框级结构（区块自上而下），非像素稿。前端按组件库实现；墨刀线框见文末 E 节。
 
 ---
 
@@ -204,7 +204,43 @@
 
 ## E. 墨刀
 
-线框项目名建议：**农家乐三端-v1.1**；分页面板：Portal / Admin / Merchant。链接齐后回填此处。
+- **项目**：农家乐三端-v1.1
+- **编辑器**：https://modao.cc/proto/design/pb2mv85t4q73sptep
+- **分页面板**：Portal / Admin / Merchant
+
+页面与上文线框一一对应：
+
+**Portal**
+
+- A0 全局壳
+- A1 首页 `/`
+- A2 列表 `/regions/:slug` · `/search?q=`
+- A3 详情 `/homestays/:id`
+- A4 登录 / 注册 `/login` · `/register`
+- A5 意向表 `/homestays/:id/book`
+- A6 成功页 `/booking/success`
+- A7 我的意向 `/me/intents`
+- A8 咨询留言
+- A9 资讯 / 攻略
+- A10 商家入驻申请 `/merchant/apply`
+
+**Admin**
+
+- B0 布局
+- B1 工作台
+- B2 意向 / 留言
+- B3 入驻审核
+- B4 上下架审核
+- B5 房源 / 资讯 / 推荐 / 商家账号 / 站点配置
+
+**Merchant**
+
+- C0 布局
+- C1 工作台
+- C2 门店列表 / 编辑
+- C3 上下架申请
+- C4 意向只读
+- C5 登录 / 改密
 
 ## F. 相关文档
 
