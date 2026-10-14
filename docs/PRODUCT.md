@@ -1,5 +1,5 @@
 # 农家乐旅游网站 — 产品文档（P1）
-> **正式版范围已改以印程为准**：见 [PRODUCT-INCHENG-v1-DRAFT.md](./PRODUCT-INCHENG-v1-DRAFT.md)（待老板拍板）。本文档仅保留 **Demo/P1** 已冻结与已验收结论，不再作为正式版扩范围依据。
+> **正式版范围已冻结为印程对照 v1.1**（老板 2026-10-14 拍板）：规范稿 [PRODUCT-INCHENG-v1.1.md](./PRODUCT-INCHENG-v1.1.md)，同文副本 [PRODUCT-INCHENG-v1-DRAFT.md](./PRODUCT-INCHENG-v1-DRAFT.md)。本文档仅保留 **Demo/P1** 已冻结与已验收结论，不再作为正式版扩范围依据。
 >
 
 > 维护：资深产品经理 · 范围 / 业务规则 / 验收表  
