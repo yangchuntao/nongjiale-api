@@ -127,3 +127,4 @@
 
 - 范围已冻结：设计三端首交（portal / admin / merchant）→ 工程改契约与仓；站名/主色/电话补齐后写入配置验收  
 - 发版、改生产、改已上线规则前停等批准  
+- 验收标准见 docs/ACCEPTANCE-INCHENG-v1.1.md  
