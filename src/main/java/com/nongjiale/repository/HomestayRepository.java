@@ -8,10 +8,12 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
 public interface HomestayRepository extends JpaRepository<Homestay, Long> {
     Page<Homestay> findByMerchantId(Long merchantId, Pageable pageable);
+    List<Homestay> findByStatusAndHomeRecommendedTrueOrderByHomeRecommendSortAscIdAsc(String status);
     long countByMerchantId(Long merchantId);
     Optional<Homestay> findByIdAndMerchantId(Long id, Long merchantId);
 

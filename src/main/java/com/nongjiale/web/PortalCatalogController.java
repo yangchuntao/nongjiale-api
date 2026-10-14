@@ -53,6 +53,9 @@ public class PortalCatalogController {
         Page<Homestay> hot = homestays.search(null, null, null, null, null,
                 PageRequest.of(0, 8, Sort.by(Sort.Direction.DESC, "salesCount")));
         List<Map<String, Object>> hotCards = hot.getContent().stream().map(this::card).toList();
+        List<Map<String, Object>> recommended = homestays
+                .findByStatusAndHomeRecommendedTrueOrderByHomeRecommendSortAscIdAsc("ON_SALE")
+                .stream().limit(20).map(this::card).toList();
         List<Map<String, Object>> articleCards = articles
                 .findByStatusOrderByPublishedAtDesc("PUBLISHED", PageRequest.of(0, 6))
                 .map(articleService::card).getContent();
@@ -61,6 +64,7 @@ public class PortalCatalogController {
                         .map(r -> Map.<String, Object>of("id", r.getId(), "slug", r.getSlug(), "name", r.getName()))
                         .toList(),
                 "hotHomestays", hotCards,
+                "recommendedHomestays", recommended,
                 "topics", List.of(),
                 "articles", articleCards
         ));

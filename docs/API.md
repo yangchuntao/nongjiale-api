@@ -23,6 +23,7 @@
 | `V2__seed_yangtze_delta.sql` | 长三角地区 + 演示账号 + 样例房源 | Demo 已有 |
 | `V3__merchant_v11.sql` | 商家主体/账号、入驻申请、上下架申请、标签、站点配置；房源补归属与文案列 | v1.1 |
 | `V4__seed_merchants.sql` | 演示商家甲/乙，并挂到两家已上架样例房源 | v1.1 |
+| `V5__home_recommend.sql` | 房源 `home_recommended`、`home_recommend_sort`；两家已上架样例标为首页推荐 | v1.1 |
 
 门店复用 `homestay`：`storeId` = `homestay.id`。套餐复用 `homestay_room`。
 
@@ -91,7 +92,7 @@ Demo 已签发的游客 token 里 `role` 字面量是 `TOURIST`。v1.1 把 `TOUR
 | GET | `/api/auth/me` | 门户用户 | 当前用户 |
 | GET | `/api/config/public` | GUEST | Demo 仅 `contactPhone`。v1.1 起增加字段，见站点配置 |
 | GET | `/api/regions` | GUEST | 启用地区；`data` 为**纯数组**（非 `{items,total}`） |
-| GET | `/api/home/feed` | GUEST | `regions`,`hotHomestays`,`topics`(空),`articles` |
+| GET | `/api/home/feed` | GUEST | `regions`,`hotHomestays`（销量）,`recommendedHomestays`（首页推荐楼层）,`topics`(空),`articles` |
 | GET | `/api/homestays` | GUEST | 仅已上架。`regionId`/`regionSlug`/`keyword`/`priceMin`/`priceMax`/`page`/`pageSize`。门户 URL 的 `q` 由前端映射为 `keyword` |
 | GET | `/api/homestays/{id}` | GUEST | 详情；不可订 **410**「该农家乐暂不可预订」 |
 | POST | `/api/booking-intents` | 门户用户 | 提交意向；幂等键 `userId:homestayId:checkIn`。房源不可订时 **409**（详情仍是 410） |
@@ -119,11 +120,28 @@ Demo 已签发的游客 token 里 `role` 字面量是 `TOURIST`。v1.1 把 `TOUR
 | POST | `/api/admin/intents/{id}/status` | OPERATOR、AGENT | body：`status`,`note?`,`version?`。冲突 **409** |
 | GET | `/api/admin/homestays` | OPERATOR、AGENT | 房源列表（客服只读使用此接口） |
 | POST | `/api/admin/homestays/{id}/status` | **仅 OPERATOR** | 代为上下架。body：`status`=`ON_SALE`\|`OFF_SALE`\|`DRAFT`,`version?`。客服 **403** |
+| PUT、PATCH | `/api/admin/homestays/{id}` | **仅 OPERATOR** | 设置首页推荐字段，见下。客服 **403**。不是推荐位 CRUD |
 | GET | `/api/admin/contact-messages` | OPERATOR、AGENT | 留言列表 |
 | POST | `/api/admin/contact-messages/{id}/done` | OPERATOR、AGENT | 标记已处理 |
 
 意向状态：`PENDING` → `CONFIRMED` | `RESCHEDULED` | `CLOSED`。  
 房源对客状态：`ON_SALE` 门户可订；`OFF_SALE` / `DRAFT` 详情 **410**、提交意向 **409**，且不进门户列表。
+
+### 首页推荐楼层（B6）
+
+**没有**推荐位 / 推荐槽 CRUD。不提供 `/api/admin/home-slots`、`/api/admin/recommends` 或同类资源。`home_slot` 仍是 Demo 遗留表，没有读写接口。
+
+推荐写在房源 `homestay` 上：
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `homeRecommended` | boolean | 是否进入首页推荐楼层。默认 `false` |
+| `homeRecommendSort` | int | 升序，越小越靠前；相同再按 `id` 升序。默认 `0` |
+
+- **谁能写：** 仅运营。`PUT` 或 `PATCH /api/admin/homestays/{id}`，body：`homeRecommended?`,`homeRecommendSort?`,`version?`。至少带一个推荐字段。`version` 不一致 **409**。
+- **客服：** 调上述 PUT/PATCH → **403**，字段不变。客服仍可 `GET /api/admin/homestays` 看到这两个字段。
+- **商家：** `POST`/`PUT /api/merchant/stores` 若带 `homeRecommended` 或 `homeRecommendSort`：**忽略**，不能把自己送上首页。商家读模型不返回这两个字段。
+- **门户读：** `GET /api/home/feed` 的 `recommendedHomestays`。只含 `status=ON_SALE` 且 `homeRecommended=true`，按 `homeRecommendSort`、`id` 升序。未上架即使标了推荐也不出现。`hotHomestays` 仍按销量，不是推荐位接口。
 
 意向列表字段（运营/客服，含完整手机号）：`id`,`intentNo`,`userId`,`homestayId`,`checkIn`,`checkOut`,`guests`,`contactName`,`contactPhone`,`status`,`version`,`createdAt`。备注：`id`,`adminId`,`action`,`note`,`createdAt`。
 
@@ -245,7 +263,7 @@ media 成功 `data`：`{ "url": "..." }`。仅图片；大小上限实现时定�
 
 可写字段：`name`,`regionId`,`address`,`phone`,`summary`,`coverUrl`,`gallery`(string[]),`facilities`,`notice`,`traffic`,`surroundings`,`version`。
 
-请求里若带 `merchantId`,`status`,`salesCount`,`recommendWeight`：**不生效**（忽略）。上下架不走 PUT。
+请求里若带 `merchantId`,`status`,`salesCount`,`recommendWeight`,`homeRecommended`,`homeRecommendSort`：**不生效**（忽略）。上下架不走 PUT。首页推荐只由运营写。
 
 读模型在可写字段之外还有：`id`,`merchantId`,`status`(`DRAFT`|`ON_SALE`|`OFF_SALE`),`listingStatus`(`NONE`|`PUBLISH_PENDING`|`UNPUBLISH_PENDING`),`priceFrom`,`salesCount`,`version`。  
 `priceFrom` 由套餐最低价汇总，商家不直接改。
@@ -417,9 +435,9 @@ body / 公开 `data`：
 
 ## 明确不做（v1.1 无路径）
 
-支付 / 定金收银台 · 结算 / 对账 / 提现 / 分账 · 锁房 / 库存日历 · 积分 · 短信 OTP / 短信查单 · IM · 问答 / 私人定制 / 专题频道 · 地图找店 · App · 门票 · 商家营销券 / 电子签。
+支付 / 定金收银台 · 结算 / 对账 / 提现 / 分账 · 锁房 / 库存日历 · 积分 · 短信 OTP / 短信查单 · IM · 问答 / 私人定制 / 专题频道 · 地图找店 · App · 门票 · 商家营销券 / 电子签 · **推荐位/推荐槽 CRUD**（首页推荐只用房源上的 `homeRecommended` / `homeRecommendSort`）。
 
-不提供例如 `/api/payments`、`/api/merchant/settlements`、`/api/inventory`、`/api/sms`、`/api/im`。这些路径保持 404，不要做半成品。
+不提供例如 `/api/payments`、`/api/merchant/settlements`、`/api/inventory`、`/api/sms`、`/api/im`、`/api/admin/home-slots`。这些路径保持 404，不要做半成品。
 
 ---
 

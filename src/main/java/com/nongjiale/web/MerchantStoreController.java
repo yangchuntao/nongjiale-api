@@ -15,7 +15,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 商家门店。v1.1：storeId == homestay.id。body 中的 merchantId/status/salesCount/recommendWeight 不读取。
+ * 商家门店。v1.1：storeId == homestay.id。
+ * body 中的 merchantId/status/salesCount/recommendWeight/homeRecommended/homeRecommendSort 不读取。
+ * 首页推荐只由运营 PUT/PATCH /api/admin/homestays/{id} 写入。
  */
 @RestController
 @RequestMapping("/api/merchant/stores")

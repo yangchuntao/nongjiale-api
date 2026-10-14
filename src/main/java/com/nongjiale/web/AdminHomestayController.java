@@ -36,6 +36,28 @@ public class AdminHomestayController {
 
     public record StatusReq(String status, Long version) {}
     public record OwnerReq(Long merchantId) {}
+    /** 首页推荐字段。没有独立推荐位资源；客服调用本接口 403。 */
+    public record RecommendReq(Boolean homeRecommended, Integer homeRecommendSort, Long version) {}
+
+    @RequestMapping(value = "/{id}", method = {RequestMethod.PUT, RequestMethod.PATCH})
+    @PreAuthorize("hasRole('OPERATOR')")
+    @Transactional
+    public ApiResponse<Map<String, Object>> updateRecommend(@PathVariable Long id,
+                                                            @RequestBody RecommendReq req,
+                                                            Authentication auth) {
+        requireOperator(auth);
+        if (req == null || (req.homeRecommended() == null && req.homeRecommendSort() == null)) {
+            throw new BusinessException(HttpStatus.BAD_REQUEST, 400, "请提供 homeRecommended 或 homeRecommendSort");
+        }
+        Homestay h = homestays.findById(id)
+                .orElseThrow(() -> new BusinessException(HttpStatus.NOT_FOUND, 404, "房源不存在"));
+        if (req.version() != null && !req.version().equals(h.getVersion())) {
+            throw new BusinessException(HttpStatus.CONFLICT, 409, "房源已被他人更新，请刷新后重试");
+        }
+        if (req.homeRecommended() != null) h.setHomeRecommended(req.homeRecommended());
+        if (req.homeRecommendSort() != null) h.setHomeRecommendSort(req.homeRecommendSort());
+        return ApiResponse.ok(dto(h));
+    }
 
     @PostMapping("/{id}/owner")
     @PreAuthorize("hasRole('OPERATOR')")
@@ -73,6 +95,8 @@ public class AdminHomestayController {
         m.put("status", h.getStatus());
         m.put("priceFrom", h.getPriceFrom());
         m.put("regionId", h.getRegionId());
+        m.put("homeRecommended", h.isHomeRecommended());
+        m.put("homeRecommendSort", h.getHomeRecommendSort());
         m.put("version", h.getVersion());
         return m;
     }

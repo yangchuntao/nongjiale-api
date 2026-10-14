@@ -30,6 +30,11 @@ public class Homestay {
     private String gallery;
     @Column(name = "sales_count", nullable = false)
     private int salesCount;
+    /** 首页推荐楼层。仅运营可写；商家请求里的同名字段不映射到这里。 */
+    @Column(name = "home_recommended", nullable = false)
+    private boolean homeRecommended;
+    @Column(name = "home_recommend_sort", nullable = false)
+    private int homeRecommendSort;
     @Column(nullable = false, length = 16)
     private String status;
     @Column(name = "price_from")
@@ -71,6 +76,10 @@ public class Homestay {
     public void setGallery(String gallery) { this.gallery = gallery; }
     public int getSalesCount() { return salesCount; }
     public void setSalesCount(int salesCount) { this.salesCount = salesCount; }
+    public boolean isHomeRecommended() { return homeRecommended; }
+    public void setHomeRecommended(boolean homeRecommended) { this.homeRecommended = homeRecommended; }
+    public int getHomeRecommendSort() { return homeRecommendSort; }
+    public void setHomeRecommendSort(int homeRecommendSort) { this.homeRecommendSort = homeRecommendSort; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
     public BigDecimal getPriceFrom() { return priceFrom; }
