@@ -42,6 +42,7 @@ public class BookingIntentService {
         }
         Homestay h = homestays.findById(homestayId)
                 .orElseThrow(() -> new BusinessException(HttpStatus.NOT_FOUND, 404, "农家乐不存在"));
+        // 详情接口对不可订返回 410；提交意向固定 409，避免和「资源已消失」混用。
         if (!h.isOnSale()) {
             throw new BusinessException(HttpStatus.CONFLICT, 409, "该农家乐暂不可预订");
         }

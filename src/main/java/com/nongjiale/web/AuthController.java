@@ -38,12 +38,13 @@ public class AuthController {
         u.setDisplayName(req.displayName());
         u.setPasswordHash(encoder.encode(req.password()));
         users.save(u);
-        String token = tokens.issue(new AuthPrincipal(u.getId(), u.getPhone(), "TOURIST", "TOURIST"));
+        String token = tokens.issue(new AuthPrincipal(u.getId(), u.getPhone(), "TOURIST", "USER"));
         return ApiResponse.ok(Map.of(
                 "token", token,
                 "userId", u.getId(),
                 "phone", u.getPhone(),
-                "displayName", u.getDisplayName()
+                "displayName", u.getDisplayName(),
+                "role", "USER"
         ));
     }
 
@@ -54,12 +55,13 @@ public class AuthController {
         if (!encoder.matches(req.password(), u.getPasswordHash())) {
             throw new BusinessException(HttpStatus.UNAUTHORIZED, 401, "手机号或密码错误");
         }
-        String token = tokens.issue(new AuthPrincipal(u.getId(), u.getPhone(), "TOURIST", "TOURIST"));
+        String token = tokens.issue(new AuthPrincipal(u.getId(), u.getPhone(), "TOURIST", "USER"));
         return ApiResponse.ok(Map.of(
                 "token", token,
                 "userId", u.getId(),
                 "phone", u.getPhone(),
-                "displayName", u.getDisplayName()
+                "displayName", u.getDisplayName(),
+                "role", "USER"
         ));
     }
 
@@ -74,7 +76,8 @@ public class AuthController {
         return ApiResponse.ok(Map.of(
                 "userId", u.getId(),
                 "phone", u.getPhone(),
-                "displayName", u.getDisplayName()
+                "displayName", u.getDisplayName(),
+                "role", "USER"
         ));
     }
 }

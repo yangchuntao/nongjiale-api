@@ -8,8 +8,15 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
+import java.util.Optional;
 
 public interface HomestayRepository extends JpaRepository<Homestay, Long> {
+    Page<Homestay> findByMerchantId(Long merchantId, Pageable pageable);
+    long countByMerchantId(Long merchantId);
+    Optional<Homestay> findByIdAndMerchantId(Long id, Long merchantId);
+
+    @Query(value = "SELECT COUNT(*) FROM review WHERE homestay_id = :id", nativeQuery = true)
+    long countReviews(@Param("id") Long id);
 
     @Query("""
         SELECT h FROM Homestay h
@@ -18,10 +25,13 @@ public interface HomestayRepository extends JpaRepository<Homestay, Long> {
           AND (:keyword IS NULL OR LOWER(h.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
           AND (:priceMin IS NULL OR h.priceFrom >= :priceMin)
           AND (:priceMax IS NULL OR h.priceFrom <= :priceMax)
+          AND (:tag IS NULL OR EXISTS (
+                SELECT 1 FROM HomestayTag t WHERE t.homestayId = h.id AND t.tag = :tag))
         """)
     Page<Homestay> search(@Param("regionId") Long regionId,
                           @Param("keyword") String keyword,
                           @Param("priceMin") BigDecimal priceMin,
                           @Param("priceMax") BigDecimal priceMax,
+                          @Param("tag") String tag,
                           Pageable pageable);
 }

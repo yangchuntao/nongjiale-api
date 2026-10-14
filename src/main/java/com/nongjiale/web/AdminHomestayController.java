@@ -3,6 +3,7 @@ package com.nongjiale.web;
 import com.nongjiale.domain.Homestay;
 import com.nongjiale.repository.HomestayRepository;
 import com.nongjiale.security.AuthPrincipal;
+import com.nongjiale.service.MerchantStoreService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
@@ -18,9 +19,11 @@ import java.util.Map;
 @RequestMapping("/api/admin/homestays")
 public class AdminHomestayController {
     private final HomestayRepository homestays;
+    private final MerchantStoreService stores;
 
-    public AdminHomestayController(HomestayRepository homestays) {
+    public AdminHomestayController(HomestayRepository homestays, MerchantStoreService stores) {
         this.homestays = homestays;
+        this.stores = stores;
     }
 
     @GetMapping
@@ -32,6 +35,17 @@ public class AdminHomestayController {
     }
 
     public record StatusReq(String status, Long version) {}
+    public record OwnerReq(Long merchantId) {}
+
+    @PostMapping("/{id}/owner")
+    @PreAuthorize("hasRole('OPERATOR')")
+    @Transactional
+    public ApiResponse<Map<String, Object>> assignOwner(@PathVariable Long id,
+                                                        @RequestBody OwnerReq req,
+                                                        Authentication auth) {
+        requireOperator(auth);
+        return ApiResponse.ok(stores.assignOwner(id, req == null ? null : req.merchantId()));
+    }
 
     @PostMapping("/{id}/status")
     @PreAuthorize("hasRole('OPERATOR')")
