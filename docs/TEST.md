@@ -2,10 +2,11 @@
 
 > 维护：资深测试工程师  
 > 对齐：`PRODUCT-INCHENG-v1.1.md`（已冻结）· 验收 ID 逐条对照 `ACCEPTANCE-INCHENG-v1.1.md`  
+> API：PR #4 草案 `docs/API.md`「v1.1 增量」（分支 `cursor/api-merchant-v1-1-9221`）。契约若改，以合并后的 API.md 为准再改本表。  
 > 状态：**覆盖表草案**（v1.1 用例尚未执行，不得当作通过报告）  
 > 更新：2026-10-14（上海）
 
-「期望」与验收表同 ID 的「可观察结果 / 期望」一致。本表不新增、不改号。全部功能用例状态为 **待测**。Demo/P1 的历史 PASS 只在文末附录，**不算** v1.1 的 A/B/C 已过，也不重验商家端与三端范围。
+「期望」与验收表同 ID 的「可观察结果 / 期望」一致，本轮只补 API 列。本表不新增、不改号。A/B/C/E 状态仍为 **待测**。Demo/P1 的历史 PASS 只在文末附录，**不算** v1.1 的 A/B/C 已过，也不重验商家端与三端范围。
 
 ## 1. 范围
 
@@ -19,56 +20,62 @@
 
 ### 明确不做（标不测）
 
-支付/定金收银台、锁房/实时库存、积分、结算/对账/提现/分账、未登录下单与短信查单、问答、私人定制、专题频道、地图、IM、App、门票、动态码登录、商家端营销券/合同电子签。这些功能本身 **不测**；是否漂移用 D1–D6 抽检。
+支付/定金收银台、锁房/实时库存、积分、结算/对账/提现/分账、未登录下单与短信查单、问答、私人定制、专题频道、地图、IM、App、门票、动态码登录、商家端营销券/合同电子签。这些功能本身 **不测**；是否漂移用 D1–D6 抽检。契约不提供 `/api/payments`、`/api/merchant/settlements`、`/api/inventory`、`/api/sms`、`/api/im`，这些路径保持 404。
 
 ## 2. 覆盖表
 
-方式只取 `API`、`UI`、`人工` 之一。状态除 D 节外均为 **待测**。路径级请求体、URL、错误码等 **API.md 商家增量定稿后补**，不在本草案展开。
+方式只取 `API`、`UI`、`人工` 之一，本轮不改。状态除 D 节外均为 **待测**。
+
+统一响应 `{code,message,data}`。下表未写死状态码的成功调用：HTTP 200 且 `code=0`。失败时 HTTP 与 `code` 对齐：未登录 **401**（`message`「未登录」），角色不够 **403**（`message`「无权限」，商家改意向另有专用文案），摸到别人的店/意向 **404**（不回对方字段）。鉴权头 `Authorization: Bearer <token>`。`storeId` = 门户/运营的 `homestayId`。
+
+门户列表沿用 Demo，没有单独验收 ID：`GET /api/regions`（`data` 为数组）、`GET /api/home/feed`、`GET /api/homestays`（仅已上架；`regionId` / `regionSlug` / `keyword` / `priceMin` / `priceMax` / `page` / `pageSize`；门户 URL 的 `q` 映射为 `keyword`）。v1.1 另加可选 `tag`、`sort=default|price|sales`。
+
+`mustChangePassword=true` 时，除 `POST /api/merchant/auth/login`、`GET /api/merchant/auth/me`、`POST /api/merchant/auth/password` 外，其余商家接口 **403**「请先修改初始密码」。C 段执行前先改密，不单列编号。
 
 ### A · 门户（A0–A9）
 
-| ID | 前置 | 操作 | 期望 | 方式 | 状态 |
-|----|------|------|------|------|------|
-| A0 | 未登录 | 详情点「立即预订」 | 进入登录；登录成功后回跳该房源预订表单 | UI | 待测 |
-| A1 | 已登录 + 上架可订门店 | 提交合法意向（日期合法、人数≥1） | 成功页：单号 + 可拨打**配置客服电话**；库中待跟进且含 userId；文案不暗示已锁房/已付款 | UI | 待测 |
-| A1b | 无登录态 | 调提交意向接口 | 401，不入库 | API | 待测 |
-| A2 | 已登录 + 同用户同门店同到店日已有单 | 再提交/弱网重试 | 不新增；返回已有单 | API | 待测 |
-| A3 | 门店下架或未审上架 | 打开详情或提交 | 不可订 / 提交拒绝 | UI | 待测 |
-| A4 | 已登录 | 非法日期（离店≤到店）或人数 0 | 字段错误，不入库 | API | 待测 |
-| A5 | 已登录 | 打开「我的意向」 | 只见本人单据；可见状态；**无**取消/改状态入口 | UI | 待测 |
-| A6 | 列表无结果 | 打开列表 | 空态，非报错页 | UI | 待测 |
-| A7 | 任意 | 走攻略/资讯列表→详情 | 可打开运营已发布内容 | UI | 待测 |
-| A8 | 未登录 | 点「在线咨询」 | 先登录再回跳；已登录合法留言进待跟进 | UI | 待测 |
-| A9 | 访客 | 提交商家入驻申请（必填齐） | 申请进入待审；申请人**未**自动获得商家权限 | UI | 待测 |
+| ID | 前置 | 操作 | 期望 | 方式 | API | 状态 |
+|----|------|------|------|------|-----|------|
+| A0 | 未登录 | 详情点「立即预订」 | 进入登录；登录成功后回跳该房源预订表单 | UI | 回跳无单独接口。上架详情 `GET /api/homestays/{id}` → 200。登录 `POST /api/auth/login` body `phone`,`password` → 200，`data.token` | 待测 |
+| A1 | 已登录 + 上架可订门店 | 提交合法意向（日期合法、人数≥1） | 成功页：单号 + 可拨打**配置客服电话**；库中待跟进且含 userId；文案不暗示已锁房/已付款 | UI | 门户 Bearer `POST /api/booking-intents`，body `homestayId`,`checkIn`,`checkOut`,`guests`≥1,`contactName`,`contactPhone` → 200，`data.intentId`、`data.intentNo`、`data.status=PENDING`、`data.contactPhone` 等于 `GET /api/config/public` 的 `contactPhone`（站点客服电话，不是游客填写的手机）。库中该单 `userId` 为当前用户。锁房/付款文案仍看成功页 | 待测 |
+| A1b | 无登录态 | 调提交意向接口 | 401，不入库 | API | 无 token `POST /api/booking-intents` → **401**，`code=401`，`data=null`，不入库 | 待测 |
+| A2 | 已登录 + 同用户同门店同到店日已有单 | 再提交/弱网重试 | 不新增；返回已有单 | API | 同一门户用户再 `POST /api/booking-intents`。幂等键 `userId:homestayId:checkIn` → 200，`data.intentId` 与已有单相同，条数不增 | 待测 |
+| A3 | 门店下架或未审上架 | 打开详情或提交 | 不可订 / 提交拒绝 | UI | `GET /api/homestays/{id}` → **410**，`code=410`，「该农家乐暂不可预订」，且不出现在 `GET /api/homestays`。`POST /api/booking-intents` 拒绝且不入库。提交时的 HTTP 码见缺口，本表不写成已定码 | 待测 |
+| A4 | 已登录 | 非法日期（离店≤到店）或人数 0 | 字段错误，不入库 | API | 门户 Bearer `POST /api/booking-intents`：`checkOut`≤`checkIn`，或 `guests=0` → **400**，`code=400`，不入库 | 待测 |
+| A5 | 已登录 | 打开「我的意向」 | 只见本人单据；可见状态；**无**取消/改状态入口 | UI | `GET /api/me/intents`、`GET /api/me/intents/{id}` 只含本人，字段含 `status`。他人 id → **404**。不提供 `POST /api/me/intents/{id}/cancel`（打到即 **404**），无改状态接口 | 待测 |
+| A6 | 列表无结果 | 打开列表 | 空态，非报错页 | UI | `GET /api/homestays?keyword=...`（由门户 `q` 映射）→ 200，`code=0`，`data.items=[]`，`data.total=0`，不是 4xx/5xx | 待测 |
+| A7 | 任意 | 走攻略/资讯列表→详情 | 可打开运营已发布内容 | UI | 访客 `GET /api/articles`、`GET /api/articles/{id}` 对已发布 → 200。草稿或不存在 → **404**。发布前置（仅 OPERATOR）：`POST /api/admin/articles`，再 `POST /api/admin/articles/{id}/status` body `status=PUBLISHED` | 待测 |
+| A8 | 未登录 | 点「在线咨询」 | 先登录再回跳；已登录合法留言进待跟进 | UI | 回跳无单独接口。未登录 `POST /api/contact-messages` → **401**。已登录合法 body（`content`,`contactName`,`contactPhone`）→ 200，`data.status=PENDING`（Demo 基线已有该响应；v1.1 未改此路径） | 待测 |
+| A9 | 访客 | 提交商家入驻申请（必填齐） | 申请进入待审；申请人**未**自动获得商家权限 | UI | `POST /api/merchant-applications`，body 含 `subjectName`,`contactName`,`phone`,`proposedStoreName`,`regionId` → 200，`data.applicationId`，`data.status=PENDING`。申请人不会变成商家：门户 token 调 `GET /api/merchant/stores` → **403**；此时不能拿到 `role=MERCHANT` 的 token（开通要等 B1）。已有 `PENDING` 再提 → **409** | 待测 |
 
 ### B · 运营 / 客服（B1–B8）
 
-| ID | 前置 | 操作 | 期望 | 方式 | 状态 |
-|----|------|------|------|------|------|
-| B1 | 运营 | 通过入驻申请 | 商家账号可用且绑定该主体；驳回须原因且可再提 | UI | 待测 |
-| B2 | 运营 | 审核商家上架申请通过 | 门店对游客可订；驳回后仍不可订且原因可见 | UI | 待测 |
-| B3 | 运营 | 审核下架申请通过 | 门店对游客不可订 | UI | 待测 |
-| B4 | 运营/客服 | 意向确认 + 备注 | 状态已确认；备注时间线可见 | API | 待测 |
-| B5 | 客服 | 尝试入驻审 / 管商家账号 / 改站点配置 | **无权限**，数据不变 | API | 待测 |
-| B6 | 客服 | 尝试改房源归属或全站推荐位 | **无权限**（房源只读） | API | 待测 |
-| B7 | 运营 | 改站点客服电话并保存 | 成功页/`tel:` 展示新号码（配置生效） | UI | 待测 |
-| B8 | 运营 | 上下架申请队列 | 仅运营可审；客服不可审（默认） | API | 待测 |
+| ID | 前置 | 操作 | 期望 | 方式 | API | 状态 |
+|----|------|------|------|------|-----|------|
+| B1 | 运营 | 通过入驻申请 | 商家账号可用且绑定该主体；驳回须原因且可再提 | UI | OPERATOR `POST /api/admin/merchant-applications/{id}/approve` → 200，`data.status=APPROVED`，`data.merchantId`，`data.loginPhone`，`data.initialPassword`（只此一次），`data.mustChangePassword=true`。随后 `POST /api/merchant/auth/login` 可登录且 `merchantId` 为该主体。`POST .../reject` 的 `reason` 为空 → **400**；有原因 → `REJECTED` 且 `rejectReason` 可见，申请人可再 `POST /api/merchant-applications` 得新的 `PENDING`。非 `PENDING` 再审 → **409** | 待测 |
+| B2 | 运营 | 审核商家上架申请通过 | 门店对游客可订；驳回后仍不可订且原因可见 | UI | OPERATOR `POST /api/admin/listing-applications/{id}/approve`（`action=PUBLISH`）→ 门店 `status=ON_SALE`，`GET /api/homestays/{id}` → 200 且进入列表。`POST .../reject` 的 `reason` 为空 → **400**；有原因则门店 `status` 不变，商家 `GET /api/merchant/listing-applications/{id}` 可见 `rejectReason`，游客详情仍 **410**。非 `PENDING` → **409** | 待测 |
+| B3 | 运营 | 审核下架申请通过 | 门店对游客不可订 | UI | OPERATOR `POST /api/admin/listing-applications/{id}/approve`（`action=UNPUBLISH`）→ 门店 `status=OFF_SALE`，`GET /api/homestays/{id}` → **410**，且退出 `GET /api/homestays` | 待测 |
+| B4 | 运营/客服 | 意向确认 + 备注 | 状态已确认；备注时间线可见 | API | OPERATOR 或 AGENT `POST /api/admin/intents/{id}/status`（别名 `POST /api/admin/booking-intents/{id}/status`）body `status=CONFIRMED`,`note` → 200。`GET /api/admin/intents/{id}` 的 `status=CONFIRMED` 且 `notes` 含该备注。`version` 不一致 → **409**，不覆盖 | 待测 |
+| B5 | 客服 | 尝试入驻审 / 管商家账号 / 改站点配置 | **无权限**，数据不变 | API | AGENT 调用以下接口 → **403**，`code=403`，目标数据不变：`GET/POST /api/admin/merchant-applications` 及 `.../approve`、`.../reject`；`GET /api/admin/merchants`、`POST /api/admin/merchants/{merchantId}/enabled`、`POST .../reset-password`；`GET/PUT /api/admin/site-config` | 待测 |
+| B6 | 客服 | 尝试改房源归属或全站推荐位 | **无权限**（房源只读） | API | AGENT `GET /api/admin/homestays` → 200（只读）。`POST /api/admin/homestays/{id}/owner` body `merchantId` → **403**，归属不变。全站推荐位无写路径，见缺口。代上下架 `POST /api/admin/homestays/{id}/status` 对客服也是 **403**（仅 OPERATOR），不替代推荐位 | 待测 |
+| B7 | 运营 | 改站点客服电话并保存 | 成功页/`tel:` 展示新号码（配置生效） | UI | OPERATOR `PUT /api/admin/site-config` 写入 `contactPhone` → 200。`GET /api/config/public` 的 `contactPhone` 为新号码。之后 `POST /api/booking-intents` 的 `data.contactPhone` 同新号码。成功页 `tel:` 仍看 UI。正式站名/主色/电话见 E1，本条用占位号即可 | 待测 |
+| B8 | 运营 | 上下架申请队列 | 仅运营可审；客服不可审（默认） | API | OPERATOR `GET /api/admin/listing-applications` → 200。AGENT 的 `GET` 以及 `POST .../{id}/approve`、`POST .../{id}/reject` → **403**，申请与门店 `status` 不变 | 待测 |
 
 ### C · 商家隔离（C1–C7）
 
-| ID | 前置 | 操作 | 期望 | 方式 | 状态 |
-|----|------|------|------|------|------|
-| C1 | 商家 A 已入驻 | 登录商家端 | 只见本主体门店；不见商家 B 门店 | UI | 待测 |
-| C2 | 商家 A | 改自家门店图文/套餐并保存 | 后台资料更新；**未**经上架审则游客仍不可订（若原为下架） | UI | 待测 |
-| C3 | 商家 A + 门店下架 | 提交上架申请 | 进入运营待审；游客端仍不可订直至 B2 | UI | 待测 |
-| C4 | 商家 A | 打开意向列表 | **只读**本店意向；手机脱敏；**无**改状态/写跟进入口 | UI | 待测 |
-| C5 | 商家 A | 调改意向状态或写跟进接口 | 拒绝（403/业务错），状态不变 | API | 待测 |
-| C6 | 商家 A | 尝试编辑商家 B 门店或审入驻 | 拒绝，数据不变 | API | 待测 |
-| C7 | 商家 A | 商家端是否出现支付/结算/提现入口 | **无**（范围抽检） | 人工 | 待测 |
+| ID | 前置 | 操作 | 期望 | 方式 | API | 状态 |
+|----|------|------|------|------|-----|------|
+| C1 | 商家 A 已入驻 | 登录商家端 | 只见本主体门店；不见商家 B 门店 | UI | `POST /api/merchant/auth/login` body `phone`,`password` → 200，`data.role=MERCHANT`，`data.merchantId` 为 A。`GET /api/merchant/stores` 只含该 `merchantId`。`GET /api/merchant/stores/{B的storeId}` → **404**，响应体无 B 的字段。query/body 传入 B 的 `merchantId` → **403** | 待测 |
+| C2 | 商家 A | 改自家门店图文/套餐并保存 | 后台资料更新；**未**经上架审则游客仍不可订（若原为下架） | UI | `PUT /api/merchant/stores/{storeId}`（`name`,`gallery`,`notice` 等 + `version`）→ 200；`version` 冲突 → **409**。套餐 `POST/PUT /api/merchant/stores/{storeId}/packages`；标签 `PUT .../tags` body `tags`。body 里的 `merchantId`/`status`/`recommendWeight` 忽略，上下架不走 PUT。原为下架或草稿时 `status` 仍非 `ON_SALE`，`GET /api/homestays/{id}` → **410** | 待测 |
+| C3 | 商家 A + 门店下架 | 提交上架申请 | 进入运营待审；游客端仍不可订直至 B2 | UI | `POST /api/merchant/stores/{storeId}/listing-applications` body `action=PUBLISH` → 200，申请 `status=PENDING`。此时 `GET /api/homestays/{id}` 仍 **410**，直到 B2 通过。不提供 `POST /api/merchant/stores/{storeId}/status`（**404**）。商家 token 调 `POST /api/admin/homestays/{id}/status` → **403**。同一 `action` 已有 `PENDING` 再提 → **409** | 待测 |
+| C4 | 商家 A | 打开意向列表 | **只读**本店意向；手机脱敏；**无**改状态/写跟进入口 | UI | `GET /api/merchant/intents`、`GET /api/merchant/intents/{id}` 只含本主体门店。字段为 `contactPhoneMasked`（前 3 后 4，如 `138****5678`），响应不得出现完整 `contactPhone`。他人意向 id → **404**。写接口见 C5 | 待测 |
+| C5 | 商家 A | 调改意向状态或写跟进接口 | 拒绝（403/业务错），状态不变 | API | `POST /api/merchant/intents/{id}/status` 与 `POST /api/merchant/intents/{id}/notes` → **403**，`message`「商家不可修改意向或写跟进」，状态与备注不变。单据不存在、属于本主体或属于其他商家都是 **403**（不用 404 探单）。同路径 PATCH/PUT 同样 **403** | 待测 |
+| C6 | 商家 A | 尝试编辑商家 B 门店或审入驻 | 拒绝，数据不变 | API | `PUT /api/merchant/stores/{B的storeId}`（及其 packages/tags）→ **404**，B 的资料不变。商家 token `POST /api/admin/merchant-applications/{id}/approve` 或 `.../reject` → **403**，申请状态不变 | 待测 |
+| C7 | 商家 A | 商家端是否出现支付/结算/提现入口 | **无**（范围抽检） | 人工 | 无成功路径。`/api/payments`、`/api/merchant/settlements` 以及提现/分账保持 **404**，不做半成品。页面入口仍人工看 | 待测 |
 
 ### D · 不做项抽检（D1–D6）
 
-功能不在本期。验收表本段只有「检查 / 期望」，无单独前置；下表前置填「—」，操作与期望照抄。状态标 **不测（抽检）**，不记功能通过。
+功能不在本期。验收表本段只有「检查 / 期望」，无单独前置；下表前置填「—」，操作与期望照抄。状态标 **不测（抽检）**，不记功能通过。不补成可执行的 API 用例。
 
 | ID | 前置 | 操作 | 期望 | 方式 | 状态 |
 |----|------|------|------|------|------|
@@ -83,25 +90,30 @@
 
 站名 / 主色 / 客服电话正式值仍待老板提供。未到位前 **不执行** E1；到位后重测。占位配置下的电话改写见 B7，B7 通过不等于 E1 通过。
 
-| ID | 前置 | 操作 | 期望 | 方式 | 状态 |
-|----|------|------|------|------|------|
-| E1 | 老板已提供站名/主色/电话 | 写入站点配置 | 门户展示站名与主色；成功页与页头电话为正式值 | UI | 待测 |
+| ID | 前置 | 操作 | 期望 | 方式 | API | 状态 |
+|----|------|------|------|------|-----|------|
+| E1 | 老板已提供站名/主色/电话 | 写入站点配置 | 门户展示站名与主色；成功页与页头电话为正式值 | UI | 到位后才测。OPERATOR `PUT /api/admin/site-config` body `siteName`,`primaryColor`（`#RRGGBB`）,`contactPhone` → 200。`GET /api/config/public` 三个字段等于正式值。页头站名、主色、成功页与页头 `tel:` 仍看 UI | 待测 |
 
 ## 3. 执行结论
 
 **v1.1 尚未执行。** A0–A9、A1b、B1–B8、C1–C7、E1 全部 **待测**；D1–D6 为 **不测（抽检）**。没有任何 v1.1 通过结论。附录里的 Demo/P1 PASS 只证明当时的门户意向主路径，**不能**写成商家端、入驻审核、上下架方案 B、三端隔离或本表已过。
 
-## 4. 依赖
+## 4. 依赖与契约缺口
 
-- API 路径细节等 `API.md` 商家增量定稿后补；本草案不写未定稿的 URL / 字段。
-- E1 等站名、主色、客服电话正式值到位后再测。
-- 发版前停等批准。
+- 上表 API 列对齐 PR #4 草案，不是执行结果。契约合并后若路径或状态码有变，再改本表。发版前停等批准。
+- E1 等站名、主色、客服电话正式值到位后再测。未到位前不执行。B7 只覆盖占位客服电话。
+- **缺口（验收有、API.md 未覆盖或未写死）：**
+  1. **B6 全站推荐位**：没有运营侧修改推荐位 / `recommendWeight` 的路径，客服「改推荐位 → 403」无法按 URL 断言。已能测的是归属 `POST /api/admin/homestays/{id}/owner` → 403，以及只读 `GET /api/admin/homestays`。商家 `PUT` 忽略 `recommendWeight` 不能代替这条越权。
+  2. **A3 提交不可订意向**：契约只规定详情 `GET /api/homestays/{id}` 为 **410**。`POST /api/booking-intents` 在下架或未上架生效时的 HTTP 码未写入 v1.1。Demo 实现是 **409**「该农家乐暂不可预订」。本表只断言拒绝且不入库，不把 409 当成 v1.1 已定码。
+  3. **A9 开通前的商家登录码**：未开通时 `POST /api/merchant/auth/login` 的 HTTP 码未写。断言停在「不签发 `role=MERCHANT` 的 token」以及门户 token 调商家接口 **403**。
+- 文案与回跳没有单独字段，API 不能单独判过：A0 / A8 的登录回跳，A1 成功页「不暗示已锁房/已付款」，A6 的空态页面，E1 的站名与主色展示。
 
 ## 5. 变更记录
 
 | 日期 | 变更 |
 |------|------|
 | 2026-10-14 | 按 `ACCEPTANCE-INCHENG-v1.1.md` 重写覆盖表（A0–A9、B1–B8、C1–C7、D1–D6、E1）；状态均为待测或抽检。Demo/P1 执行结果降为附录，不计入 v1.1。 |
+| 2026-10-14 | 按 PR #4 `docs/API.md` v1.1 增量补 A/B/C/E 的方法、路径与关键状态码。状态仍为待测；D 仍为不测（抽检）。 |
 
 ## 附录 · Demo/P1 历史结论
 
