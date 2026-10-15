@@ -49,6 +49,7 @@ app:
   security:
     token-ttl: 12h
   cache:
+    enabled: true
     key-prefix: "njl:"
     default-ttl: 10m
     home-feed-ttl: 5m

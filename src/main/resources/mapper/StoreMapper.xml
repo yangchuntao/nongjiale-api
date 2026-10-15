@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.suzhong.njl.mapper.StoreMapper">
+
+    <sql id="onShelfFilters">
+        FROM store s
+        WHERE s.shelf_status = #{shelfStatus}
+        <if test="regionIds != null and regionIds.size() &gt; 0">
+            AND s.region_id IN
+            <foreach collection="regionIds" item="regionId" open="(" separator="," close=")">
+                #{regionId}
+            </foreach>
+        </if>
+        <if test="tagCode != null and tagCode != ''">
+            AND EXISTS (
+                SELECT 1
+                FROM store_tag_rel rel
+                INNER JOIN tag t ON t.id = rel.tag_id
+                WHERE rel.store_id = s.id
+                  AND t.code = #{tagCode}
+                  AND t.enabled = TRUE
+            )
+        </if>
+        <if test="priceMin != null">
+            AND s.price_from &gt;= #{priceMin}
+        </if>
+        <if test="priceMax != null">
+            AND s.price_from &lt;= #{priceMax}
+        </if>
+    </sql>
+
+    <select id="searchOnShelf" resultType="com.suzhong.njl.domain.entity.Store">
+        SELECT s.*
+        <include refid="onShelfFilters"/>
+        ORDER BY ${orderBy}
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countOnShelf" resultType="long">
+        SELECT COUNT(1)
+        <include refid="onShelfFilters"/>
+    </select>
+</mapper>

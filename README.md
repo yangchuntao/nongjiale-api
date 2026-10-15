@@ -96,10 +96,22 @@ com.suzhong.njl.domain.enums    状态、角色、地区层级
 com.suzhong.njl.mapper          MyBatis-Plus Mapper
 ```
 
-本次不做的业务接口：门户目录、意向提交、入驻审核、商家端、支付。
+本次不做的业务接口：运营审核、商家端、支付。门户目录、注册登录和意向提交已经接上，见 `BE4-DELIVERY.md`。
+
+## 门户
+
+- `POST /api/auth/register`、`POST /api/auth/login`、`GET /api/auth/me`：游客手机号，令牌角色 `TOURIST`
+- `GET /api/config/public`、`GET /api/regions`、`GET /api/home/feed`
+- `GET /api/stores`：只列出上架房源，可按地区、标签、价格带筛选，排序 `comprehensive` / `price_asc` / `price_desc`
+- `GET /api/stores/{id}`：下架返回 410。套餐以 `packageText` 为准
+- `POST /api/booking-intents`、`GET /api/me/intents`：须游客登录，只能看自己的意向
+- `GET /api/articles`：只返回已发布攻略
+- `POST /api/merchant-applies`：提交入驻申请
+
+V3 种子是手工精选店，含「表弟店」，`test_data=false`。抓取或导入的房源要标 `test_data=true`，列表和详情会带「测试」。
 
 ## 门店文案与验收数据
 
 门店详情和验收以 `store.package_text` 为准。`store_package` 可以没有行；两处不一致时以 `package_text` 为准。
 
-当前 V2 种子只有运营账号、苏中地区和站点配置，没有房源。验收用的精选店是手工整理的（含表亲店），不是抓取结果。抓取或导入的房源必须把 `test_data` 设为 true。
+V2 仍只有运营账号、苏中地区和站点配置。验收精选店在 V3，含表弟店，`test_data=false`。抓取或导入的房源必须把 `test_data` 设为 true。
