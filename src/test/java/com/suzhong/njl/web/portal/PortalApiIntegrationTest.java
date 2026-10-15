@@ -80,7 +80,7 @@ class PortalApiIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(0))
                 .andExpect(jsonPath("$.data.siteName").value("站点名称"))
-                .andExpect(jsonPath("$.data.brandColor").value("#2F6B4F"))
+                .andExpect(jsonPath("$.data.brandColor").value("#4BA3D9"))
                 .andExpect(jsonPath("$.data.contactPhone").value("400-000-0000"));
 
         mockMvc.perform(get("/api/regions"))

@@ -38,5 +38,5 @@ SELECT id, 'chongchuan', '崇川区', 3, 31, TRUE, 'SUZHONG' FROM region WHERE s
 INSERT INTO site_config (config_key, config_value, updated_at, updated_by)
 VALUES
     ('site.name', '站点名称', CURRENT_TIMESTAMP, NULL),
-    ('site.brand_color', '#2F6B4F', CURRENT_TIMESTAMP, NULL),
+    ('site.brand_color', '#4BA3D9', CURRENT_TIMESTAMP, NULL),
     ('site.contact_phone', '400-000-0000', CURRENT_TIMESTAMP, NULL);
