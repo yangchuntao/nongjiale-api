@@ -6,6 +6,8 @@ import java.util.List;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import com.suzhong.njl.cache.CacheName;
+
 @ConfigurationProperties(prefix = "app")
 public class AppProperties {
 
@@ -50,12 +52,30 @@ public class AppProperties {
     }
 
     public static class Cache {
+        private boolean enabled = true;
         private String keyPrefix = "njl:";
         private Duration defaultTtl = Duration.ofMinutes(10);
         private Duration homeFeedTtl = Duration.ofMinutes(5);
         private Duration storeDetailTtl = Duration.ofMinutes(5);
         private Duration regionTtl = Duration.ofMinutes(30);
         private Duration siteConfigTtl = Duration.ofMinutes(30);
+
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        public void setEnabled(boolean enabled) {
+            this.enabled = enabled;
+        }
+
+        public Duration ttlFor(CacheName name) {
+            return switch (name) {
+                case HOME_FEED -> homeFeedTtl;
+                case STORE_DETAIL -> storeDetailTtl;
+                case REGION -> regionTtl;
+                case SITE_CONFIG -> siteConfigTtl;
+            };
+        }
 
         public String getKeyPrefix() {
             return keyPrefix;

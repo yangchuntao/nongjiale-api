@@ -15,6 +15,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import com.suzhong.njl.domain.enums.AdminRole;
+import com.suzhong.njl.domain.enums.UserType;
 import com.suzhong.njl.security.ApiAccessDeniedHandler;
 import com.suzhong.njl.security.ApiAuthenticationEntryPoint;
 import com.suzhong.njl.security.BearerTokenFilter;
@@ -40,7 +41,11 @@ public class SecurityConfig {
                         .accessDeniedHandler(accessDeniedHandler))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/api/admin/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login").permitAll()
                         .requestMatchers("/health", "/error").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/auth/me").hasAuthority(UserType.TOURIST.name())
+                        .requestMatchers(HttpMethod.POST, "/api/booking-intents").hasAuthority(UserType.TOURIST.name())
+                        .requestMatchers("/api/me/**").hasAuthority(UserType.TOURIST.name())
                         .requestMatchers("/api/admin/**")
                         .hasAnyAuthority(AdminRole.OPERATOR.name(), AdminRole.AGENT.name())
                         .anyRequest().permitAll())
