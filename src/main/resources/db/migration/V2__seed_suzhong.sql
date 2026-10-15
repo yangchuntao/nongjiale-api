@@ -1,4 +1,5 @@
--- 苏中种子：地区、站点占位、演示运营账号。
+-- 苏中种子：地区、站点占位、演示运营账号。本脚本不写门店。
+-- 验收房源是手工精选（含表亲店）。抓取或导入的房源必须 test_data=true。
 -- 运营登录标识是手机号，没有 username。
 -- 密码明文仅本地种子：SeedAdmin#2026（BCrypt）。正式环境必须更换。
 -- 码值对应 Java 枚举：AdminRole.OPERATOR、SeedMarket.SUZHONG、RegionLevel、SiteConfigKey。

@@ -39,11 +39,15 @@ Flyway `V1__schema.sql` 建 TECH §2.2 的核心表。枚举列 `VARCHAR(32)`。
 
 大文本用 `TEXT`，这样 H2 MySQL 模式和 MySQL 8 能共用脚本。同一门店「最多一条待审上下架」不建部分唯一索引，两边语法不一致，留给以后的服务层。
 
+门店详情和验收以 `store.package_text` 为权威文案。`store_package` 允许没有行；若明细和主文案不一致，以 `package_text` 为准。
+
 `V2__seed_suzhong.sql` 写入：
 
 - 上述运营账号（BCrypt）
 - 苏中地区树：江苏，以及扬州、泰州、南通和广陵、海陵、崇川
 - `site_config`：站名「站点名称」、主色 `#2F6B4F`、电话 `400-000-0000`
+
+V2 不写门店。验收房源是手工精选（含表亲店），不使用抓取列表。抓取或导入的房源必须 `test_data=true`，不能当成验收店。
 
 `CHECKED_IN` 的中文是「已落地」。意向状态机写在 `IntentStatus.canTransitTo`，非法迁移规则已有单测，但还没有对外改状态接口。
 
@@ -68,8 +72,8 @@ Flyway `V1__schema.sql` 建 TECH §2.2 的核心表。枚举列 `VARCHAR(32)`。
 | `pom.xml` | Boot 3.3.13；Web、Validation、Security、Redis、Cache、MyBatis-Plus、Flyway、H2、MySQL；不引入 JPA |
 | `com.suzhong.seed` | 删除，改为 `com.suzhong.njl` |
 | `application*.yml` | `local` / `mysql`、CORS、令牌 TTL、缓存前缀 |
-| `db/migration/V1__schema.sql` | 核心表、索引、外键、乐观锁 |
-| `db/migration/V2__seed_suzhong.sql` | 运营手机号、苏中地区、站点配置 |
+| `db/migration/V1__schema.sql` | 核心表、索引、外键、乐观锁；注明 `package_text` 优先、`test_data` 口径 |
+| `db/migration/V2__seed_suzhong.sql` | 运营手机号、苏中地区、站点配置；不写验收房源 |
 | `domain.enums` / `domain.entity` / `mapper` | 枚举、实体、Mapper |
 | `security` + `AdminAuthController` | 内存令牌、Bearer、运营登录 |
 | `RedisCacheConfig` | 缓存键前缀与 TTL，不存放令牌 |
@@ -85,3 +89,5 @@ Flyway `V1__schema.sql` 建 TECH §2.2 的核心表。枚举列 `VARCHAR(32)`。
 - 表结构只加 Flyway 版本，不要开 MyBatis-Plus 自动建表。
 - 种子密码会出现在库脚本和文档里，只能用于本地。上线前更换。
 - 门户、商家、意向写入、审核、导出、支付都还没实现。状态机枚举已经就位，后续接口应复用，不要再引入另一套字符串状态。
+- 后续门店详情以 `package_text` 展示和验收。`store_package` 没有行仍算完整门店；明细与主文案不一致时，展示和验收都用 `package_text`。
+- 验收房源是手工精选店（含表亲店）。抓取或导入的房源标 `test_data=true`。

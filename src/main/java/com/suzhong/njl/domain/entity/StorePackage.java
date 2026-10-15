@@ -6,6 +6,9 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 
+/**
+ * 套餐明细，可为空。门店详情与验收以 {@code store.package_text} 为准，冲突时不覆盖主文案。
+ */
 @TableName("store_package")
 public class StorePackage {
 

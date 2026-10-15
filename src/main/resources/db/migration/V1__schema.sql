@@ -2,6 +2,8 @@
 -- 枚举列统一 VARCHAR(32)，码值与 Java 枚举 code 一致，只增不改名。
 -- 大文本用 TEXT（两边都能跑；不使用仅 H2 的 CLOB）。
 -- 一期 booking_intent 不含支付列。同一门店仅一条 PENDING 上下架申请由应用层保证（两边都不做部分唯一索引）。
+-- 门店详情与验收以 store.package_text 为准。store_package 可以没有行；两边不一致时 package_text 赢。
+-- 验收用的精选店是手工整理（含表亲店），不是抓取来的。抓取或导入的房源必须 test_data=true。
 
 CREATE TABLE portal_user (
     id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -95,6 +97,7 @@ CREATE TABLE store (
     gallery_json TEXT NULL,
     price_text VARCHAR(64) NULL,
     price_from DECIMAL(10, 2) NULL,
+    -- 套餐权威文案。详情和验收只认这一列；store_package 可空，冲突时本列优先。
     package_text TEXT NULL,
     facilities TEXT NULL,
     features TEXT NULL,
@@ -103,6 +106,7 @@ CREATE TABLE store (
     shelf_status VARCHAR(32) NOT NULL,
     home_recommended BOOLEAN NOT NULL DEFAULT FALSE,
     home_sort INT NOT NULL DEFAULT 100,
+    -- 验收精选店为手工数据，保持 false。抓取或导入的房源必须为 true。
     test_data BOOLEAN NOT NULL DEFAULT FALSE,
     version BIGINT NOT NULL DEFAULT 0,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -115,6 +119,7 @@ CREATE INDEX idx_store_shelf_region ON store (shelf_status, region_id);
 CREATE INDEX idx_store_home ON store (home_recommended, home_sort);
 CREATE INDEX idx_store_org ON store (merchant_org_id);
 
+-- 套餐明细可选。没有行是正常情况，不能拿它覆盖 store.package_text。
 CREATE TABLE store_package (
     id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
     store_id BIGINT NOT NULL,

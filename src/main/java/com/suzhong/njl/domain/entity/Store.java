@@ -35,6 +35,7 @@ public class Store {
 
     private BigDecimal priceFrom;
 
+    /** 套餐权威文案。详情与验收认这一列；与 store_package 冲突时以本字段为准。 */
     private String packageText;
 
     private String facilities;
@@ -51,6 +52,7 @@ public class Store {
 
     private Integer homeSort;
 
+    /** 验收精选店保持 false。抓取或导入的房源必须为 true。 */
     private Boolean testData;
 
     @Version

@@ -97,3 +97,9 @@ com.suzhong.njl.mapper          MyBatis-Plus Mapper
 ```
 
 本次不做的业务接口：门户目录、意向提交、入驻审核、商家端、支付。
+
+## 门店文案与验收数据
+
+门店详情和验收以 `store.package_text` 为准。`store_package` 可以没有行；两处不一致时以 `package_text` 为准。
+
+当前 V2 种子只有运营账号、苏中地区和站点配置，没有房源。验收用的精选店是手工整理的（含表亲店），不是抓取结果。抓取或导入的房源必须把 `test_data` 设为 true。
