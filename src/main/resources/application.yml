@@ -1,3 +1,57 @@
+server:
+  port: 8080
+  servlet:
+    encoding:
+      charset: UTF-8
+      force: true
+
 spring:
   application:
-    name: suzhong-seed
+    name: nongjiale-api
+  profiles:
+    active: local
+  jackson:
+    time-zone: Asia/Shanghai
+    serialization:
+      write-dates-as-timestamps: false
+    deserialization:
+      fail-on-unknown-properties: true
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: 2s
+      connect-timeout: 2s
+      repositories:
+        enabled: false
+  cache:
+    type: redis
+
+mybatis-plus:
+  type-enums-package: com.suzhong.njl.domain.enums
+  configuration:
+    map-underscore-to-camel-case: true
+    default-enum-type-handler: com.baomidou.mybatisplus.core.handlers.MybatisEnumTypeHandler
+  global-config:
+    banner: false
+    db-config:
+      id-type: auto
+  mapper-locations: classpath*:/mapper/**/*.xml
+
+app:
+  cors-allowed-origins:
+    - http://localhost:43123
+    - http://localhost:43124
+    - http://localhost:43125
+  security:
+    token-ttl: 12h
+  cache:
+    key-prefix: "njl:"
+    default-ttl: 10m
+    home-feed-ttl: 5m
+    store-detail-ttl: 5m
+    region-ttl: 30m
+    site-config-ttl: 30m
