@@ -1,0 +1,31 @@
+package com.suzhong.njl.domain.enums;
+
+import com.baomidou.mybatisplus.annotation.EnumValue;
+
+public enum AuditAction {
+    APPLY_APPROVE("APPLY_APPROVE", "入驻通过"),
+    APPLY_REJECT("APPLY_REJECT", "入驻驳回"),
+    SHELF_FORCE("SHELF_FORCE", "代上下架"),
+    SHELF_REVIEW("SHELF_REVIEW", "审上下架"),
+    INTENT_STATUS("INTENT_STATUS", "意向状态"),
+    SITE_CONFIG_UPDATE("SITE_CONFIG_UPDATE", "站点配置"),
+    MERCHANT_DISABLE("MERCHANT_DISABLE", "商家停用"),
+    MERCHANT_ENABLE("MERCHANT_ENABLE", "商家启用");
+
+    @EnumValue
+    private final String code;
+    private final String label;
+
+    AuditAction(String code, String label) {
+        this.code = code;
+        this.label = label;
+    }
+
+    public String code() {
+        return code;
+    }
+
+    public String label() {
+        return label;
+    }
+}

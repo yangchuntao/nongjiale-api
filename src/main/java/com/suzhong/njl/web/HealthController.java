@@ -1,4 +1,4 @@
-package com.suzhong.seed.web;
+package com.suzhong.njl.web;
 
 import java.util.Map;
 
@@ -12,6 +12,6 @@ public class HealthController {
     public Map<String, String> health() {
         return Map.of(
                 "status", "UP",
-                "service", "suzhong-seed");
+                "service", "nongjiale-api");
     }
 }

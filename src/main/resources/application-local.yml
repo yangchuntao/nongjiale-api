@@ -1,0 +1,7 @@
+# 本地零依赖库：H2 MySQL 模式。结构只走 Flyway，禁止自动建表。
+spring:
+  datasource:
+    url: jdbc:h2:mem:nongjiale;MODE=MySQL;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
