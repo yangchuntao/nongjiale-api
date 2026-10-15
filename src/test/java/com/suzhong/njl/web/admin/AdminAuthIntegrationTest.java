@@ -155,7 +155,7 @@ class AdminAuthIntegrationTest {
         assertThat(regionMapper.selectOne(Wrappers.lambdaQuery(com.suzhong.njl.domain.entity.Region.class)
                 .eq(com.suzhong.njl.domain.entity.Region::getSlug, "yangzhou")).getLevel()).isEqualTo(RegionLevel.CITY);
         assertThat(siteConfigMapper.selectById(SiteConfigKey.NAME.code()).getConfigValue()).isEqualTo("站点名称");
-        assertThat(siteConfigMapper.selectById(SiteConfigKey.BRAND_COLOR.code()).getConfigValue()).isEqualTo("#2F6B4F");
+        assertThat(siteConfigMapper.selectById(SiteConfigKey.BRAND_COLOR.code()).getConfigValue()).isEqualTo("#4BA3D9");
         assertThat(siteConfigMapper.selectById(SiteConfigKey.CONTACT_PHONE.code()).getConfigValue()).isEqualTo("400-000-0000");
     }
 }
