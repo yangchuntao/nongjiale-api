@@ -10,4 +10,9 @@ public interface TokenStore {
     IssuedToken issue(AuthenticatedUser user);
 
     Optional<AuthenticatedUser> resolve(String token);
+
+    /**
+     * 丢掉该商家主体尚未过期的内存令牌。停用和改密后调用，不写 Redis。
+     */
+    void revokeMerchantOrg(Long merchantOrgId);
 }

@@ -1,6 +1,6 @@
 # 苏中种子 · 农家乐 API
 
-`nongjiale-api` 是苏中农家乐垂直平台的后端。当前是 MVP-0 的 S1 脚手架：能启动、Flyway 建表并写入种子、运营用手机号登录。门户、商家和支付接口还没做。
+`nongjiale-api` 是苏中农家乐垂直平台的后端。MVP-0 已包含门户、商家和运营审核。没有支付、锁房和佣金计算。
 
 ## 技术栈
 
@@ -89,14 +89,14 @@ mvn spring-boot:run -Dspring-boot.run.profiles=mysql
 com.suzhong.njl                 启动
 com.suzhong.njl.config          Security、CORS、Redis、MyBatis-Plus、时钟
 com.suzhong.njl.security        内存令牌与 Bearer
-com.suzhong.njl.web             信封、健康检查、运营登录
-com.suzhong.njl.service         运营登录
+com.suzhong.njl.web             信封、健康检查、三端接口
+com.suzhong.njl.service         门户、商家、运营业务
 com.suzhong.njl.domain.entity   表对应的实体
 com.suzhong.njl.domain.enums    状态、角色、地区层级
 com.suzhong.njl.mapper          MyBatis-Plus Mapper
 ```
 
-运营审核、代建门店和支付还没做。门户见 `BE4-DELIVERY.md`，商家端见 `BE5-DELIVERY.md`。
+门户见 `BE4-DELIVERY.md`，商家端见 `BE5-DELIVERY.md`，运营业务见 `BE6-DELIVERY.md` 和 `docs/ADMIN-API.md`。没有支付。
 
 ## 门户
 
@@ -119,7 +119,38 @@ V3 种子是手工精选店，含「表弟店」，`test_data=false`。抓取或
 - `GET /api/merchant/shelf-applications`：本主体申请
 - `GET /api/merchant/intents`、`GET /api/merchant/intents/{id}`：只读，联系电话中间四位脱敏
 
-商家账号由测试或后续运营开通写入，本接口不审入驻。
+商家账号由运营审核入驻后开通，见下方运营路径。本端没有创建门店接口。
+
+## 运营
+
+除登录外，`/api/admin/**` 需要 `OPERATOR` 或 `AGENT` 的 Bearer。未登录 401。游客或商家令牌 403。字段表见 `docs/ADMIN-API.md`。
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| POST | `/api/admin/auth/login` | 手机号 + 密码 |
+| GET | `/api/admin/auth/me` | 当前运营 |
+| GET | `/api/admin/merchant-applies` | 入驻队列，可按 `status` 筛 |
+| POST | `/api/admin/merchant-applies/{id}/approve` | 通过并开通账号。明文密码只在当次响应 |
+| POST | `/api/admin/merchant-applies/{id}/reject` | 驳回，`reason` 必填。非待审 409 |
+| GET | `/api/admin/merchants` | 商家主体列表 |
+| PATCH | `/api/admin/merchants/{orgId}` | 主体 `status` 或账号 `enabled`。停用后旧令牌失效 |
+| POST | `/api/admin/merchants/{orgId}/reset-password` | 重置该主体登录密码，明文只返回一次 |
+| POST | `/api/admin/merchants/{orgId}/stores` | 代建门店并绑定主体 |
+| GET | `/api/admin/stores`、`GET /api/admin/stores/{id}` | 全站门店 |
+| PUT | `/api/admin/stores/{id}` | 代编。可写 `homeRecommended`、`homeSort`、`shelfStatus`。乐观锁 `version` |
+| GET | `/api/admin/shelf-applications` | 上下架申请队列 |
+| POST | `/api/admin/shelf-applications/{id}/approve` | 通过后改门店上架状态 |
+| POST | `/api/admin/shelf-applications/{id}/reject` | 驳回，原因必填。游客可见性不变 |
+| GET | `/api/admin/intents`、`GET /api/admin/intents/{id}` | 意向列表和详情。运营看完整手机号 |
+| POST | `/api/admin/intents/{id}/status` | `targetStatus` + `version`，可选 `note` |
+| POST | `/api/admin/intents/{id}/notes` | 只追加备注 |
+| GET | `/api/admin/intents/export` | CSV，筛选与列表相同。无佣金列 |
+| GET/POST/PUT/DELETE | `/api/admin/articles` | 攻略。发布后门户可见 |
+| GET/PUT | `/api/admin/site-config` | 站名、主色、客服电话 |
+
+代上下架写在 `PUT /api/admin/stores/{id}` 的 `shelfStatus`，没有单独的 shelf 接口。与当前状态不同则立即生效，并写 `SHELF_FORCE` 审计。不走申请队列。
+
+`CHECKED_IN` 的中文是「已落地」。站点主色种子保持 `#4BA3D9`。
 
 ## 门店文案与验收数据
 
