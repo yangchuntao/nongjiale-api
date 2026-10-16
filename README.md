@@ -96,7 +96,7 @@ com.suzhong.njl.domain.enums    状态、角色、地区层级
 com.suzhong.njl.mapper          MyBatis-Plus Mapper
 ```
 
-本次不做的业务接口：运营审核、商家端、支付。门户目录、注册登录和意向提交已经接上，见 `BE4-DELIVERY.md`。
+运营审核、代建门店和支付还没做。门户见 `BE4-DELIVERY.md`，商家端见 `BE5-DELIVERY.md`。
 
 ## 门户
 
@@ -109,6 +109,17 @@ com.suzhong.njl.mapper          MyBatis-Plus Mapper
 - `POST /api/merchant-applies`：提交入驻申请
 
 V3 种子是手工精选店，含「表弟店」，`test_data=false`。抓取或导入的房源要标 `test_data=true`，列表和详情会带「测试」。
+
+## 商家
+
+`POST /api/merchant/auth/login` 使用商家手机号和密码。主体或账号停用返回 403。令牌角色是 `MERCHANT`，只能访问 `/api/merchant/**`。
+
+- `GET /api/merchant/stores`、`GET/PUT /api/merchant/stores/{id}`：只看本主体。不能直接改上下架和首页推荐，也没有创建门店接口
+- `POST /api/merchant/stores/{id}/shelf-applications`：申请上架或下架。同一门店同时只能有一条待审
+- `GET /api/merchant/shelf-applications`：本主体申请
+- `GET /api/merchant/intents`、`GET /api/merchant/intents/{id}`：只读，联系电话中间四位脱敏
+
+商家账号由测试或后续运营开通写入，本接口不审入驻。
 
 ## 门店文案与验收数据
 

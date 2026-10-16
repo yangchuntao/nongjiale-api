@@ -28,6 +28,11 @@ class CacheAsideTest {
             public void set(String key, String value, Duration ttl) {
                 throw new RedisConnectionFailureException("down");
             }
+
+            @Override
+            public void delete(String key) {
+                throw new RedisConnectionFailureException("down");
+            }
         };
         CacheAside cacheAside = new CacheAside(redis, new ObjectMapper(), enabled());
 
@@ -51,6 +56,11 @@ class CacheAsideTest {
 
             @Override
             public void set(String key, String value, Duration ttl) {
+                throw new AssertionError("不应访问 Redis");
+            }
+
+            @Override
+            public void delete(String key) {
                 throw new AssertionError("不应访问 Redis");
             }
         };

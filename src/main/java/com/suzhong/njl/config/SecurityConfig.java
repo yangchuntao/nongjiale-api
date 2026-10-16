@@ -41,6 +41,7 @@ public class SecurityConfig {
                         .accessDeniedHandler(accessDeniedHandler))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/api/admin/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/merchant/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login").permitAll()
                         .requestMatchers("/health", "/error").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/auth/me").hasAuthority(UserType.TOURIST.name())
@@ -48,6 +49,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/me/**").hasAuthority(UserType.TOURIST.name())
                         .requestMatchers("/api/admin/**")
                         .hasAnyAuthority(AdminRole.OPERATOR.name(), AdminRole.AGENT.name())
+                        .requestMatchers("/api/merchant/**").hasAuthority(UserType.MERCHANT.name())
                         .anyRequest().permitAll())
                 .addFilterBefore(bearerTokenFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();

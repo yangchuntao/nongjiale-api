@@ -23,4 +23,9 @@ public class LettuceRedisValueStore implements RedisValueStore {
     public void set(String key, String value, Duration ttl) {
         redis.opsForValue().set(key, value, ttl);
     }
+
+    @Override
+    public void delete(String key) {
+        redis.delete(key);
+    }
 }

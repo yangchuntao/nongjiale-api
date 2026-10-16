@@ -71,6 +71,21 @@ public class CacheAside {
         return loaded;
     }
 
+    /**
+     * 写路径失效。删缓存失败只记日志，不回滚已经成功的数据库写入。
+     */
+    public void evict(CacheName cache, String key) {
+        if (!appProperties.getCache().isEnabled() || !redisUp.get()) {
+            return;
+        }
+        String redisKey = appProperties.getCache().getKeyPrefix() + cache.key() + ":" + key;
+        try {
+            redis.delete(redisKey);
+        } catch (RuntimeException ex) {
+            log.warn("缓存失效失败 cache={}", cache.key(), ex);
+        }
+    }
+
     private void markDown(RuntimeException ex) {
         if (redisUp.compareAndSet(true, false)) {
             log.warn("Redis 不可用，热点读改为直接读库", ex);
