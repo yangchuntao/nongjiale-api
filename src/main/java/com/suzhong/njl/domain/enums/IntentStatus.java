@@ -6,7 +6,7 @@ public enum IntentStatus {
     PENDING("PENDING", "待跟进"),
     CONFIRMED("CONFIRMED", "已确认"),
     RESCHEDULED("RESCHEDULED", "已改期"),
-    CHECKED_IN("CHECKED_IN", "已达成"),
+    CHECKED_IN("CHECKED_IN", "已入住"),
     CLOSED("CLOSED", "已关闭");
 
     @EnumValue

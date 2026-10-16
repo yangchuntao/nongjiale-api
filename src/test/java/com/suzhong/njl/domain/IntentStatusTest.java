@@ -32,6 +32,6 @@ class IntentStatusTest {
         assertThat(IntentStatus.CLOSED.terminal()).isTrue();
         assertThat(IntentStatus.CHECKED_IN.canTransitTo(IntentStatus.CLOSED)).isFalse();
         assertThat(IntentStatus.CLOSED.canTransitTo(IntentStatus.PENDING)).isFalse();
-        assertThat(IntentStatus.CHECKED_IN.label()).isEqualTo("已达成");
+        assertThat(IntentStatus.CHECKED_IN.label()).isEqualTo("已入住");
     }
 }

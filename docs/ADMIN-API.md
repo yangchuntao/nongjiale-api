@@ -277,7 +277,7 @@
 | contactPhone | string | 完整号码 |
 | userRemark | string \| null | |
 | status | string | 英文码 |
-| statusLabel | string | 中文。`CHECKED_IN` 为「已达成」 |
+| statusLabel | string | 中文。`CHECKED_IN` 为「已入住」 |
 | version | number | |
 | createdAt | string | |
 | updatedAt | string | |
@@ -332,14 +332,14 @@
 | 离店日期 | checkOut |
 | 晚数 | nights |
 | 人数 | guests |
-| 状态 | statusLabel（已达成，不是已落地/已成交/已落实） |
+| 状态 | statusLabel（已入住，不是已达成/已落地/已落实/已成交） |
 | 联系人 | contactName |
 | 手机号 | 完整 contactPhone |
 | 游客备注 | userRemark |
 
 没有佣金、金额、支付列。
 
-中文对照：待跟进、已确认、已改期、已达成、已关闭。`CHECKED_IN` 是「已达成」，不是已落地/已成交/已落实。
+中文对照：待跟进、已确认、已改期、已入住、已关闭。`CHECKED_IN` 是「已入住」，不是已达成/已落地/已落实/已成交。
 
 ## 攻略
 

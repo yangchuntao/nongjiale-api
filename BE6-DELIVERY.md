@@ -55,9 +55,9 @@
 
 列表和导出共用筛选：`status`、`storeId`、`merchantOrgId`、`checkInFrom`、`checkInTo`、`createdFrom`、`createdTo`。
 
-详情带备注时间线，`contactPhone` 是完整号码。改状态的请求体是 `targetStatus`、`version`，可选 `note`。只允许 `IntentStatus.canTransitTo`。非法迁移 409，文案形如「不能从待跟进改为已达成」。版本不一致 409「数据已被修改」。每次改状态追加一条 `STATUS_CHANGE` 备注，不删历史，并写 `INTENT_STATUS`。`POST .../notes` 只追加 `COMMENT`。
+详情带备注时间线，`contactPhone` 是完整号码。改状态的请求体是 `targetStatus`、`version`，可选 `note`。只允许 `IntentStatus.canTransitTo`。非法迁移 409，文案形如「不能从待跟进改为已入住」。版本不一致 409「数据已被修改」。每次改状态追加一条 `STATUS_CHANGE` 备注，不删历史，并写 `INTENT_STATUS`。`POST .../notes` 只追加 `COMMENT`。
 
-`GET /api/admin/intents/export` 返回 CSV，不是 JSON 信封。表头为：单号、门店、到店日期、离店日期、晚数、人数、状态、联系人、手机号、游客备注。状态用枚举中文，`CHECKED_IN` 为「已达成」。没有佣金列。筛选与列表一致，最多 10000 行。
+`GET /api/admin/intents/export` 返回 CSV，不是 JSON 信封。表头为：单号、门店、到店日期、离店日期、晚数、人数、状态、联系人、手机号、游客备注。状态用枚举中文，`CHECKED_IN` 为「已入住」。没有佣金列。筛选与列表一致，最多 10000 行。
 
 ### 攻略和站点配置
 
@@ -73,7 +73,7 @@
 | `TokenStore.revokeMerchantOrg` | 停用或改密时丢掉该主体商家令牌 |
 | `AuditTarget` | 审计目标类型 |
 | `ArticleQueryService` | 门户攻略计数去掉排序，避免空 `published_at` 让 H2 失败 |
-| `AdminApiIntegrationTest` | 通过/驳回、状态机合法与非法、导出含已确认和已达成、`homeRecommended` 可写、商家令牌调运营 403 |
+| `AdminApiIntegrationTest` | 通过/驳回、状态机合法与非法、导出含已确认和已入住、`homeRecommended` 可写、商家令牌调运营 403 |
 | `README.md`、`docs/ADMIN-API.md` | 运营路径和 DTO 字段 |
 
 没有新的 Flyway 版本。
@@ -84,5 +84,5 @@
 - 商家停用文案与 BE-5 一致。旧令牌在停用或改密后失效，需要重新登录。
 - 门户 410、商家隔离、推荐字段商家不可写，这些行为保持不变。
 - 开通和重置密码的明文只在当次响应里，后续查询不再返回。
-- 意向导出是 CSV 附件。`CHECKED_IN` 列值是「已达成」。
+- 意向导出是 CSV 附件。`CHECKED_IN` 列值是「已入住」。
 - 默认主色种子仍是 `#4BA3D9`。改配置后再读门户公开配置即可看到新值。
