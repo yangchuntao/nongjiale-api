@@ -98,7 +98,7 @@ com.suzhong.njl.domain.enums    状态、角色、地区层级
 com.suzhong.njl.mapper          MyBatis-Plus Mapper
 ```
 
-门户见 `BE4-DELIVERY.md`，商家端见 `BE5-DELIVERY.md`，运营业务见 `BE6-DELIVERY.md` 和 `docs/ADMIN-API.md`。没有支付。
+门户见 `BE4-DELIVERY.md`，商家端见 `BE5-DELIVERY.md`，运营业务见 `BE6-DELIVERY.md` 和 `docs/ADMIN-API.md`。没有支付。没有控制器的路径（含 `/api/payments`）返回 HTTP 404，信封 `{code:404, message:接口不存在, data:null}`，不是 500。见 `docs/S5-E01-UNKNOWN-ROUTE.md`。
 
 ## 门户
 

@@ -4,15 +4,23 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.lang.reflect.Method;
 
+import jakarta.servlet.ServletException;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.core.MethodParameter;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 class GlobalExceptionHandlerTest {
 
@@ -73,6 +81,31 @@ class GlobalExceptionHandlerTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
         assertThat(response.getBody().message()).isEqualTo("服务器繁忙");
         assertThat(response.getBody().message()).doesNotContain("secret");
+    }
+
+    @Test
+    void missingResourceAndMissingHandlerAreNotFound() {
+        assertNotFound(handler.handleMissingRoute(new NoResourceFoundException(HttpMethod.GET, "api/payments")));
+        assertNotFound(handler.handleMissingRoute(new NoHandlerFoundException("POST", "/api/checkout", new HttpHeaders())));
+    }
+
+    @Test
+    void missingRouteHandlerDeclaresBothSpringNotFoundTypes() throws Exception {
+        ExceptionHandler mapping = GlobalExceptionHandler.class
+                .getMethod("handleMissingRoute", ServletException.class)
+                .getAnnotation(ExceptionHandler.class);
+
+        assertThat(mapping.value()).containsExactlyInAnyOrder(
+                NoResourceFoundException.class,
+                NoHandlerFoundException.class);
+    }
+
+    private static void assertNotFound(ResponseEntity<ApiResponse<Void>> response) {
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().code()).isEqualTo(HttpStatus.NOT_FOUND.value());
+        assertThat(response.getBody().message()).isEqualTo("接口不存在");
+        assertThat(response.getBody().data()).isNull();
     }
 
     static final class Probe {
