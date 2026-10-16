@@ -1,5 +1,7 @@
 package com.suzhong.njl.web;
 
+import jakarta.servlet.ServletException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -10,9 +12,13 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    static final String ROUTE_NOT_FOUND_MESSAGE = "接口不存在";
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
@@ -44,6 +50,16 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiResponse<Void>> handleUnreadable(HttpMessageNotReadableException ex) {
         return ResponseEntity.badRequest().body(ApiResponse.fail(HttpStatus.BAD_REQUEST.value(), "请求体格式不正确"));
+    }
+
+    /**
+     * 没有控制器、也没有静态资源时，Spring 抛出这两个异常。
+     * 不能落到 {@link #handleUnexpected}，否则未实现的路径（含支付）会变成 500。
+     */
+    @ExceptionHandler({NoResourceFoundException.class, NoHandlerFoundException.class})
+    public ResponseEntity<ApiResponse<Void>> handleMissingRoute(ServletException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.fail(HttpStatus.NOT_FOUND.value(), ROUTE_NOT_FOUND_MESSAGE));
     }
 
     @ExceptionHandler(Exception.class)
