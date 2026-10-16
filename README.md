@@ -23,6 +23,8 @@ mvn test
 mvn spring-boot:run
 ```
 
+`mvn test` 会跑 JaCoCo，并用 **行覆盖率（LINE / COVEREDRATIO）** 做门禁。整包低于 85% 时构建失败。报告在 `target/site/jacoco/index.html`（XML 为 `target/site/jacoco/jacoco.xml`）。说明见 `docs/COVERAGE.md`。
+
 服务端口 `8080`。健康检查 `GET /health` 不走业务信封，返回：
 
 ```json
