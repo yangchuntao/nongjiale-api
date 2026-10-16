@@ -150,7 +150,7 @@ V3 种子是手工精选店，含「表弟店」，`test_data=false`。抓取或
 
 代上下架写在 `PUT /api/admin/stores/{id}` 的 `shelfStatus`，没有单独的 shelf 接口。与当前状态不同则立即生效，并写 `SHELF_FORCE` 审计。不走申请队列。
 
-`CHECKED_IN` 的中文是「已落地」。站点主色种子保持 `#4BA3D9`。
+`CHECKED_IN` 的中文是「已入住」。站点主色种子保持 `#4BA3D9`。
 
 ## 门店文案与验收数据
 

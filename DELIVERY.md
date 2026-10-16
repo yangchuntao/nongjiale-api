@@ -49,7 +49,7 @@ Flyway `V1__schema.sql` 建 TECH §2.2 的核心表。枚举列 `VARCHAR(32)`。
 
 V2 不写门店。验收房源是手工精选（含表亲店），不使用抓取列表。抓取或导入的房源必须 `test_data=true`，不能当成验收店。
 
-`CHECKED_IN` 的中文是「已落地」。意向状态机写在 `IntentStatus.canTransitTo`，非法迁移规则已有单测，但还没有对外改状态接口。
+`CHECKED_IN` 的中文是「已入住」。意向状态机写在 `IntentStatus.canTransitTo`，非法迁移规则已有单测，但还没有对外改状态接口。
 
 `store_tag_rel` 是联合主键，Mapper 不提供单主键 `selectById`。
 
