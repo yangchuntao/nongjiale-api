@@ -46,4 +46,23 @@ class InMemoryTokenStoreTest {
         now.set(now.get().plus(Duration.ofMinutes(31)));
         assertThat(store.resolve(issued.token())).isEmpty();
     }
+
+    @Test
+    void revokeMerchantOrgDropsOnlyThatOrg() {
+        AppProperties properties = new AppProperties();
+        properties.getSecurity().setTokenTtl(Duration.ofHours(1));
+        InMemoryTokenStore store = new InMemoryTokenStore(properties, Clock.systemUTC());
+        AuthenticatedUser merchant = new AuthenticatedUser(9L, UserType.MERCHANT, null, 3L, "商家", "13700000000");
+        AuthenticatedUser other = new AuthenticatedUser(8L, UserType.MERCHANT, null, 4L, "别家", "13700000001");
+        AuthenticatedUser admin = new AuthenticatedUser(1L, UserType.OPERATOR, AdminRole.OPERATOR, null, "运营", "13800000000");
+
+        IssuedToken dropped = store.issue(merchant);
+        IssuedToken kept = store.issue(other);
+        IssuedToken adminToken = store.issue(admin);
+        store.revokeMerchantOrg(3L);
+
+        assertThat(store.resolve(dropped.token())).isEmpty();
+        assertThat(store.resolve(kept.token())).contains(other);
+        assertThat(store.resolve(adminToken.token())).contains(admin);
+    }
 }

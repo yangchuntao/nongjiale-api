@@ -28,7 +28,8 @@ public class ArticleQueryService {
 
     public PageResult<ArticleSummary> list(Integer page, Integer pageSize) {
         PageQuery pageQuery = PageQuery.of(page, pageSize);
-        Long total = articleMapper.selectCount(published());
+        Long total = articleMapper.selectCount(
+                Wrappers.<Article>lambdaQuery().eq(Article::getStatus, ArticleStatus.PUBLISHED));
         List<Article> rows = articleMapper.selectList(
                 published().last("LIMIT " + pageQuery.pageSize() + " OFFSET " + pageQuery.offset()));
         List<ArticleSummary> items = new ArrayList<>(rows.size());

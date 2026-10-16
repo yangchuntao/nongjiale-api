@@ -9,6 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.stereotype.Component;
 
 import com.suzhong.njl.config.AppProperties;
+import com.suzhong.njl.domain.enums.UserType;
 
 @Component
 public class InMemoryTokenStore implements TokenStore {
@@ -47,6 +48,17 @@ public class InMemoryTokenStore implements TokenStore {
             return Optional.empty();
         }
         return Optional.of(record.user());
+    }
+
+    @Override
+    public void revokeMerchantOrg(Long merchantOrgId) {
+        if (merchantOrgId == null) {
+            return;
+        }
+        tokens.entrySet().removeIf(entry -> {
+            AuthenticatedUser user = entry.getValue().user();
+            return user.userType() == UserType.MERCHANT && merchantOrgId.equals(user.merchantOrgId());
+        });
     }
 
     private record TokenRecord(AuthenticatedUser user, Instant expiresAt) {
