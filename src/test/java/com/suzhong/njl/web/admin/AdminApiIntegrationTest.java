@@ -404,7 +404,7 @@ class AdminApiIntegrationTest {
                 {"targetStatus":"CHECKED_IN","version":%d,"note":"客人已到"}
                 """.formatted(landedVersion), admin);
         assertThat(checkedIn.path("data").path("status").asText()).isEqualTo("CHECKED_IN");
-        assertThat(checkedIn.path("data").path("statusLabel").asText()).isEqualTo("已入住");
+        assertThat(checkedIn.path("data").path("statusLabel").asText()).isEqualTo("已达成");
 
         JsonNode noted = postJson("/api/admin/intents/" + confirmedId + "/notes", """
                 {"note":"补一句"}
@@ -438,7 +438,7 @@ class AdminApiIntegrationTest {
                         .param("storeId", String.valueOf(storeId)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.total").value(1))
-                .andExpect(jsonPath("$.data.items[0].statusLabel").value("已入住"));
+                .andExpect(jsonPath("$.data.items[0].statusLabel").value("已达成"));
 
         String csv = mockMvc.perform(get("/api/admin/intents/export")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + admin)
@@ -446,8 +446,11 @@ class AdminApiIntegrationTest {
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString(java.nio.charset.StandardCharsets.UTF_8);
         assertThat(csv).contains("已确认");
-        assertThat(csv).contains("已入住");
+        assertThat(csv).contains("已达成");
         assertThat(csv).doesNotContain("已落地");
+        assertThat(csv).doesNotContain("已入住");
+        assertThat(csv).doesNotContain("已成交");
+        assertThat(csv).doesNotContain("已落实");
         assertThat(csv).contains("NJL-BE6-C");
         assertThat(csv).contains("NJL-BE6-L");
         assertThat(csv).contains("意向店");
@@ -476,7 +479,7 @@ class AdminApiIntegrationTest {
                                 """))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value(409))
-                .andExpect(jsonPath("$.message").value("不能从待跟进改为已入住"));
+                .andExpect(jsonPath("$.message").value("不能从待跟进改为已达成"));
         assertThat(bookingIntentMapper.selectById(pendingId).getStatus()).isEqualTo(IntentStatus.PENDING);
     }
 
