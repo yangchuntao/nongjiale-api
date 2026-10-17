@@ -101,6 +101,7 @@ com.suzhong.njl.mapper          MyBatis-Plus Mapper
 门户见 `BE4-DELIVERY.md`，商家端见 `BE5-DELIVERY.md`，运营业务见 `BE6-DELIVERY.md` 和 `docs/ADMIN-API.md`。没有支付。没有控制器的路径（含 `/api/payments`）返回 HTTP 404，信封 `{code:404, message:接口不存在, data:null}`，不是 500。见 `docs/S5-E01-UNKNOWN-ROUTE.md`。
 
 MVP-1 开城技术设计（设计稿，未写业务代码）：`docs/TECH-DESIGN-MVP-1-开城.md`。
+MVP-1 开城技术设计产品门禁（PASS）：`docs/GATE-TECH-DESIGN-MVP-1-开城-产品.md`。
 
 ## 门户
 
