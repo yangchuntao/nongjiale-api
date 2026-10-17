@@ -88,10 +88,13 @@ public class AdminIntentService {
     public AdminIntentDetail changeStatus(long adminId, Long id, IntentStatusRequest request) {
         BookingIntent intent = requireIntent(id);
         IntentStatus target = request.targetStatus();
-        if (!intent.getStatus().canTransitTo(target)) {
-            throw new ApiException(HttpStatus.CONFLICT, "不能从" + intent.getStatus().label() + "改为" + target.label());
-        }
         IntentStatus from = intent.getStatus();
+        if (from == null) {
+            throw new ApiException(HttpStatus.CONFLICT, "不能改为" + target.label());
+        }
+        if (!from.canTransitTo(target)) {
+            throw new ApiException(HttpStatus.CONFLICT, "不能从" + from.label() + "改为" + target.label());
+        }
         intent.setStatus(target);
         intent.setVersion(request.version());
         int updated = bookingIntentMapper.updateById(intent);
@@ -153,7 +156,7 @@ public class AdminIntentService {
             csv.append(cell(text(row.getCheckOut()))).append(',');
             csv.append(cell(text(row.getNights()))).append(',');
             csv.append(cell(text(row.getGuests()))).append(',');
-            csv.append(cell(row.getStatus() == null ? "" : row.getStatus().label())).append(',');
+            csv.append(cell(statusLabel(row.getStatus()))).append(',');
             csv.append(cell(row.getContactName())).append(',');
             csv.append(cell(row.getContactPhone())).append(',');
             csv.append(cell(row.getUserRemark())).append('\n');
@@ -249,7 +252,7 @@ public class AdminIntentService {
                 intent.getContactPhone(),
                 intent.getUserRemark(),
                 intent.getStatus(),
-                intent.getStatus().label(),
+                statusLabel(intent.getStatus()),
                 intent.getVersion(),
                 intent.getCreatedAt(),
                 intent.getUpdatedAt(),
@@ -272,10 +275,18 @@ public class AdminIntentService {
                 intent.getContactPhone(),
                 intent.getUserRemark(),
                 intent.getStatus(),
-                intent.getStatus().label(),
+                statusLabel(intent.getStatus()),
                 intent.getVersion(),
                 intent.getCreatedAt(),
                 intent.getUpdatedAt());
+    }
+
+    /**
+     * 库内空串或无法对应 {@link IntentStatus} 的码，MyBatis 枚举处理器会读成 null。
+     * 未筛选列表会扫到这些行；标签留空，避免 label() 空指针把整页打成 500。
+     */
+    private String statusLabel(IntentStatus status) {
+        return status == null ? "" : status.label();
     }
 
     private String blankToNull(String value) {
