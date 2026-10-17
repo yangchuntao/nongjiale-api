@@ -10,7 +10,10 @@ public enum AuditAction {
     INTENT_STATUS("INTENT_STATUS", "意向状态"),
     SITE_CONFIG_UPDATE("SITE_CONFIG_UPDATE", "站点配置"),
     MERCHANT_DISABLE("MERCHANT_DISABLE", "商家停用"),
-    MERCHANT_ENABLE("MERCHANT_ENABLE", "商家启用");
+    MERCHANT_ENABLE("MERCHANT_ENABLE", "商家启用"),
+    CITY_CHECKLIST("CITY_CHECKLIST", "开城清单"),
+    CITY_OPEN("CITY_OPEN", "开通城市"),
+    CITY_CLOSE("CITY_CLOSE", "关闭城市");
 
     @EnumValue
     private final String code;

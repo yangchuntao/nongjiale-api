@@ -376,6 +376,88 @@
 
 `PUBLISHED` 后门户 `GET /api/articles` 和 `GET /api/articles/{id}` 可见。草稿对门户是 404 或不在列表中。
 
+## 开城
+
+开通单位是市。`enabled` 仍表示节点可维护，`openStatus` 才表示对客开通。省和区县没有开通态。没有支付，没有强制开通。
+
+`GET /api/admin/cities` 不分页。只含 `enabled=true` 且层级为市的节点，按 `sortOrder, id`。
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | number | 市 id |
+| provinceName | string \| null | 父省名称。父节点不是省则为 null |
+| name | string | 如扬州市 |
+| slug | string | 如 `yangzhou` |
+| openStatus | `OPEN` \| `CLOSED` | 库内空值也返回 `CLOSED` |
+| storeCount | number | 上架、非测试、地区启用，且挂在该市或下属区县 |
+| articleCount | number | 已发布，且挂在该市或下属区县 |
+| updatedAt | string \| null | 清单最近操作时间。没有清单行则为 null |
+
+`GET /api/admin/cities/{cityId}` 在上面的字段之外还有：
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| enabled | boolean | 停用的市返回 400「地区不可用」 |
+| minStores | number | 生效的最低上架店数，默认 5 |
+| minArticles | number | 生效的最低攻略数，默认 1 |
+| checklist.destinationReady | boolean | ①目的地数据齐，手勾 |
+| checklist.supplyReady | boolean | ②按 `storeCount >= minStores` 推导，不落库 |
+| checklist.articlesReady | boolean | ③按 `articleCount >= minArticles` 推导，不落库 |
+| checklist.supportCovered | boolean | ④客服覆盖，手勾 |
+| checklist.dirtyDataCleared | boolean | ⑤脏数据已清理，手勾 |
+| canOpen | boolean | 当前不是 OPEN，且三项手勾和两项计数都达标 |
+| canClose | boolean | 当前是 OPEN |
+| missingReasons | string[] | 未满足项。已经开通且只是「已经开了」时为空数组 |
+| version | number | 没有清单行时为 0 |
+| updatedBy | number \| null | 最近操作的运营 id |
+
+不是市、或不存在：404「城市不存在」。
+
+`PATCH /api/admin/cities/{cityId}/checklist`
+
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| destinationReady | boolean | 否 | 省略表示不改 |
+| supportCovered | boolean | 否 | 省略表示不改 |
+| dirtyDataCleared | boolean | 否 | 省略表示不改 |
+| version | number | 是 | 乐观锁 |
+
+三项至少要改一项，否则 400「请指定要更新的项」。请求体若带 `supplyReady` 或 `articlesReady`，400「供给达标与攻略达标按实时计数自动勾选，不能手改」，不改版本。成功 `data` 与详情相同。手勾不刷新门户缓存。
+
+`POST /api/admin/cities/{cityId}/open` 和 `POST /api/admin/cities/{cityId}/close` 的请求体只有必填 `version`。
+
+| HTTP | message |
+|------|---------|
+| 409 | 该市已开通 |
+| 409 | 该市未开通 |
+| 409 | 未达标，不能开通：再加上缺项，用中文分号连接 |
+| 409 | 数据已被修改 |
+
+缺项顺序固定：目的地数据未齐；供给未达标（当前 {storeCount} / 需要 {minStores}）；攻略未达标（当前 {articleCount} / 需要 {minArticles}）；客服覆盖未说明；测数或脏数据未确认清理。
+
+开通和关城成功后失效地区缓存和首页缓存。关城不删意向、门店、攻略，也不改 `enabled`。计数后来跌破 N/M 不会自动关城。
+
+`GET /api/admin/metrics/city-intents`
+
+| 参数 | 说明 |
+|------|------|
+| window | `7`、`30`、`ALL`。省略默认 `7`。其他值 400「参数不正确」 |
+| cityId | 可选。必须是启用的市，否则 404「城市不存在」 |
+
+时间打在 `booking_intent.created_at`。`7` / `30` 是从现在往前滚动的 7 或 30 天，不是自然日零点。`data`：
+
+| 字段 | 说明 |
+|------|------|
+| window | 实际使用的 `7` / `30` / `ALL` |
+| from | 下界。`ALL` 为 null |
+| rows | 第一行是合计，其后是市 |
+
+行字段：`cityId`（合计为 null）、`cityName`（合计为「合计」）、`intentCount`、`confirmedCount`（只数当前 `CONFIRMED`）、`checkedInCount`（只数当前 `CHECKED_IN`，文案仍是已入住）、`total`（合计为 true）。没有意向 id、门店 id 或跳转字段。`RESCHEDULED` 计入意向数，不计入已确认。
+
+`GET /api/admin/metrics/city-intents/export` 使用相同查询。响应是 `text/csv;charset=UTF-8`，带 BOM，附件名 `city-intents.csv`。列：`市,意向数,已确认,已入住`。第一数据行是合计。不是 `{code,message,data}`。
+
+门户：`GET /api/regions` 只留下已开通的市和它们的区县。`GET /api/stores` 的 `data` 在 `items,total,page,pageSize` 之外增加 `destinationStatus`（`OPEN` / `CLOSED` / `NONE`）和 `emptyHint`。未开通市的详情和创建意向复用 410「已下架或不可用」。
+
 ## 站点配置
 
 `GET /api/admin/site-config` 与 `PUT /api/admin/site-config` 的 `data`：

@@ -10,9 +10,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.suzhong.njl.service.portal.StoreQueryService;
 import com.suzhong.njl.web.ApiResponse;
-import com.suzhong.njl.web.PageResult;
-import com.suzhong.njl.web.portal.dto.StoreCard;
 import com.suzhong.njl.web.portal.dto.StoreDetailResponse;
+import com.suzhong.njl.web.portal.dto.StoreListResponse;
 
 @RestController
 @RequestMapping("/api/stores")
@@ -25,7 +24,7 @@ public class StoreController {
     }
 
     @GetMapping
-    public ApiResponse<PageResult<StoreCard>> list(
+    public ApiResponse<StoreListResponse> list(
             @RequestParam(required = false) Long regionId,
             @RequestParam(required = false) String tag,
             @RequestParam(required = false) BigDecimal priceMin,

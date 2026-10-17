@@ -31,4 +31,10 @@ public class AdminCache {
     public void evictPublicConfig() {
         cacheAside.evict(CacheName.SITE_CONFIG, "public");
     }
+
+    /** 开通或关城后失效地区树和首页。手勾不调用。 */
+    public void evictCityOpen() {
+        cacheAside.evict(CacheName.REGION, "enabled");
+        cacheAside.evict(CacheName.HOME_FEED, "default");
+    }
 }
