@@ -9,7 +9,8 @@ public enum AuditTarget {
     STORE("STORE"),
     SHELF_APPLICATION("SHELF_APPLICATION"),
     BOOKING_INTENT("BOOKING_INTENT"),
-    SITE_CONFIG("SITE_CONFIG");
+    SITE_CONFIG("SITE_CONFIG"),
+    REGION("REGION");
 
     private final String code;
 

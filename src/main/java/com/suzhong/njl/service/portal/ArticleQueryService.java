@@ -2,6 +2,7 @@ package com.suzhong.njl.service.portal;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -11,6 +12,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.suzhong.njl.domain.entity.Article;
 import com.suzhong.njl.domain.enums.ArticleStatus;
 import com.suzhong.njl.mapper.ArticleMapper;
+import com.suzhong.njl.service.city.CityVisibility;
 import com.suzhong.njl.service.support.PageQuery;
 import com.suzhong.njl.web.ApiException;
 import com.suzhong.njl.web.PageResult;
@@ -21,22 +23,24 @@ import com.suzhong.njl.web.portal.dto.ArticleSummary;
 public class ArticleQueryService {
 
     private final ArticleMapper articleMapper;
+    private final CityVisibility cityVisibility;
 
-    public ArticleQueryService(ArticleMapper articleMapper) {
+    public ArticleQueryService(ArticleMapper articleMapper, CityVisibility cityVisibility) {
         this.articleMapper = articleMapper;
+        this.cityVisibility = cityVisibility;
     }
 
     public PageResult<ArticleSummary> list(Integer page, Integer pageSize) {
         PageQuery pageQuery = PageQuery.of(page, pageSize);
-        Long total = articleMapper.selectCount(
-                Wrappers.<Article>lambdaQuery().eq(Article::getStatus, ArticleStatus.PUBLISHED));
-        List<Article> rows = articleMapper.selectList(
-                published().last("LIMIT " + pageQuery.pageSize() + " OFFSET " + pageQuery.offset()));
-        List<ArticleSummary> items = new ArrayList<>(rows.size());
-        for (Article row : rows) {
-            items.add(toSummary(row));
-        }
-        return new PageResult<>(items, total == null ? 0 : total, pageQuery.page(), pageQuery.pageSize());
+        Long total = articleMapper.selectCount(visibleFilter());
+        List<Article> rows = articleMapper.selectList(ordered(visibleFilter())
+                .last("LIMIT " + pageQuery.pageSize() + " OFFSET " + pageQuery.offset()));
+        return new PageResult<>(toSummaries(rows), total == null ? 0 : total, pageQuery.page(), pageQuery.pageSize());
+    }
+
+    public List<ArticleSummary> latestPromoted(int limit) {
+        List<Article> rows = articleMapper.selectList(ordered(visibleFilter()).last("LIMIT " + limit));
+        return toSummaries(rows);
     }
 
     public ArticleDetailResponse detail(Long id) {
@@ -55,11 +59,29 @@ public class ArticleQueryService {
                 article.getPublishedAt());
     }
 
-    private LambdaQueryWrapper<Article> published() {
-        return Wrappers.<Article>lambdaQuery()
-                .eq(Article::getStatus, ArticleStatus.PUBLISHED)
-                .orderByDesc(Article::getPublishedAt)
-                .orderByDesc(Article::getId);
+    private LambdaQueryWrapper<Article> visibleFilter() {
+        Set<Long> regionIds = cityVisibility.promotedArticleRegionIds();
+        LambdaQueryWrapper<Article> query = Wrappers.<Article>lambdaQuery()
+                .eq(Article::getStatus, ArticleStatus.PUBLISHED);
+        query.and(nested -> {
+            nested.isNull(Article::getRegionId);
+            if (!regionIds.isEmpty()) {
+                nested.or().in(Article::getRegionId, regionIds);
+            }
+        });
+        return query;
+    }
+
+    private LambdaQueryWrapper<Article> ordered(LambdaQueryWrapper<Article> query) {
+        return query.orderByDesc(Article::getPublishedAt).orderByDesc(Article::getId);
+    }
+
+    private List<ArticleSummary> toSummaries(List<Article> rows) {
+        List<ArticleSummary> items = new ArrayList<>(rows.size());
+        for (Article row : rows) {
+            items.add(toSummary(row));
+        }
+        return items;
     }
 
     private ArticleSummary toSummary(Article article) {

@@ -11,12 +11,11 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.suzhong.njl.cache.CacheAside;
 import com.suzhong.njl.cache.CacheName;
-import com.suzhong.njl.domain.entity.Article;
+import com.suzhong.njl.domain.entity.Region;
 import com.suzhong.njl.domain.entity.Store;
-import com.suzhong.njl.domain.enums.ArticleStatus;
 import com.suzhong.njl.domain.enums.ShelfStatus;
-import com.suzhong.njl.mapper.ArticleMapper;
 import com.suzhong.njl.mapper.StoreMapper;
+import com.suzhong.njl.service.city.CityVisibility;
 import com.suzhong.njl.web.portal.dto.ArticleSummary;
 import com.suzhong.njl.web.portal.dto.HomeFeedResponse;
 import com.suzhong.njl.web.portal.dto.RegionItem;
@@ -30,21 +29,24 @@ public class HomeFeedService {
     };
 
     private final StoreMapper storeMapper;
-    private final ArticleMapper articleMapper;
     private final RegionQueryService regionQueryService;
     private final StoreQueryService storeQueryService;
+    private final ArticleQueryService articleQueryService;
+    private final CityVisibility cityVisibility;
     private final CacheAside cacheAside;
 
     public HomeFeedService(
             StoreMapper storeMapper,
-            ArticleMapper articleMapper,
             RegionQueryService regionQueryService,
             StoreQueryService storeQueryService,
+            ArticleQueryService articleQueryService,
+            CityVisibility cityVisibility,
             CacheAside cacheAside) {
         this.storeMapper = storeMapper;
-        this.articleMapper = articleMapper;
         this.regionQueryService = regionQueryService;
         this.storeQueryService = storeQueryService;
+        this.articleQueryService = articleQueryService;
+        this.cityVisibility = cityVisibility;
         this.cacheAside = cacheAside;
     }
 
@@ -63,25 +65,15 @@ public class HomeFeedService {
         for (RegionItem region : regionQueryService.enabledRegions()) {
             regionNames.put(region.id(), region.name());
         }
-        List<StoreCard> cards = new ArrayList<>(stores.size());
+        Map<Long, Region> regions = cityVisibility.byId();
+        List<StoreCard> cards = new ArrayList<>();
         for (Store store : stores) {
+            if (!cityVisibility.isCustomerStoreRegion(store.getRegionId(), regions)) {
+                continue;
+            }
             cards.add(storeQueryService.toCard(store, regionNames));
         }
-        List<Article> articles = articleMapper.selectList(
-                Wrappers.<Article>lambdaQuery()
-                        .eq(Article::getStatus, ArticleStatus.PUBLISHED)
-                        .orderByDesc(Article::getPublishedAt)
-                        .orderByDesc(Article::getId)
-                        .last("LIMIT " + ARTICLE_LIMIT));
-        List<ArticleSummary> summaries = new ArrayList<>(articles.size());
-        for (Article article : articles) {
-            summaries.add(new ArticleSummary(
-                    article.getId(),
-                    article.getTitle(),
-                    article.getCoverUrl(),
-                    article.getSummary(),
-                    article.getPublishedAt()));
-        }
+        List<ArticleSummary> summaries = articleQueryService.latestPromoted(ARTICLE_LIMIT);
         return new HomeFeedResponse(cards, summaries);
     }
 }

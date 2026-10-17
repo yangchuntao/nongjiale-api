@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.suzhong.njl.domain.enums.RegionLevel;
+import com.suzhong.njl.domain.enums.RegionOpenStatus;
 import com.suzhong.njl.domain.enums.SeedMarket;
 import com.suzhong.njl.domain.support.RegionLevelTypeHandler;
 
@@ -26,6 +27,9 @@ public class Region {
     private Integer sortOrder;
 
     private Boolean enabled;
+
+    /** 只对市有意义。省、区县保持空。空在门户上按未开通处理。 */
+    private RegionOpenStatus openStatus;
 
     private SeedMarket seedMarket;
 
@@ -83,6 +87,14 @@ public class Region {
 
     public void setEnabled(Boolean enabled) {
         this.enabled = enabled;
+    }
+
+    public RegionOpenStatus getOpenStatus() {
+        return openStatus;
+    }
+
+    public void setOpenStatus(RegionOpenStatus openStatus) {
+        this.openStatus = openStatus;
     }
 
     public SeedMarket getSeedMarket() {

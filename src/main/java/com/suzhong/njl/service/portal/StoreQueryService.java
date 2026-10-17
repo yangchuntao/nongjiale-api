@@ -21,13 +21,15 @@ import com.suzhong.njl.domain.enums.StoreSort;
 import com.suzhong.njl.mapper.StoreMapper;
 import com.suzhong.njl.mapper.StorePackageMapper;
 import com.suzhong.njl.mapper.StoreSearch;
+import com.suzhong.njl.service.city.CityVisibility;
+import com.suzhong.njl.service.city.StoreListingScope;
 import com.suzhong.njl.service.support.PageQuery;
 import com.suzhong.njl.service.support.TestDataMark;
 import com.suzhong.njl.web.ApiException;
-import com.suzhong.njl.web.PageResult;
 import com.suzhong.njl.web.portal.dto.RegionItem;
 import com.suzhong.njl.web.portal.dto.StoreCard;
 import com.suzhong.njl.web.portal.dto.StoreDetailResponse;
+import com.suzhong.njl.web.portal.dto.StoreListResponse;
 import com.suzhong.njl.web.portal.dto.StorePackageItem;
 
 @Service
@@ -41,6 +43,7 @@ public class StoreQueryService {
     private final StoreMapper storeMapper;
     private final StorePackageMapper storePackageMapper;
     private final RegionQueryService regionQueryService;
+    private final CityVisibility cityVisibility;
     private final CacheAside cacheAside;
     private final ObjectMapper objectMapper;
 
@@ -48,16 +51,18 @@ public class StoreQueryService {
             StoreMapper storeMapper,
             StorePackageMapper storePackageMapper,
             RegionQueryService regionQueryService,
+            CityVisibility cityVisibility,
             CacheAside cacheAside,
             ObjectMapper objectMapper) {
         this.storeMapper = storeMapper;
         this.storePackageMapper = storePackageMapper;
         this.regionQueryService = regionQueryService;
+        this.cityVisibility = cityVisibility;
         this.cacheAside = cacheAside;
         this.objectMapper = objectMapper;
     }
 
-    public PageResult<StoreCard> list(
+    public StoreListResponse list(
             Long regionId,
             String tag,
             BigDecimal priceMin,
@@ -67,13 +72,14 @@ public class StoreQueryService {
             Integer pageSize) {
         StoreSort storeSort = parseSort(sort);
         PageQuery pageQuery = PageQuery.of(page, pageSize);
-        List<Long> regionIds = null;
-        if (regionId != null) {
-            regionIds = regionQueryService.selfAndDescendants(regionId);
+        StoreListingScope scope = cityVisibility.listScope(regionId);
+        if (scope.regionIds().isEmpty()) {
+            return new StoreListResponse(
+                    List.of(), 0, pageQuery.page(), pageQuery.pageSize(), scope.destinationStatus(), scope.emptyHint());
         }
         StoreSearch query = new StoreSearch();
         query.setShelfStatus(ShelfStatus.ON_SHELF);
-        query.setRegionIds(regionIds);
+        query.setRegionIds(scope.regionIds());
         query.setTagCode(blankToNull(tag));
         query.setPriceMin(priceMin);
         query.setPriceMax(priceMax);
@@ -87,17 +93,12 @@ public class StoreQueryService {
         for (Store row : rows) {
             items.add(toCard(row, regionNames));
         }
-        return new PageResult<>(items, total, pageQuery.page(), pageQuery.pageSize());
+        return new StoreListResponse(
+                items, total, pageQuery.page(), pageQuery.pageSize(), scope.destinationStatus(), scope.emptyHint());
     }
 
     public StoreDetailResponse detail(Long id) {
-        Store store = storeMapper.selectById(id);
-        if (store == null) {
-            throw new ApiException(HttpStatus.NOT_FOUND, "房源不存在");
-        }
-        if (store.getShelfStatus() != ShelfStatus.ON_SHELF) {
-            throw new ApiException(HttpStatus.GONE, "已下架或不可用");
-        }
+        Store store = requireBookable(id);
         return cacheAside.get(CacheName.STORE_DETAIL, String.valueOf(id), DETAIL_TYPE, () -> loadDetail(store));
     }
 
@@ -106,7 +107,7 @@ public class StoreQueryService {
         if (store == null) {
             throw new ApiException(HttpStatus.NOT_FOUND, "房源不存在");
         }
-        if (store.getShelfStatus() != ShelfStatus.ON_SHELF) {
+        if (store.getShelfStatus() != ShelfStatus.ON_SHELF || !cityVisibility.bookableRegion(store.getRegionId())) {
             throw new ApiException(HttpStatus.GONE, "已下架或不可用");
         }
         return store;

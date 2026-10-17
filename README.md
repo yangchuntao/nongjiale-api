@@ -98,7 +98,7 @@ com.suzhong.njl.domain.enums    状态、角色、地区层级
 com.suzhong.njl.mapper          MyBatis-Plus Mapper
 ```
 
-门户见 `BE4-DELIVERY.md`，商家端见 `BE5-DELIVERY.md`，运营业务见 `BE6-DELIVERY.md` 和 `docs/ADMIN-API.md`。没有支付。没有控制器的路径（含 `/api/payments`）返回 HTTP 404，信封 `{code:404, message:接口不存在, data:null}`，不是 500。见 `docs/S5-E01-UNKNOWN-ROUTE.md`。
+门户见 `BE4-DELIVERY.md`，商家端见 `BE5-DELIVERY.md`，运营业务见 `BE6-DELIVERY.md` 和 `docs/ADMIN-API.md`。开城见 `BE7-DELIVERY.md`，契约见 `docs/TECH-DESIGN-MVP-1-开城.md`。没有支付。没有控制器的路径（含 `/api/payments`）返回 HTTP 404，信封 `{code:404, message:接口不存在, data:null}`，不是 500。见 `docs/S5-E01-UNKNOWN-ROUTE.md`。
 
 MVP-1 开城技术设计（设计稿，未写业务代码）：`docs/TECH-DESIGN-MVP-1-开城.md`。
 MVP-1 开城技术设计产品门禁（PASS）：`docs/GATE-TECH-DESIGN-MVP-1-开城-产品.md`。
@@ -107,8 +107,11 @@ MVP-1 开城技术设计产品门禁（PASS）：`docs/GATE-TECH-DESIGN-MVP-1-�
 
 - `POST /api/auth/register`、`POST /api/auth/login`、`GET /api/auth/me`：游客手机号，令牌角色 `TOURIST`
 - `GET /api/config/public`、`GET /api/regions`、`GET /api/home/feed`
-- `GET /api/stores`：只列出上架房源，可按地区、标签、价格带筛选，排序 `comprehensive` / `price_asc` / `price_desc`
-- `GET /api/stores/{id}`：下架返回 410。套餐以 `packageText` 为准
+- `GET /api/regions`：只返回已开通的市，以及这些市下面仍启用的区县。没有开通市的省不出现
+- `GET /api/stores`：只列出已开通市里的上架房源。未开通市返回空列表，`destinationStatus=CLOSED`，`emptyHint` 为「该目的地暂未开通」。可按地区、标签、价格带筛选，排序 `comprehensive` / `price_asc` / `price_desc`
+- `GET /api/stores/{id}`：下架或所属市未开通返回 410「已下架或不可用」。套餐以 `packageText` 为准
+- `GET /api/home/feed`：首页推荐只保留已开通市的上架房源。未开通市的攻略不占首页名额
+- `GET /api/articles`：不列出未开通市的攻略。已发布攻略的直链仍可打开
 - `POST /api/booking-intents`、`GET /api/me/intents`：须游客登录，只能看自己的意向
 - `GET /api/articles`：只返回已发布攻略
 - `POST /api/merchant-applies`：提交入驻申请
@@ -151,7 +154,12 @@ V3 种子是手工精选店，含「表弟店」，`test_data=false`。抓取或
 | POST | `/api/admin/intents/{id}/notes` | 只追加备注 |
 | GET | `/api/admin/intents/export` | CSV，筛选与列表相同。无佣金列 |
 | GET/POST/PUT/DELETE | `/api/admin/articles` | 攻略。发布后门户可见 |
-| GET/PUT | `/api/admin/site-config` | 站名、主色、客服电话 |
+| GET/PUT | `/api/admin/site-config` | 站名、主色、客服电话。不改开城阈值 |
+| GET | `/api/admin/cities`、`GET /api/admin/cities/{cityId}` | 开城列表和详情。供给、攻略按实时计数 |
+| PATCH | `/api/admin/cities/{cityId}/checklist` | 只手改三项。带供给/攻略达标字段返回 400 |
+| POST | `/api/admin/cities/{cityId}/open`、`POST /api/admin/cities/{cityId}/close` | 达标才开通。未达标 409。关城不删历史 |
+| GET | `/api/admin/metrics/city-intents` | 意向 / 已确认 / 已入住汇总。`window` 为 `7`、`30`、`ALL` |
+| GET | `/api/admin/metrics/city-intents/export` | 同上筛选的 CSV |
 
 代上下架写在 `PUT /api/admin/stores/{id}` 的 `shelfStatus`，没有单独的 shelf 接口。与当前状态不同则立即生效，并写 `SHELF_FORCE` 审计。不走申请队列。
 
