@@ -53,8 +53,8 @@ import com.suzhong.njl.mapper.StoreMapper;
 @Transactional
 class AdminApiIntegrationTest {
 
-    private static final String ADMIN_PHONE = "13800000000";
-    private static final String ADMIN_PASSWORD = "SeedAdmin#2026";
+    private static final String ADMIN_PHONE = "17606838920";
+    private static final String ADMIN_PASSWORD = "123456";
 
     @Autowired
     private MockMvc mockMvc;

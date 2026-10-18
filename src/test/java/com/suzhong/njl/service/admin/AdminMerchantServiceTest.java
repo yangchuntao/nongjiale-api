@@ -80,7 +80,7 @@ class AdminMerchantServiceTest {
         assertThat(page.items()).hasSize(1);
         assertThat(page.items().get(0).name()).isEqualTo("表弟店");
         assertThat(page.items().get(0).users()).singleElement().satisfies(item -> {
-            assertThat(item.phone()).isEqualTo("13800000000");
+            assertThat(item.phone()).isEqualTo("17606838921");
             assertThat(item.enabled()).isTrue();
         });
     }
@@ -124,7 +124,7 @@ class AdminMerchantServiceTest {
     void resetPasswordRejectsAnOrgWithoutAccountsAndKeepsASuppliedPassword() {
         when(merchantOrgMapper.selectById(4L)).thenReturn(org(4L, MerchantOrgStatus.ACTIVE));
         when(merchantUserMapper.selectList(any())).thenReturn(List.of());
-        assertThatThrownBy(() -> service.resetPassword(4L, new PlainPasswordRequest("SeedAdmin#2026")))
+        assertThatThrownBy(() -> service.resetPassword(4L, new PlainPasswordRequest("merchant12")))
                 .isInstanceOf(ApiException.class)
                 .hasMessage("商家账号不存在");
 
@@ -132,14 +132,14 @@ class AdminMerchantServiceTest {
         later.setPhone("13900000002");
         MerchantUser earlier = user(8L, 4L, true);
         when(merchantUserMapper.selectList(any())).thenReturn(new ArrayList<>(List.of(later, earlier)));
-        when(passwordEncoder.encode("SeedAdmin#2026")).thenReturn("hash");
+        when(passwordEncoder.encode("merchant12")).thenReturn("hash");
 
-        ResetPasswordResponse response = service.resetPassword(4L, new PlainPasswordRequest("SeedAdmin#2026"));
+        ResetPasswordResponse response = service.resetPassword(4L, new PlainPasswordRequest("merchant12"));
 
         assertThat(response.merchantOrgId()).isEqualTo(4L);
         assertThat(response.merchantUserId()).isEqualTo(8L);
-        assertThat(response.phone()).isEqualTo("13800000000");
-        assertThat(response.plainPassword()).isEqualTo("SeedAdmin#2026");
+        assertThat(response.phone()).isEqualTo("17606838921");
+        assertThat(response.plainPassword()).isEqualTo("merchant12");
         assertThat(earlier.getPasswordHash()).isEqualTo("hash");
         assertThat(later.getPasswordHash()).isEqualTo("hash");
         verify(tokenStore).revokeMerchantOrg(4L);
@@ -171,7 +171,7 @@ class AdminMerchantServiceTest {
         MerchantUser user = new MerchantUser();
         user.setId(id);
         user.setMerchantOrgId(orgId);
-        user.setPhone("13800000000");
+        user.setPhone("17606838921");
         user.setDisplayName("店主");
         user.setEnabled(enabled);
         return user;

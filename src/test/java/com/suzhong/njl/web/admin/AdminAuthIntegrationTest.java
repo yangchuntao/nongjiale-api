@@ -35,8 +35,10 @@ import com.suzhong.njl.security.TokenStore;
 @AutoConfigureMockMvc
 class AdminAuthIntegrationTest {
 
-    private static final String PHONE = "13800000000";
-    private static final String PASSWORD = "SeedAdmin#2026";
+    private static final String PHONE = "17606838920";
+    private static final String MERCHANT_PHONE = "17606838921";
+    private static final String VISITOR_PHONE = "17606838922";
+    private static final String PASSWORD = "123456";
 
     @Autowired
     private MockMvc mockMvc;
@@ -88,6 +90,38 @@ class AdminAuthIntegrationTest {
                 .andExpect(jsonPath("$.code").value(0))
                 .andExpect(jsonPath("$.data.phone").value(PHONE))
                 .andExpect(jsonPath("$.data.role").value("OPERATOR"));
+    }
+
+    @Test
+    void seededMerchantAndVisitorLogInWithTheSharedPassword() throws Exception {
+        mockMvc.perform(post("/api/merchant/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"phone":"%s","password":"%s"}
+                                """.formatted(MERCHANT_PHONE, PASSWORD)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(0))
+                .andExpect(jsonPath("$.data.role").value("MERCHANT"))
+                .andExpect(jsonPath("$.data.displayName").value("表弟"))
+                .andExpect(jsonPath("$.data.merchantOrgId").isNumber());
+
+        MvcResult login = mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"phone":"%s","password":"%s"}
+                                """.formatted(VISITOR_PHONE, PASSWORD)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(0))
+                .andExpect(jsonPath("$.data.role").value("TOURIST"))
+                .andExpect(jsonPath("$.data.displayName").value("演示游客"))
+                .andReturn();
+
+        String token = login.getResponse().getContentAsString()
+                .replaceAll("(?s).*\"token\"\\s*:\\s*\"([^\"]+)\".*", "$1");
+        mockMvc.perform(get("/api/auth/me").header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.phone").value(VISITOR_PHONE))
+                .andExpect(jsonPath("$.data.role").value("TOURIST"));
     }
 
     @Test

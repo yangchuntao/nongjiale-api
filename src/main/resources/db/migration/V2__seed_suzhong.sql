@@ -1,16 +1,25 @@
--- 苏中种子：地区、站点占位、演示运营账号。本脚本不写门店。
+-- 苏中种子：地区、站点占位、演示运营与游客。本脚本不写门店。
 -- 验收房源是手工精选（含表亲店）。抓取或导入的房源必须 test_data=true。
 -- 运营登录标识是手机号，没有 username。
--- 密码明文仅本地种子：SeedAdmin#2026（BCrypt）。正式环境必须更换。
+-- 演示口令明文统一为 123456（BCrypt）。旧明文 Demo123456 与 SeedAdmin#2026 已停用。
+-- 正式环境必须更换。本脚本只给全新库；不另写迁移去改已有库的口令或手机号。
 -- 码值对应 Java 枚举：AdminRole.OPERATOR、SeedMarket.SUZHONG、RegionLevel、SiteConfigKey。
 
 INSERT INTO admin_user (phone, password_hash, display_name, role, enabled, created_at)
 VALUES (
-    '13800000000',
-    '$2b$10$iwHoG0umd76KNgsg2CmCG.WbROH7wdTrS.gjACgMhQ5ZMazerLXQC',
+    '17606838920',
+    '$2a$10$f50zaGUPPjk7wkAofwZry.O0EsZAH65NgQ6eQ6pTDNHl9NjvuoROG',
     '苏中运营',
     'OPERATOR',
     TRUE,
+    CURRENT_TIMESTAMP
+);
+
+INSERT INTO portal_user (phone, password_hash, display_name, created_at)
+VALUES (
+    '17606838922',
+    '$2a$10$f50zaGUPPjk7wkAofwZry.O0EsZAH65NgQ6eQ6pTDNHl9NjvuoROG',
+    '演示游客',
     CURRENT_TIMESTAMP
 );
 

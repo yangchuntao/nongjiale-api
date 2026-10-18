@@ -110,7 +110,7 @@ class MerchantApiIntegrationTest {
                 .andExpect(jsonPath("$.code").value(403));
 
         JsonNode admin = postJson("/api/admin/auth/login", """
-                {"phone":"13800000000","password":"SeedAdmin#2026"}
+                {"phone":"17606838920","password":"123456"}
                 """, null);
         mockMvc.perform(get("/api/merchant/stores")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + admin.path("data").path("token").asText()))
@@ -285,7 +285,7 @@ class MerchantApiIntegrationTest {
         long storeB = insertStore(orgB, regionId, "乙店", ShelfStatus.ON_SHELF, false, 4);
         long portalUserId = insertPortalUser("13600004001");
         long intentA = insertIntent(orgA, storeA, portalUserId, "NJL-M-A", RAW_PHONE);
-        long intentB = insertIntent(orgB, storeB, portalUserId, "NJL-M-B", "13900008888");
+        long intentB = insertIntent(orgB, storeB, portalUserId, "NJL-M-B", "17606838922");
         String tokenA = login("13700004001");
 
         String listBody = mockMvc.perform(get("/api/merchant/intents")
@@ -324,7 +324,7 @@ class MerchantApiIntegrationTest {
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenA)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"status":"CONFIRMED","contactPhone":"13800000000"}
+                                {"status":"CONFIRMED","contactPhone":"17606838920"}
                                 """))
                 .andExpect(status().isMethodNotAllowed())
                 .andExpect(jsonPath("$.code").value(405));

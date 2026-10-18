@@ -1,5 +1,7 @@
 -- 手工精选验收店。test_data=false。不含抓取或导入房源。
 -- 详情与验收以 store.package_text 为准。表弟店另有一条不同的 store_package，冲突时主文案胜。
+-- 演示商家只保留主号 17606838921，口令与运营/游客相同（明文 123456）。副号不再建账号。
+-- 门店仍挂原主体；主号绑在「广陵表弟农家」，不另造演示主体。
 
 INSERT INTO merchant_org (name, contact_name, contact_phone, status, created_at)
 VALUES
@@ -63,6 +65,11 @@ SELECT
 FROM merchant_org org, region
 WHERE org.name = '崇川江边小院' AND region.slug = 'chongchuan';
 
+INSERT INTO merchant_user (merchant_org_id, phone, password_hash, display_name, enabled, created_at)
+SELECT id, '17606838921', '$2a$10$f50zaGUPPjk7wkAofwZry.O0EsZAH65NgQ6eQ6pTDNHl9NjvuoROG', '表弟', TRUE, CURRENT_TIMESTAMP
+FROM merchant_org
+WHERE name = '广陵表弟农家';
+
 INSERT INTO store_package (store_id, name, price_from, description, sort_order)
 SELECT id, '标间', 268.00, '仅床位，不含餐', 1
 FROM store
@@ -93,4 +100,4 @@ SELECT
     CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
 FROM region, admin_user
-WHERE region.slug = 'jiangsu' AND admin_user.phone = '13800000000';
+WHERE region.slug = 'jiangsu' AND admin_user.phone = '17606838920';

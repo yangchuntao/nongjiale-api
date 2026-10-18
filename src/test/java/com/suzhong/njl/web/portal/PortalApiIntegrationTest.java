@@ -251,7 +251,7 @@ class PortalApiIntegrationTest {
                 .andExpect(jsonPath("$.code").value(403));
 
         JsonNode admin = postJson("/api/admin/auth/login", """
-                {"phone":"13800000000","password":"SeedAdmin#2026"}
+                {"phone":"17606838920","password":"123456"}
                 """, null);
         String adminToken = admin.path("data").path("token").asText();
         mockMvc.perform(get("/api/auth/me").header(HttpHeaders.AUTHORIZATION, "Bearer " + adminToken))

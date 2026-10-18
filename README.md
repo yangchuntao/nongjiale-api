@@ -41,12 +41,14 @@ mvn spring-boot:run -Dspring-boot.run.profiles=mysql
 
 登录和建表不连接 Redis。真正读写缓存（首页、门店详情、地区、站点配置）之前，需要本机 Redis。令牌仍然只放内存。
 
-## 运营登录
+## 演示登录
 
-`POST /api/admin/auth/login`
+三端演示口令都是明文 `123456`（种子里存 BCrypt）。旧明文 `Demo123456` 与 `SeedAdmin#2026` 已停用。只给本地和测试的全新库使用，正式环境必须换掉。
+
+运营 `POST /api/admin/auth/login`：
 
 ```json
-{"phone":"13800000000","password":"SeedAdmin#2026"}
+{"phone":"17606838920","password":"123456"}
 ```
 
 成功信封：
@@ -57,7 +59,11 @@ mvn spring-boot:run -Dspring-boot.run.profiles=mysql
 
 之后访问 `/api/admin/**` 带 `Authorization: Bearer <token>`。没有 `username` 字段，多传会被拒绝。
 
-这组手机号和密码只在 Flyway 种子里，给本地和测试用。正式环境必须换掉。
+商家 `POST /api/merchant/auth/login`：`17606838921` / `123456`，账号挂在「广陵表弟农家」（表弟店所在主体）。不再提供演示副号。
+
+游客 `POST /api/auth/login`：`17606838922` / `123456`，显示名「演示游客」。
+
+已应用过旧 V2/V3 的库不会被本仓库自动改口令。这些脚本只在空库重放时生效；不要为了换演示号去挡正在进行的测服发布。
 
 `GET /api/admin/auth/me` 用来确认当前运营身份。
 
@@ -173,4 +179,4 @@ V3 种子是手工精选店，含「表弟店」，`test_data=false`。抓取或
 
 门店详情和验收以 `store.package_text` 为准。`store_package` 可以没有行；两处不一致时以 `package_text` 为准。
 
-V2 仍只有运营账号、苏中地区和站点配置。验收精选店在 V3，含表弟店，`test_data=false`。抓取或导入的房源必须把 `test_data` 设为 true。
+V2 写入运营账号、演示游客、苏中地区和站点配置。验收精选店在 V3，含表弟店，`test_data=false`，并把演示商家主号绑到「广陵表弟农家」。抓取或导入的房源必须把 `test_data` 设为 true。
