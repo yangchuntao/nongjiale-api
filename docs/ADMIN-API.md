@@ -471,3 +471,47 @@
 PUT 三个字段都必填。`brandColor` 必须匹配 `^#[0-9A-Fa-f]{6}$`。`siteName` 最长 64，`contactPhone` 最长 32。
 
 种子默认值：站名「站点名称」，主色 `#4BA3D9`，电话 `400-000-0000`。门户读 `GET /api/config/public`，字段名与上表相同。
+
+## 首页 Banner
+
+运营配置门户首页 Banner。`OPERATOR` 与 `AGENT` 都可以。图片只收 `http` / `https` 地址，没有上传接口。不挂在站点配置上。无支付、无买位、无曝光统计。
+
+详情、创建、更新、启停共用这些字段：
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | number | |
+| title | string \| null | 运营标题。空白存 null |
+| imageUrl | string | 最长 512，须 `http://` 或 `https://` |
+| linkUrl | string | 最长 512。站内以单个 `/` 开头，或 `http(s)` 外链 |
+| scope | `ALL` \| `CITY` | 全站或指定市 |
+| cityId | number \| null | `ALL` 为 null |
+| citySlug | string \| null | 市的 `region.slug`，如 `yangzhou`。没有 `cityCode` |
+| cityName | string \| null | 如扬州市。`ALL` 为 null |
+| cityOpen | boolean \| null | `CITY` 且该市当前开通为 true，否则 `CITY` 为 false。`ALL` 为 null |
+| sortOrder | number | 0～1000000，越小越靠前。同值再按 id 升序 |
+| enabled | boolean | |
+| createdAt / updatedAt | string | 上海时区 ISO-8601 |
+
+`GET /api/admin/banners` 分页，固定 `sortOrder` 升序、`id` 升序。空列表 `items=[]`。
+
+| 参数 | 说明 |
+|------|------|
+| enabled | `true` / `false`。省略表示都要 |
+| scope | `ALL` / `CITY`。其他值 400「参数不正确」 |
+| keyword | 匹配标题或跳转链接，先 trim。空串当省略。超过 64 字 400「参数不正确」 |
+| page / pageSize | 与现网相同。非法 400「分页参数不正确」 |
+
+`POST /api/admin/banners`：`imageUrl`、`linkUrl`、`scope` 必填。`title` 可空。`cityId` 在 `CITY` 时必填，且必须是已开通的市。`sortOrder` 省略为 100。`enabled` 省略为 true。成功 `data` 为详情。
+
+`PUT /api/admin/banners/{id}` 全量更新。`imageUrl`、`linkUrl`、`scope`、`sortOrder`、`enabled` 必填。`title`、`cityId` 可空。不存在 404「Banner 不存在」。指定市后来被关成 CLOSED 时，保存前必须改成全站或另一座已开通的市。
+
+`POST /api/admin/banners/{id}/enable` 与 `POST /api/admin/banners/{id}/disable` 无请求体。已经是目标状态返回当前详情，不重复写审计。启用一条 `CITY` 且该市现已不是开通：409「投放市未开通，请改选全站或其他已开通市」。停用不受市开通态限制。关城不改 `enabled`。
+
+`DELETE /api/admin/banners/{id}` 物理删除。成功 `data` 为 `{ "id": number }`。
+
+写入按顺序命中即返回：没填图片「请填写图片地址」；图片超长「图片地址过长」；图片不是 http(s)「图片地址须为 http 或 https」；没填链接「请填写跳转链接」；链接超长「跳转链接过长」；链接形态不对「跳转链接须为站内路径或 http(s) 外链」；标题超长「标题过长」；排序非法「请输入整数排序值」；没选范围「请选择投放范围」；全站却带了市「全站投放不能指定市」；指定市却没选「请选择已开通的市」；市不存在或不是市 404「城市不存在」；市节点停用「地区不可用」；市未开通「投放市未开通，请改选全站或其他已开通市」；更新没带 enabled「请指定是否启用」。未知字段、坏 JSON、非法 scope 码为「请求体格式不正确」。路径 id 不是数字为「参数不正确」。
+
+门户 `GET /api/home/banners` 公开，无查询参数。多出来的查询串忽略，不按游客当前市过滤。`data` 是数组，不是分页。元素不含 `cityOpen` 和时间。`enabled` 恒为 true。入集：启用，且（全站，或指定市且该市当前仍开通），再按排序升序。0 条为 `[]`。不走 Redis，也不进 `GET /api/home/feed`。
+
+种子：全站「苏中逛一逛」排序 10，链接 `/`；扬州「扬州周末」排序 20，链接 `/?city=yangzhou`。图片是 `https://example.com/njl/banner-all.png` 与 `banner-yangzhou.png`。不改三市 OPEN。
