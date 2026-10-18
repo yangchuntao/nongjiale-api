@@ -17,7 +17,7 @@ import com.suzhong.njl.cache.CacheName;
 
 @Configuration
 @EnableCaching
-@EnableConfigurationProperties(AppProperties.class)
+@EnableConfigurationProperties({AppProperties.class, WechatMiniappProperties.class})
 public class RedisCacheConfig {
 
     @Bean

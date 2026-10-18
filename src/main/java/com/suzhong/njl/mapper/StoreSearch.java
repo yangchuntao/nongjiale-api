@@ -13,6 +13,7 @@ public class StoreSearch {
     private String tagCode;
     private BigDecimal priceMin;
     private BigDecimal priceMax;
+    private String keyword;
     private String orderBy = StoreSort.COMPREHENSIVE.orderBySql();
     private int limit = 20;
     private int offset;
@@ -55,6 +56,14 @@ public class StoreSearch {
 
     public void setPriceMax(BigDecimal priceMax) {
         this.priceMax = priceMax;
+    }
+
+    public String getKeyword() {
+        return keyword;
+    }
+
+    public void setKeyword(String keyword) {
+        this.keyword = keyword;
     }
 
     public String getOrderBy() {

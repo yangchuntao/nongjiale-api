@@ -69,7 +69,9 @@ public class StoreQueryService {
             BigDecimal priceMax,
             String sort,
             Integer page,
-            Integer pageSize) {
+            Integer pageSize,
+            String keyword) {
+        String matchedKeyword = StoreKeywords.normalize(keyword);
         StoreSort storeSort = parseSort(sort);
         PageQuery pageQuery = PageQuery.of(page, pageSize);
         StoreListingScope scope = cityVisibility.listScope(regionId);
@@ -83,6 +85,7 @@ public class StoreQueryService {
         query.setTagCode(blankToNull(tag));
         query.setPriceMin(priceMin);
         query.setPriceMax(priceMax);
+        query.setKeyword(matchedKeyword);
         query.applySort(storeSort);
         query.setLimit(pageQuery.pageSize());
         query.setOffset(pageQuery.offset());

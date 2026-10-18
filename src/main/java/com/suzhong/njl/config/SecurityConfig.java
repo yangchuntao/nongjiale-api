@@ -43,6 +43,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/admin/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/merchant/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/wechat/login").permitAll()
+                        .requestMatchers("/api/auth/wechat/**").hasAuthority(UserType.TOURIST.name())
                         .requestMatchers("/health", "/error").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/auth/me").hasAuthority(UserType.TOURIST.name())
                         .requestMatchers(HttpMethod.POST, "/api/booking-intents").hasAuthority(UserType.TOURIST.name())

@@ -15,4 +15,9 @@ public interface TokenStore {
      * 丢掉该商家主体尚未过期的内存令牌。停用和改密后调用，不写 Redis。
      */
     void revokeMerchantOrg(Long merchantOrgId);
+
+    /**
+     * 丢掉带这枚微信 openid 的内存令牌。网页版密码登录令牌的 openid 为空，不会被丢掉。不写 Redis。
+     */
+    void revokeWechatOpenid(String openid);
 }

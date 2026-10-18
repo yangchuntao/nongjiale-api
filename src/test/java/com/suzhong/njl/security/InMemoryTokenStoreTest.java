@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 
 import com.suzhong.njl.config.AppProperties;
 import com.suzhong.njl.domain.enums.AdminRole;
+import com.suzhong.njl.domain.enums.LoginChannel;
 import com.suzhong.njl.domain.enums.UserType;
 
 class InMemoryTokenStoreTest {
@@ -64,5 +65,29 @@ class InMemoryTokenStoreTest {
         assertThat(store.resolve(dropped.token())).isEmpty();
         assertThat(store.resolve(kept.token())).contains(other);
         assertThat(store.resolve(adminToken.token())).contains(admin);
+    }
+
+    @Test
+    void revokeWechatOpenidDropsOnlyThatOpenid() {
+        AppProperties properties = new AppProperties();
+        properties.getSecurity().setTokenTtl(Duration.ofHours(1));
+        InMemoryTokenStore store = new InMemoryTokenStore(properties, Clock.systemUTC());
+        AuthenticatedUser wechat = new AuthenticatedUser(
+                4L, UserType.TOURIST, null, null, "微信用户", null, LoginChannel.WECHAT, "openid-a");
+        AuthenticatedUser otherWechat = new AuthenticatedUser(
+                4L, UserType.TOURIST, null, null, "微信用户", null, LoginChannel.WECHAT, "openid-b");
+        AuthenticatedUser password = new AuthenticatedUser(4L, UserType.TOURIST, null, null, "网页", "13900000000");
+
+        IssuedToken dropped = store.issue(wechat);
+        IssuedToken keptWechat = store.issue(otherWechat);
+        IssuedToken keptPassword = store.issue(password);
+        store.revokeWechatOpenid("openid-a");
+        store.revokeWechatOpenid(null);
+        store.revokeWechatOpenid(" ");
+
+        assertThat(store.resolve(dropped.token())).isEmpty();
+        assertThat(store.resolve(keptWechat.token())).contains(otherWechat);
+        assertThat(store.resolve(keptPassword.token())).contains(password);
+        assertThat(keptPassword.token()).doesNotContain("Bearer");
     }
 }

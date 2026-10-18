@@ -33,5 +33,8 @@ class IntentStatusTest {
         assertThat(IntentStatus.CHECKED_IN.canTransitTo(IntentStatus.CLOSED)).isFalse();
         assertThat(IntentStatus.CLOSED.canTransitTo(IntentStatus.PENDING)).isFalse();
         assertThat(IntentStatus.CHECKED_IN.label()).isEqualTo("已入住");
+        assertThat(IntentStatus.CHECKED_IN.label()).isEqualTo("\u5DF2\u5165\u4F4F");
+        assertThat(IntentStatus.CHECKED_IN.label().codePoints().toArray()).containsExactly(0x5DF2, 0x5165, 0x4F4F);
+        assertThat(IntentStatus.CHECKED_IN.label()).isNotIn("已定着", "已落实", "已落地", "已订立", "已成交", "已达成");
     }
 }
