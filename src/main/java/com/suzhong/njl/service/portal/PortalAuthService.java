@@ -57,7 +57,7 @@ public class PortalAuthService {
     public PortalAuthResponse login(PortalLoginRequest request) {
         PortalUser user = portalUserMapper.selectOne(
                 Wrappers.<PortalUser>lambdaQuery().eq(PortalUser::getPhone, request.phone()));
-        if (user == null || !passwordEncoder.matches(request.password(), user.getPasswordHash())) {
+        if (user == null || !passwordMatches(request.password(), user.getPasswordHash())) {
             throw new ApiException(HttpStatus.UNAUTHORIZED, "手机号或密码错误");
         }
         return issue(user);
@@ -69,6 +69,13 @@ public class PortalAuthService {
             throw new ApiException(HttpStatus.UNAUTHORIZED, "未登录");
         }
         return new PortalMeResponse(stored.getId(), stored.getPhone(), stored.getDisplayName(), UserType.TOURIST);
+    }
+
+    private boolean passwordMatches(String raw, String hash) {
+        if (raw == null || hash == null || hash.isBlank()) {
+            return false;
+        }
+        return passwordEncoder.matches(raw, hash);
     }
 
     private PortalAuthResponse issue(PortalUser user) {

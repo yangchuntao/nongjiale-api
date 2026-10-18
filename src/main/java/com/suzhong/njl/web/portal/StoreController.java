@@ -31,8 +31,9 @@ public class StoreController {
             @RequestParam(required = false) BigDecimal priceMax,
             @RequestParam(required = false) String sort,
             @RequestParam(required = false) Integer page,
-            @RequestParam(required = false) Integer pageSize) {
-        return ApiResponse.ok(storeQueryService.list(regionId, tag, priceMin, priceMax, sort, page, pageSize));
+            @RequestParam(required = false) Integer pageSize,
+            @RequestParam(required = false) String keyword) {
+        return ApiResponse.ok(storeQueryService.list(regionId, tag, priceMin, priceMax, sort, page, pageSize, keyword));
     }
 
     @GetMapping("/{id}")

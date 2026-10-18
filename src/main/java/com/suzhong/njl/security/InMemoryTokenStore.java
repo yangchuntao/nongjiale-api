@@ -61,6 +61,14 @@ public class InMemoryTokenStore implements TokenStore {
         });
     }
 
+    @Override
+    public void revokeWechatOpenid(String openid) {
+        if (openid == null || openid.isBlank()) {
+            return;
+        }
+        tokens.entrySet().removeIf(entry -> openid.equals(entry.getValue().user().wechatOpenid()));
+    }
+
     private record TokenRecord(AuthenticatedUser user, Instant expiresAt) {
     }
 }

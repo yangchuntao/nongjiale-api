@@ -90,6 +90,8 @@ mvn spring-boot:run -Dspring-boot.run.profiles=mysql
 | `app.security.token-ttl` | 内存令牌有效期，默认 12 小时 |
 | `app.cache.key-prefix` | Redis 键前缀，默认 `njl:` |
 | `app.cache.*-ttl` | 首页、门店详情、地区、站点配置 |
+| `wechat.miniapp.app-id` | 小程序 AppID，环境变量 `WECHAT_MINIAPP_APP_ID`。空则微信接口 503，进程仍可启动 |
+| `wechat.miniapp.secret` | 小程序 Secret，环境变量 `WECHAT_MINIAPP_SECRET`。不要写进源码 |
 
 ## 包
 
@@ -102,25 +104,30 @@ com.suzhong.njl.service         门户、商家、运营业务
 com.suzhong.njl.domain.entity   表对应的实体
 com.suzhong.njl.domain.enums    状态、角色、地区层级
 com.suzhong.njl.mapper          MyBatis-Plus Mapper
+com.suzhong.njl.wechat          微信 jscode2session / access_token / 手机号
 ```
 
 门户见 `BE4-DELIVERY.md`，商家端见 `BE5-DELIVERY.md`，运营业务见 `BE6-DELIVERY.md` 和 `docs/ADMIN-API.md`。开城见 `BE7-DELIVERY.md`，契约见 `docs/TECH-DESIGN-MVP-1-开城.md`。没有支付。没有控制器的路径（含 `/api/payments`）返回 HTTP 404，信封 `{code:404, message:接口不存在, data:null}`，不是 500。见 `docs/S5-E01-UNKNOWN-ROUTE.md`。
 
 MVP-1 开城技术设计（设计稿，未写业务代码）：`docs/TECH-DESIGN-MVP-1-开城.md`。
 MVP-1 开城技术设计产品门禁（PASS）：`docs/GATE-TECH-DESIGN-MVP-1-开城-产品.md`。
-MVP-2 微信小程序技术设计（设计稿，未写业务代码）：`docs/TECH-DESIGN-MVP-2-微信小程序.md`。
+MVP-2 微信小程序后端契约：`docs/TECH-DESIGN-MVP-2-微信小程序.md`。
 
 ## 门户
 
-- `POST /api/auth/register`、`POST /api/auth/login`、`GET /api/auth/me`：游客手机号，令牌角色 `TOURIST`
+- `POST /api/auth/register`、`POST /api/auth/login`、`GET /api/auth/me`：游客手机号，令牌角色 `TOURIST`。没有密码的账号登录返回 401，不抛空指针
+- `POST /api/auth/wechat/login`：公开。用 `wx.login` 的 code 换游客 Bearer。同一 openid 再次登录复用原来的 `userId`。响应含 `phone`、`phoneBound`、`wechatBound`、`accountLinked`，不含 `session_key`
+- `POST /api/auth/wechat/bind`：须微信渠道的游客令牌。手填手机号加密码，或微信手机号凭证。成功后换发目标用户的令牌
+- `POST /api/auth/wechat/unbind`：只解除当前 AppID 的 openid，并作废带这枚 openid 的内存令牌。网页版密码令牌保留
+- `GET /api/auth/wechat/link`：游客可读打通状态。未配置微信时与登录、绑定、解绑一样返回 503「微信登录未配置」
 - `GET /api/config/public`、`GET /api/regions`、`GET /api/home/feed`、`GET /api/home/banners`
 - `GET /api/home/banners`：公开，无城市参数。只返回启用条目：全站始终在内，指定市仅该市当前仍开通。按排序升序，数字越小越前。0 条是空数组。不进首页 feed 缓存。图片只收 URL
 - `GET /api/regions`：只返回已开通的市，以及这些市下面仍启用的区县。没有开通市的省不出现
-- `GET /api/stores`：只列出已开通市里的上架房源。未开通市返回空列表，`destinationStatus=CLOSED`，`emptyHint` 为「该目的地暂未开通」。可按地区、标签、价格带筛选，排序 `comprehensive` / `price_asc` / `price_desc`
+- `GET /api/stores`：只列出已开通市里的上架房源。未开通市返回空列表，`destinationStatus=CLOSED`，`emptyHint` 为「该目的地暂未开通」。可按地区、标签、价格带筛选，排序 `comprehensive` / `price_asc` / `price_desc`。可选 `keyword`：省略或空白与原来相同；超过 64 字返回 400「参数不正确」；店名包含匹配，并转义 `%` 与 `_`
 - `GET /api/stores/{id}`：下架或所属市未开通返回 410「已下架或不可用」。套餐以 `packageText` 为准
 - `GET /api/home/feed`：首页推荐只保留已开通市的上架房源。未开通市的攻略不占首页名额
 - `GET /api/articles`：不列出未开通市的攻略。已发布攻略的直链仍可打开
-- `POST /api/booking-intents`、`GET /api/me/intents`：须游客登录，只能看自己的意向
+- `POST /api/booking-intents`、`GET /api/me/intents`：须游客登录，只能看自己的意向。`portal_user.phone` 为空时提交返回 403「请先绑定手机号，完成与网页版账号打通后再提交意向」，不插入意向
 - `GET /api/articles`：只返回已发布攻略
 - `POST /api/merchant-applies`：提交入驻申请
 

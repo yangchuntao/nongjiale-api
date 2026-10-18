@@ -332,7 +332,7 @@ class BannerApiIntegrationTest {
     }
 
     private String adminToken() throws Exception {
-        return login("/api/admin/auth/login", "13800000000", "SeedAdmin#2026");
+        return login("/api/admin/auth/login", "17606838920", "123456");
     }
 
     private String registerTourist(String phone) throws Exception {

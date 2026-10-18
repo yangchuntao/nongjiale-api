@@ -56,3 +56,8 @@ app:
     store-detail-ttl: 5m
     region-ttl: 30m
     site-config-ttl: 30m
+
+wechat:
+  miniapp:
+    app-id: ${WECHAT_MINIAPP_APP_ID:}
+    secret: ${WECHAT_MINIAPP_SECRET:}

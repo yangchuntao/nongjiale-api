@@ -27,6 +27,9 @@
         <if test="priceMax != null">
             AND s.price_from &lt;= #{priceMax}
         </if>
+        <if test="keyword != null and keyword != ''">
+            AND s.name LIKE CONCAT('%', #{keyword}, '%') ESCAPE '!'
+        </if>
     </sql>
 
     <select id="searchOnShelf" resultType="com.suzhong.njl.domain.entity.Store">
