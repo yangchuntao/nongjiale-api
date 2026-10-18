@@ -19,7 +19,7 @@
 | POST | `/api/auth/register` | 无 | 手机号 + 密码，返回 Bearer |
 | POST | `/api/auth/login` | 无 | 同上，角色 `TOURIST` |
 | GET | `/api/auth/me` | 游客 | 本人资料 |
-| GET | `/api/config/public` | 无 | 站名、主色（默认 `#4BA3D9`）、客服电话 |
+| GET | `/api/config/public` | 无 | 站名、主色（默认 `#4BA3D9`）、客服电话。品牌字段（英文辅文、副标、Logo、图标）的目标契约见 `docs/TECH-DESIGN-品牌站点配置.md`，本交付记录仍是当时的三字段 |
 | GET | `/api/regions` | 无 | 启用地区 |
 | GET | `/api/home/feed` | 无 | 上架且首页推荐的门店 + 已发布攻略摘要 |
 | GET | `/api/stores` | 无 | 仅 `ON_SHELF`。查询 `regionId`、`tag`、`priceMin`、`priceMax`、`sort`、`page`、`pageSize` |

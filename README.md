@@ -113,6 +113,7 @@ MVP-1 开城技术设计（设计稿，未写业务代码）：`docs/TECH-DESIGN
 MVP-1 开城技术设计产品门禁（PASS）：`docs/GATE-TECH-DESIGN-MVP-1-开城-产品.md`。
 MVP-2 微信小程序后端契约：`docs/TECH-DESIGN-MVP-2-微信小程序.md`。
 MVP-2 微信小程序测试用例 v0.2（路径已回填，EXEC 未解锁）：`docs/TEST-MVP-2-微信小程序.md`。
+品牌站点配置技术设计（设计稿，未写业务代码；对齐产品稿 api#36）：`docs/TECH-DESIGN-品牌站点配置.md`。
 
 ## 门户
 
@@ -121,7 +122,8 @@ MVP-2 微信小程序测试用例 v0.2（路径已回填，EXEC 未解锁）：`
 - `POST /api/auth/wechat/bind`：须微信渠道的游客令牌。手填手机号加密码，或微信手机号凭证。成功后换发目标用户的令牌
 - `POST /api/auth/wechat/unbind`：只解除当前 AppID 的 openid，并作废带这枚 openid 的内存令牌。网页版密码令牌保留
 - `GET /api/auth/wechat/link`：游客可读打通状态。未配置微信时与登录、绑定、解绑一样返回 503「微信登录未配置」
-- `GET /api/config/public`、`GET /api/regions`、`GET /api/home/feed`、`GET /api/home/banners`
+- `GET /api/config/public`：无登录。目标契约在现有站名、主色、客服电话上增加 `siteNameEn`、`slogan`、`logoUrl`、`faviconUrl`（实现另 PR，见 `docs/TECH-DESIGN-品牌站点配置.md`）。空的英文辅文与副标不展示；空的 Logo 用文字站名；空的图标用 Logo 或浏览器默认图标。测服种子 Logo / 图标指向 `http://106.12.204.206:43123/brand/logo-header.jpg` 与 `logo-favicon.jpg`，生产可改。实现合入前现网响应仍是三字段
+- `GET /api/regions`、`GET /api/home/feed`、`GET /api/home/banners`
 - `GET /api/home/banners`：公开，无城市参数。只返回启用条目：全站始终在内，指定市仅该市当前仍开通。按排序升序，数字越小越前。0 条是空数组。不进首页 feed 缓存。图片只收 URL
 - `GET /api/regions`：只返回已开通的市，以及这些市下面仍启用的区县。没有开通市的省不出现
 - `GET /api/stores`：只列出已开通市里的上架房源。未开通市返回空列表，`destinationStatus=CLOSED`，`emptyHint` 为「该目的地暂未开通」。可按地区、标签、价格带筛选，排序 `comprehensive` / `price_asc` / `price_desc`。可选 `keyword`：省略或空白与原来相同；超过 64 字返回 400「参数不正确」；店名包含匹配，并转义 `%` 与 `_`
@@ -170,7 +172,7 @@ V3 种子是手工精选店，含「表弟店」，`test_data=false`。抓取或
 | POST | `/api/admin/intents/{id}/notes` | 只追加备注 |
 | GET | `/api/admin/intents/export` | CSV，筛选与列表相同。无佣金列 |
 | GET/POST/PUT/DELETE | `/api/admin/articles` | 攻略。发布后门户可见 |
-| GET/PUT | `/api/admin/site-config` | 站名、主色、客服电话。不改开城阈值 |
+| GET/PUT | `/api/admin/site-config` | 站名、英文辅文、副标、Logo、图标、主色、客服电话。不改开城阈值。目标契约见品牌 TECH，实现另 PR。页面仍是 `/admin/site` |
 | GET/POST | `/api/admin/banners` | 首页 Banner 列表与新建。图片只填 URL |
 | GET/PUT/DELETE | `/api/admin/banners/{id}` | 详情、全量更新、物理删除 |
 | POST | `/api/admin/banners/{id}/enable`、`/disable` | 行内启停。启用时投放市已关闭返回 409 |

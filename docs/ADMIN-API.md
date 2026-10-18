@@ -470,17 +470,25 @@
 
 ## 站点配置
 
-`GET /api/admin/site-config` 与 `PUT /api/admin/site-config` 的 `data`：
+目标契约。业务实现另 PR，细则见 `docs/TECH-DESIGN-品牌站点配置.md`（对齐产品稿 api#36）。现网代码仍只读写 `siteName`、`brandColor`、`contactPhone`。实现合入前，PUT 多传下面的新字段会 400「请求体格式不正确」。
 
-| 字段 | 类型 | 说明 |
-|------|------|------|
-| siteName | string | 对应 `site.name` |
-| brandColor | string | 对应 `site.brand_color`，如 `#4BA3D9` |
-| contactPhone | string | 对应 `site.contact_phone` |
+`GET /api/admin/site-config` 与 `PUT /api/admin/site-config` 的 `data`，门户 `GET /api/config/public` 使用同一组字段：
 
-PUT 三个字段都必填。`brandColor` 必须匹配 `^#[0-9A-Fa-f]{6}$`。`siteName` 最长 64，`contactPhone` 最长 32。
+| 字段 | 类型 | `SiteConfigKey` | 说明 |
+|------|------|-----------------|------|
+| siteName | string | `NAME` → `site.name` | 必填，最长 64。种子由「站点名称」改为「垛里」（仅替换仍是占位的行） |
+| siteNameEn | string | `NAME_EN` → `site.name_en` | 新增。最长 32，可空。空则前端不展示英文辅文。种子 `Duoli` |
+| slogan | string | `SLOGAN` → `site.slogan` | 新增。最长 40，可空。空则前端不展示副标。种子 `住进千垛水乡` |
+| logoUrl | string | `LOGO_URL` → `site.logo_url` | 新增。最长 512。空串允许；非空须 `http://` 或 `https://`。空则前端用文字站名。测服种子 `http://106.12.204.206:43123/brand/logo-header.jpg` |
+| faviconUrl | string | `FAVICON_URL` → `site.favicon_url` | 新增。规则同 `logoUrl`。空则前端用 logo，否则浏览器默认图标。测服种子 `http://106.12.204.206:43123/brand/logo-favicon.jpg` |
+| brandColor | string | `BRAND_COLOR` → `site.brand_color` | 必填，`^#[0-9A-Fa-f]{6}$`。种子 `#4BA3D9` |
+| contactPhone | string | `CONTACT_PHONE` → `site.contact_phone` | 必填，最长 32。种子 `400-000-0000` |
 
-种子默认值：站名「站点名称」，主色 `#4BA3D9`，电话 `400-000-0000`。门户读 `GET /api/config/public`，字段名与上表相同。
+`OPEN_CITY_MIN_STORES`（`open_city.min_stores`）与 `OPEN_CITY_MIN_ARTICLES`（`open_city.min_articles`）仍不在本接口。
+
+PUT：`siteName`、`brandColor`、`contactPhone` 必填，文案与现网相同（站名不能为空 / 站名过长 / 主色不能为空 / 主色格式不正确 / 客服电话不能为空 / 客服电话过长）。四个新字段可省略；省略、`null` 或空白都存空串，表示清空，不是保留旧值。新字段超长或 URL 协议不对时：英文站名过长、副标过长、Logo 地址过长、Logo 地址须为 http 或 https、图标地址过长、图标地址须为 http 或 https。
+
+没有上传接口。Logo 与图标由运维提供静态 URL，后端只存字符串。生产可改这两条 URL；存空串才走文字站名 / 默认图标。写入后失效 `site-config` 缓存（`njl:site-config:public`）。运营页面仍是 `/admin/site`（A-SITE-CONFIG）。
 
 ## 首页 Banner
 
