@@ -7,7 +7,7 @@
 | 维护 | 资深测试工程师 |
 | 范围 | **MVP-2 微信小程序（W-B）**：游客端微信登录、首页 Banner、找店列表/详情、提交意向、我的意向、分享到门店、攻略只读；账号与 Web 打通；**无支付/定金/钱包**；**无**商家/运营小程序 |
 | 对齐 | [PRODUCT-MVP-2-微信小程序-范围](./PRODUCT-MVP-2-微信小程序-范围.md) §5 **C-MP1～C-MP8** / **C-MP2b** / §2～§3 业务规则；分期见 [PRODUCT-MVP-分期-已拍](./PRODUCT-MVP-分期-已拍.md)；Banner 规则对齐 [PRODUCT-MVP-1.5-广告位-范围](./PRODUCT-MVP-1.5-广告位-范围.md)；页面 IA 见 [DESIGN-MVP-2-微信小程序](./DESIGN-MVP-2-微信小程序.md) §8 与 [UI-PAGES-MVP-2-微信小程序](./UI-PAGES-MVP-2-微信小程序.md) |
-| 契约来源 | **均已合 main**：PRODUCT **api#28**；TEST 原 **api#29**（本文 v0.1）；DESIGN / UI-PAGES / UI 门禁 **api#30**；后端 TECH **api#32** [TECH-DESIGN-MVP-2-微信小程序](./TECH-DESIGN-MVP-2-微信小程序.md)；前端 TECH **web#14**（sister 仓 `nongjiale-web` 的 `docs/FE-TECH-DESIGN-MVP-2-微信小程序.md`，**不把全文拷进本仓**）。微信登录 / 打通 / `keyword` / 无手机号 403 以 **api#32** 为准。小程序 pages 见下节「页面路由」 |
+| 契约来源 | **均已合 main**：PRODUCT **api#28**；TEST 原 **api#29**（本文 v0.1）；DESIGN / UI-PAGES / UI 门禁 **api#30**；后端 TECH **api#32** [TECH-DESIGN-MVP-2-微信小程序](./TECH-DESIGN-MVP-2-微信小程序.md)；前端 TECH **web#14**（sister 仓 `nongjiale-web` 的 `docs/FE-TECH-DESIGN-MVP-2-微信小程序.md`，**不把全文拷进本仓**）。微信登录 / 打通 / `keyword` / 无手机号 403 以 **api#32** 为准。小程序页面 path 以 **web#14** 为准；与 DESIGN §8 冲突时以 FE TECH 为准 |
 | 结论规则 | **仅已执行可下结论**；未跑一律标「待测」；发版/生产/删数前停等批准 |
 | 硬锁 | **无支付 / 定金 / 收银台 / 钱包**；不改意向状态机码；`CHECKED_IN` 中文唯一 **「已入住」**（入+住；产品 C-MP8 / §3.7 与 TECH；禁已定着/已落实/已落地/已订立/已成交/已达成）；商家/运营配置入口小程序内不可达 |
 | EXEC 锁 | **未解锁** — UI 门禁与两端 TECH 已合 main，**不挡**；现在只等 **业务实现合入** + **测服测试号 / 体验版可达**。正式 AppID **不挡**（体验版 AppID 即可；正式号以后只换环境变量） |
@@ -46,7 +46,7 @@
 
 ### 页面路由
 
-下表 path 来自本仓已合入的 DESIGN §8（api#30）。分享 query `id={storeId}`、首页 Tab `/pages/home/index`、外链页 `/pages/webview/index`，以及 Banner `linkUrl` 的打开方式，与后端 TECH api#32 写死项相同。前端 TECH 全文在 web 仓 web#14，不抄入本仓。
+小程序页面 path 以 FE TECH web#14 为准；与 DESIGN §8 冲突时以 FE TECH 为准（攻略为 `guides/*`：列表 `/pages/guides/index`，详情 `/pages/guides/detail?id=`）。home / list / detail / login / intent / my / webview 与 FE TECH 一致。分享 query `id={storeId}`、首页 Tab、外链页，以及 Banner `linkUrl` 的打开方式，与后端 TECH api#32 写死项相同。FE TECH 全文不抄入本仓。
 
 | 页面 | path / query |
 |------|----------------|
@@ -58,8 +58,8 @@
 | 意向成功 | `/pages/intent/success?id={intentId}` |
 | 我的意向 | `/pages/my/intents`（Tab「我的」；未登录进登录页） |
 | 意向详情 | `/pages/my/intent-detail?id={intentId}` |
-| 攻略列表 | `/pages/guide/list`（首页入口，不进底栏） |
-| 攻略详情 | `/pages/guide/detail?id={articleId}` |
+| 攻略列表 | `/pages/guides/index`（首页入口，不进底栏） |
+| 攻略详情 | `/pages/guides/detail?id={articleId}` |
 | 外链容器 | `/pages/webview/index`（DESIGN query `url=`） |
 
 **分享（C-MP7）：** `onShareAppMessage` 的 path = `/pages/detail/index?id={storeId}`。打开后再 `GET /api/stores/{id}`。410 展示「已下架或不可用」，隐藏提交。无分享后端接口、无计数。
@@ -175,9 +175,9 @@
 
 | ID | 前置 | 操作 | 期望 | 方式 | 接口或路径 | 后端可测? | 状态 |
 |----|------|------|------|------|------------|-----------|------|
-| **C-MP6-1** | 测服有已发布攻略 ≥1 | 从首页入口打开攻略列表 | 列表**可读**；含已发布篇；不主推 CLOSED 市攻略（口径对齐 Web） | UI / API | `/pages/guide/list`；`GET /api/articles` | 部分 | 待测 |
-| **C-MP6-2** | 知悉已发布攻略 id | 打开攻略详情 | 正文/标题可读；未发布或不存在维持现网 404 | UI / API | `/pages/guide/detail?id={articleId}`；`GET /api/articles/{id}` | 部分 | 待测 |
-| **C-MP6-3** | 攻略列表/详情/相关导航可达 | 巡检入口与页内模块 | **无**问答、专题、社区帖等本包未做入口；仅只读攻略 | UI | `/pages/guide/list`；`/pages/guide/detail?id=` | 否 | 待测 |
+| **C-MP6-1** | 测服有已发布攻略 ≥1 | 从首页入口打开攻略列表 | 列表**可读**；含已发布篇；不主推 CLOSED 市攻略（口径对齐 Web） | UI / API | `/pages/guides/index`；`GET /api/articles` | 部分 | 待测 |
+| **C-MP6-2** | 知悉已发布攻略 id | 打开攻略详情 | 正文/标题可读；未发布或不存在维持现网 404 | UI / API | `/pages/guides/detail?id={articleId}`；`GET /api/articles/{id}` | 部分 | 待测 |
+| **C-MP6-3** | 攻略列表/详情/相关导航可达 | 巡检入口与页内模块 | **无**问答、专题、社区帖等本包未做入口；仅只读攻略 | UI | `/pages/guides/index`；`/pages/guides/detail?id=` | 否 | 待测 |
 
 ---
 
@@ -195,7 +195,7 @@
 
 | ID | 前置 | 操作 | 期望 | 方式 | 接口或路径 | 后端可测? | 状态 |
 |----|------|------|------|------|------------|-----------|------|
-| **C-MP8-1** | 主路径可达：`/pages/home/index`、`/pages/list/index`、`/pages/detail/index`、`/pages/intent/success`、`/pages/my/intents`、`/pages/guide/list`、`/pages/login/index` | 全文案与按钮巡检。可选：`POST /api/booking-intents` 塞 `amount` 或 `deposit` | **无**支付、定金、收银台、钱包、买位、积分等 CTA。未知字段 **400**「请求体格式不正确」 | UI / API | 上列页面；`POST /api/booking-intents` | 部分 | 待测 |
+| **C-MP8-1** | 主路径可达：`/pages/home/index`、`/pages/list/index`、`/pages/detail/index`、`/pages/intent/success`、`/pages/my/intents`、`/pages/guides/index`、`/pages/login/index` | 全文案与按钮巡检。可选：`POST /api/booking-intents` 塞 `amount` 或 `deposit` | **无**支付、定金、收银台、钱包、买位、积分等 CTA。未知字段 **400**「请求体格式不正确」 | UI / API | 上列页面；`POST /api/booking-intents` | 部分 | 待测 |
 | **C-MP8-2** | 底栏与「我的」可达 | 巡检全部可点入口 | **无**商家工作台、运营后台、Banner/开城/攻略配置入口。底栏只有首页 / 找店 / 我的 | UI | `/pages/home/index`、`/pages/list/index`、`/pages/my/intents` | 否 | 待测 |
 | **C-MP8-3** | 测服存在 `CHECKED_IN` 意向（运营 Web 跟进造数）；打通用户可在小程序「我的意向」见到 | 打开该意向列表与 `/pages/my/intent-detail?id=` | 状态中文**仅** **「已入住」**。接口码仍是 `CHECKED_IN`，不另发一套中文状态名 | UI | `GET /api/me/intents` / `/{id}`；`/pages/my/intents` | 否 | 待测 |
 
@@ -206,7 +206,7 @@
 | 首页 / Banner `/pages/home/index` | ☐ C-MP8-1 | ☐ C-MP8-2 | — | 待测 |
 | 找店 / 详情 / 提交 / 成功页 | ☐ C-MP8-1 | ☐ C-MP8-2 | — | 待测 |
 | 我的意向 `/pages/my/intents` | ☐ C-MP8-1 | ☐ C-MP8-2 | ☐ C-MP8-3 | 待测 |
-| 攻略 `/pages/guide/list` | ☐ C-MP8-1 | ☐ C-MP8-2 | — | 待测 |
+| 攻略 `/pages/guides/index` | ☐ C-MP8-1 | ☐ C-MP8-2 | — | 待测 |
 | 登录 / 绑定 `/pages/login/index` | ☐ C-MP8-1 | ☐ C-MP8-2 | — | 待测 |
 
 ---
@@ -325,7 +325,7 @@
 |----|------|
 | **概要** | MVP-2 微信小程序测试用例升到 **v0.2**：微信登录/绑定/解绑/link、无手机号 403、可选 `keyword`、小程序页面与分享 path 已按已合 main 的 TECH 回填。共 **30** 条，状态仍为待测。**EXEC 未解锁**。 |
 | **详细** | 契约来源：PRODUCT api#28、TEST 原 api#29、DESIGN/UI api#30、后端 TECH api#32、前端 TECH web#14。打通后两端同一 `portal_user.id`；未打通列表只含本 userId。`CHECKED_IN` 只写「已入住」。正式跑测改等业务实现合入，以及测服测试号/体验版可达；正式 AppID 不挡。 |
-| **改动点** | 只改本用例与 README 一行指针。v0.1 里微信登录、打通、页面路由、分享 path、Banner 外链上的「待 TECH」改为上表路径。新增 C-MP1-3、C-MP2b-3、C-MP2b-4。不改 Java、Flyway、控制器。 |
+| **改动点** | 只改本用例与 README 一行指针。v0.1 里微信登录、打通、页面路由、分享 path、Banner 外链上的「待 TECH」改为上表路径。攻略 path 按 FE TECH 改为 `/pages/guides/index`、`/pages/guides/detail?id=`（覆盖 DESIGN §8 的 `guide/*`）。新增 C-MP1-3、C-MP2b-3、C-MP2b-4。不改 Java、Flyway、控制器。 |
 | **影响点** | 现网行为不变：微信接口尚未实现，本文不授权提前 PASS。发版仍须过 C-MP8。合并由项目经理转老板，本文不自行合并。 |
 
 ---
@@ -335,4 +335,4 @@
 | 版本 | 日期 | 说明 |
 |------|------|------|
 | v0.1 | 2026-10-18 | 首版草案：对齐 PRODUCT-MVP-2（api#28）C-MP1～8 / C-MP2b；27 条；小程序路由与微信登录「待 TECH」；EXEC 未解锁 |
-| v0.2 | 2026-10-18 | 路径回填：微信 `login/bind/unbind/link`、无手机号 403、`GET /api/stores` 可选 `keyword`、pages 与分享 path、Banner 外链。契约来源加上 api#30 / api#32 / web#14（均已合 main）。用例 27→30。EXEC 改为只等业务实现合入 + 测服测试号/体验版可达，正式 AppID 不挡。`CHECKED_IN` 禁已定着等异名 |
+| v0.2 | 2026-10-18 | 路径回填：微信 `login/bind/unbind/link`、无手机号 403、`GET /api/stores` 可选 `keyword`、pages 与分享 path、Banner 外链。页面 path 以 FE TECH web#14 为准；攻略为 `/pages/guides/index`、`/pages/guides/detail?id=`（与 DESIGN §8 的 `guide/*` 冲突时取 FE TECH）。用例 27→30。EXEC 改为只等业务实现合入 + 测服测试号/体验版可达，正式 AppID 不挡。`CHECKED_IN` 禁已定着等异名 |
