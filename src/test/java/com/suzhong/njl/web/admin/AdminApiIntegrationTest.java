@@ -2,6 +2,7 @@ package com.suzhong.njl.web.admin;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -17,6 +18,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -86,6 +88,9 @@ class AdminApiIntegrationTest {
 
     @Autowired
     private AuditLogMapper auditLogMapper;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     @Test
     void merchantAndAnonymousCannotCallAdmin() throws Exception {
@@ -506,6 +511,84 @@ class AdminApiIntegrationTest {
                 .andExpect(jsonPath("$.code").value(409))
                 .andExpect(jsonPath("$.message").value("数据已被修改"));
         assertThat(bookingIntentMapper.selectById(intentId).getStatus()).isEqualTo(IntentStatus.CONFIRMED);
+    }
+
+    @Test
+    void unfilteredIntentListKeepsEveryKnownStatusAndRejectsUnknownCodes() throws Exception {
+        String admin = adminToken();
+        long regionId = regionId();
+        long orgId = insertOrg("全部状态商家", MerchantOrgStatus.ACTIVE);
+        long storeId = insertStore(orgId, regionId, "全部状态店", ShelfStatus.ON_SHELF, false, 32);
+        long portalUserId = insertPortalUser("13600008503");
+        for (IntentStatus status : IntentStatus.values()) {
+            insertIntent(orgId, storeId, portalUserId, "NJL-ALL-" + status.code(), "1380000" + status.ordinal(), status);
+        }
+        long dirtyId = insertIntent(orgId, storeId, portalUserId, "NJL-ALL-DIRTY", "13800009999", IntentStatus.PENDING);
+        jdbcTemplate.update("UPDATE booking_intent SET status = ? WHERE id = ?", "LANDED", dirtyId);
+
+        MvcResult all = mockMvc.perform(get("/api/admin/intents")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + admin)
+                        .param("storeId", String.valueOf(storeId)))
+                .andReturn();
+        assertThat(all.getResponse().getStatus())
+                .as(all.getResponse().getContentAsString(java.nio.charset.StandardCharsets.UTF_8))
+                .isEqualTo(200);
+        JsonNode allBody = objectMapper.readTree(all.getResponse().getContentAsString(java.nio.charset.StandardCharsets.UTF_8));
+        assertThat(allBody.path("data").path("total").asInt()).isEqualTo(IntentStatus.values().length + 1);
+        assertThat(allBody.path("data").path("items").toString()).contains("NJL-ALL-DIRTY");
+        assertThat(allBody.path("data").path("items").toString()).contains("已入住");
+
+        for (IntentStatus status : IntentStatus.values()) {
+            mockMvc.perform(get("/api/admin/intents")
+                            .header(HttpHeaders.AUTHORIZATION, "Bearer " + admin)
+                            .param("storeId", String.valueOf(storeId))
+                            .param("status", status.code()))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.total").value(1))
+                    .andExpect(jsonPath("$.data.items[0].status").value(status.code()))
+                    .andExpect(jsonPath("$.data.items[0].statusLabel").value(status.label()));
+        }
+
+        mockMvc.perform(get("/api/admin/intents")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + admin)
+                        .param("status", ""))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(0));
+
+        mockMvc.perform(get("/api/admin/intents")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + admin)
+                        .param("status", "LANDED"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(400))
+                .andExpect(jsonPath("$.message").value("参数不正确"));
+
+        mockMvc.perform(get("/api/admin/intents/" + dirtyId)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + admin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.intentNo").value("NJL-ALL-DIRTY"))
+                .andExpect(jsonPath("$.data.status").value(nullValue()))
+                .andExpect(jsonPath("$.data.statusLabel").value(""));
+
+        mockMvc.perform(post("/api/admin/intents/" + dirtyId + "/status")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + admin)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"targetStatus":"CONFIRMED","version":0}
+                                """))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value(409))
+                .andExpect(jsonPath("$.message").value("不能改为已确认"));
+        assertThat(jdbcTemplate.queryForObject("SELECT status FROM booking_intent WHERE id = ?", String.class, dirtyId))
+                .isEqualTo("LANDED");
+
+        String csv = mockMvc.perform(get("/api/admin/intents/export")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + admin)
+                        .param("storeId", String.valueOf(storeId)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString(java.nio.charset.StandardCharsets.UTF_8);
+        assertThat(csv).contains("NJL-ALL-DIRTY");
+        assertThat(csv).contains("已入住");
+        assertThat(csv).doesNotContain("已落地");
     }
 
     @Test
