@@ -112,6 +112,7 @@ com.suzhong.njl.wechat          微信 jscode2session / access_token / 手机号
 MVP-1 开城技术设计（设计稿，未写业务代码）：`docs/TECH-DESIGN-MVP-1-开城.md`。
 MVP-1 开城技术设计产品门禁（PASS）：`docs/GATE-TECH-DESIGN-MVP-1-开城-产品.md`。
 MVP-2 微信小程序后端契约：`docs/TECH-DESIGN-MVP-2-微信小程序.md`。
+MVP-2 微信小程序测试用例 v0.2（路径已回填，EXEC 未解锁）：`docs/TEST-MVP-2-微信小程序.md`。
 
 ## 门户
 
