@@ -13,7 +13,12 @@ public enum AuditAction {
     MERCHANT_ENABLE("MERCHANT_ENABLE", "商家启用"),
     CITY_CHECKLIST("CITY_CHECKLIST", "开城清单"),
     CITY_OPEN("CITY_OPEN", "开通城市"),
-    CITY_CLOSE("CITY_CLOSE", "关闭城市");
+    CITY_CLOSE("CITY_CLOSE", "关闭城市"),
+    BANNER_CREATE("BANNER_CREATE", "新建 Banner"),
+    BANNER_UPDATE("BANNER_UPDATE", "更新 Banner"),
+    BANNER_ENABLE("BANNER_ENABLE", "启用 Banner"),
+    BANNER_DISABLE("BANNER_DISABLE", "停用 Banner"),
+    BANNER_DELETE("BANNER_DELETE", "删除 Banner");
 
     @EnumValue
     private final String code;

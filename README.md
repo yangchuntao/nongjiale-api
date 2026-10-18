@@ -106,7 +106,8 @@ MVP-1 开城技术设计产品门禁（PASS）：`docs/GATE-TECH-DESIGN-MVP-1-�
 ## 门户
 
 - `POST /api/auth/register`、`POST /api/auth/login`、`GET /api/auth/me`：游客手机号，令牌角色 `TOURIST`
-- `GET /api/config/public`、`GET /api/regions`、`GET /api/home/feed`
+- `GET /api/config/public`、`GET /api/regions`、`GET /api/home/feed`、`GET /api/home/banners`
+- `GET /api/home/banners`：公开，无城市参数。只返回启用条目：全站始终在内，指定市仅该市当前仍开通。按排序升序，数字越小越前。0 条是空数组。不进首页 feed 缓存。图片只收 URL
 - `GET /api/regions`：只返回已开通的市，以及这些市下面仍启用的区县。没有开通市的省不出现
 - `GET /api/stores`：只列出已开通市里的上架房源。未开通市返回空列表，`destinationStatus=CLOSED`，`emptyHint` 为「该目的地暂未开通」。可按地区、标签、价格带筛选，排序 `comprehensive` / `price_asc` / `price_desc`
 - `GET /api/stores/{id}`：下架或所属市未开通返回 410「已下架或不可用」。套餐以 `packageText` 为准
@@ -155,6 +156,9 @@ V3 种子是手工精选店，含「表弟店」，`test_data=false`。抓取或
 | GET | `/api/admin/intents/export` | CSV，筛选与列表相同。无佣金列 |
 | GET/POST/PUT/DELETE | `/api/admin/articles` | 攻略。发布后门户可见 |
 | GET/PUT | `/api/admin/site-config` | 站名、主色、客服电话。不改开城阈值 |
+| GET/POST | `/api/admin/banners` | 首页 Banner 列表与新建。图片只填 URL |
+| GET/PUT/DELETE | `/api/admin/banners/{id}` | 详情、全量更新、物理删除 |
+| POST | `/api/admin/banners/{id}/enable`、`/disable` | 行内启停。启用时投放市已关闭返回 409 |
 | GET | `/api/admin/cities`、`GET /api/admin/cities/{cityId}` | 开城列表和详情。供给、攻略按实时计数 |
 | PATCH | `/api/admin/cities/{cityId}/checklist` | 只手改三项。带供给/攻略达标字段返回 400 |
 | POST | `/api/admin/cities/{cityId}/open`、`POST /api/admin/cities/{cityId}/close` | 达标才开通。未达标 409。关城不删历史 |
