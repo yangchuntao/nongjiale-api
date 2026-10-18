@@ -53,7 +53,7 @@ class AdminArticleControllerTest {
         ArticleWriteRequest request = new ArticleWriteRequest("标题", null, null, null, ArticleStatus.DRAFT, null);
         Authentication authentication = mock(Authentication.class);
         when(authentication.getPrincipal()).thenReturn(
-                new AuthenticatedUser(7L, UserType.OPERATOR, AdminRole.OPERATOR, null, "运营", "13800000000"));
+                new AuthenticatedUser(7L, UserType.OPERATOR, AdminRole.OPERATOR, null, "运营", "17606838920"));
         ArticleAdminResponse created = mock(ArticleAdminResponse.class);
         when(adminArticleService.create(7L, request)).thenReturn(created);
 

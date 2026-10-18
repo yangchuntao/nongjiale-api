@@ -39,7 +39,7 @@ class AdminAuthServiceTest {
     void disabledOperatorIsForbiddenAfterPasswordMatches() {
         AdminUser user = new AdminUser();
         user.setId(2L);
-        user.setPhone("13800000000");
+        user.setPhone("17606838920");
         user.setPasswordHash("hash");
         user.setEnabled(false);
         user.setRole(AdminRole.OPERATOR);
@@ -48,7 +48,7 @@ class AdminAuthServiceTest {
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
 
         ApiException ex = assertThrows(ApiException.class,
-                () -> adminAuthService.login(new AdminLoginRequest("13800000000", "SeedAdmin#2026")));
+                () -> adminAuthService.login(new AdminLoginRequest("17606838920", "123456")));
 
         assertThat(ex.getStatus()).isEqualTo(HttpStatus.FORBIDDEN);
         assertThat(ex.getMessage()).isEqualTo("账号已停用");
@@ -59,7 +59,7 @@ class AdminAuthServiceTest {
         when(adminUserMapper.selectOne(any())).thenReturn(null);
 
         ApiException ex = assertThrows(ApiException.class,
-                () -> adminAuthService.login(new AdminLoginRequest("13900000000", "SeedAdmin#2026")));
+                () -> adminAuthService.login(new AdminLoginRequest("13900000000", "123456")));
 
         assertThat(ex.getStatus()).isEqualTo(HttpStatus.UNAUTHORIZED);
     }

@@ -77,7 +77,7 @@ class MerchantAccessTest {
     }
 
     private static AuthenticatedUser principal(Long orgId) {
-        return new AuthenticatedUser(5L, UserType.MERCHANT, null, orgId, "商家", "13800000000");
+        return new AuthenticatedUser(5L, UserType.MERCHANT, null, orgId, "商家", "17606838921");
     }
 
     private static MerchantUser user(Boolean enabled, Long orgId) {

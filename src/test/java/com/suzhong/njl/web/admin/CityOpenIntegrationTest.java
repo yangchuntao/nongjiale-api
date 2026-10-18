@@ -530,7 +530,7 @@ class CityOpenIntegrationTest {
 
     private String adminToken() throws Exception {
         JsonNode body = ok(postJson("/api/admin/auth/login", """
-                {"phone":"13800000000","password":"SeedAdmin#2026"}
+                {"phone":"17606838920","password":"123456"}
                 """, null));
         return body.path("token").asText();
     }
