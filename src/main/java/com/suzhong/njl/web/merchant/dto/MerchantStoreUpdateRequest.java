@@ -5,6 +5,8 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -37,28 +39,44 @@ import jakarta.validation.constraints.Size;
  * @param trafficText 交通指引，可空
  * @param version     乐观锁版本号，必填，必须回传查询时的值；不匹配返回 409「数据已被修改」
  */
+@Schema(name = "MerchantStoreUpdateRequest", description = "商家更新门店请求体；只能修改白名单字段，全量更新语义，未知字段一律拒绝。"
+        + "上下架需走申请审批，首页推荐、推荐排序、测试数据、主体归属均不可改（出现在请求体里会被拒绝或被服务层按原值钉住）")
 @JsonIgnoreProperties(ignoreUnknown = false)
 public record MerchantStoreUpdateRequest(
+        @Schema(description = "门店名，必填，最长 128 字")
         @NotBlank(message = "门店名称不能为空")
         @Size(max = 128, message = "门店名称过长")
         String name,
+        @Schema(description = "所属地区 ID，必填；地区必须存在且 enabled=true，否则 400「地区不可用」")
         @NotNull(message = "地区不能为空")
         Long regionId,
+        @Schema(description = "地址，可空，最长 256 字")
         @Size(max = 256, message = "地址过长")
         String address,
+        @Schema(description = "联系电话，可空，最长 32 字；不做手机号格式校验")
         @Size(max = 32, message = "电话过长")
         String phone,
+        @Schema(description = "封面图 URL，可空，最长 512 字")
         @Size(max = 512, message = "封面地址过长")
         String coverUrl,
+        @Schema(description = "相册图片 URL 列表，可空；传 null 保持原相册，传空数组清空相册")
         List<String> gallery,
+        @Schema(description = "价格展示文案，可空，最长 64 字")
         @Size(max = 64, message = "价格文案过长")
         String priceText,
+        @Schema(description = "起步价，可空，单位元（不是分）")
         BigDecimal priceFrom,
+        @Schema(description = "套餐权威文案，可空，无长度限制；与结构化套餐不一致时以此为准")
         String packageText,
+        @Schema(description = "设施说明，可空")
         String facilities,
+        @Schema(description = "特色说明，可空")
         String features,
+        @Schema(description = "预订须知，可空")
         String notice,
+        @Schema(description = "交通指引，可空")
         String trafficText,
+        @Schema(description = "乐观锁版本号，必填，必须回传查询时的值；不匹配返回 409「数据已被修改」")
         @NotNull(message = "版本不能为空")
         Long version) {
 }

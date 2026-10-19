@@ -15,6 +15,10 @@ import com.suzhong.njl.service.admin.AdminCityMetricsService;
 import com.suzhong.njl.web.ApiResponse;
 import com.suzhong.njl.web.admin.dto.CityIntentMetricsResponse;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 /**
  * 运营端城市意向看板接口（{@code /api/admin/metrics}）。
  *
@@ -23,6 +27,8 @@ import com.suzhong.njl.web.admin.dto.CityIntentMetricsResponse;
  * <p>职责：按时间窗汇总各市的意向数、已确认数与已入住数。统计按滚动 24 小时计算，
  * 不是自然日零点；意向按门店归属市汇总，未匹配到市的记录不计入。导出为 UTF-8 BOM 的 CSV。
  */
+@Tag(name = "运营 · 指标", description = "按城市汇总预订意向并导出 CSV")
+@SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequestMapping("/api/admin/metrics")
 public class AdminCityMetricsController {
@@ -44,6 +50,7 @@ public class AdminCityMetricsController {
      * @param cityId 可选，限定单个市级地区；不是启用中的市返回 404「城市不存在」
      * @return 窗口代码、统计起始时间（{@code ALL} 为 null）与汇总行 + 各市行
      */
+    @Operation(summary = "城市意向汇总", description = "按滚动时间窗统计，首行为合计；窗口仅支持 7、30、ALL，空白按 7 处理。")
     @GetMapping("/city-intents")
     public ApiResponse<CityIntentMetricsResponse> summary(
             @RequestParam(required = false) String window,
@@ -62,6 +69,7 @@ public class AdminCityMetricsController {
      * @return {@code text/csv} 字节流，文件名 {@code city-intents.csv}
      * @throws com.suzhong.njl.web.ApiException 窗口非法 400；城市不存在 404
      */
+    @Operation(summary = "导出城市指标", description = "筛选同汇总接口，UTF-8 BOM 编码；响应为 CSV 文件，不走 JSON 信封。")
     @GetMapping(value = "/city-intents/export", produces = "text/csv")
     public ResponseEntity<byte[]> export(
             @RequestParam(required = false) String window,

@@ -1,5 +1,7 @@
 package com.suzhong.njl.web.portal.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 /**
  * 公开站点配置（{@code GET /api/config/public} 的响应体，无需登录）。
  *
@@ -11,8 +13,12 @@ package com.suzhong.njl.web.portal.dto;
  * @param brandColor   主题主色，十六进制颜色值（如 {@code #4BA3D9}），未配置时为空串
  * @param contactPhone 客服电话，未配置时为空串
  */
+@Schema(name = "PublicConfigResponse", description = "公开站点配置，GET /api/config/public 的响应体，无需登录；未配置的项一律返回空串而不是 null")
 public record PublicConfigResponse(
+        @Schema(description = "中文站名，未配置时为空串")
         String siteName,
+        @Schema(description = "主题主色，十六进制颜色值（如 #4BA3D9），未配置时为空串", example = "#4BA3D9")
         String brandColor,
+        @Schema(description = "客服电话，未配置时为空串；不随门店下架或关城变化", example = "400-000-0000")
         String contactPhone) {
 }

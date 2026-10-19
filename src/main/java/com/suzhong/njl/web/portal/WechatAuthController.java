@@ -16,6 +16,10 @@ import com.suzhong.njl.web.portal.dto.WechatBindRequest;
 import com.suzhong.njl.web.portal.dto.WechatLinkResponse;
 import com.suzhong.njl.web.portal.dto.WechatLoginRequest;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 /**
  * 门户微信小程序登录与账号打通接口（{@code /api/auth/wechat}）。
  *
@@ -25,6 +29,7 @@ import com.suzhong.njl.web.portal.dto.WechatLoginRequest;
  * <p>未配置小程序 AppID/Secret 时，本控制器全部接口返回 503「微信登录未配置」，进程仍可启动。
  * 响应不含 {@code session_key}，openid 只参与服务端身份匹配与令牌作废。
  */
+@Tag(name = "门户 · 微信登录", description = "微信小程序静默登录与账号绑定打通")
 @RestController
 @RequestMapping("/api/auth/wechat")
 public class WechatAuthController {
@@ -46,6 +51,7 @@ public class WechatAuthController {
      * @throws com.suzhong.njl.web.ApiException 未配置 503；code 缺失/超长或请求体格式错误 400；
      *                                         微信未返回 openid 502；账号异常 401
      */
+    @Operation(summary = "微信静默登录", description = "未配置小程序 AppID/Secret 返回 503；同一 openid 复用原用户，首次登录创建无手机号的壳账号。")
     @PostMapping("/login")
     public ApiResponse<WechatAuthResponse> login(@RequestBody WechatLoginRequest request) {
         return ApiResponse.ok(wechatAuthService.login(request));
@@ -65,6 +71,8 @@ public class WechatAuthController {
      *                                         密码错误或身份归属异常 401；已绑其他手机号、手机号已绑其他微信、
      *                                         壳账号已有意向 409
      */
+    @Operation(summary = "绑定手机号", description = "phoneCode 与手机号加密码二选一，同时给或都不给返回 400；身份迁移到已有账号后旧 openid 令牌立即失效。")
+    @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/bind")
     public ApiResponse<WechatAuthResponse> bind(Authentication authentication, @RequestBody WechatBindRequest request) {
         return ApiResponse.ok(wechatAuthService.bind(CurrentUser.require(authentication, UserType.TOURIST), request));
@@ -80,6 +88,8 @@ public class WechatAuthController {
      * @return 解绑后的打通状态，通常 {@code wechatBound=false}
      * @throws com.suzhong.njl.web.ApiException 未配置 503；非微信令牌 400；未登录 401；角色不是游客 403
      */
+    @Operation(summary = "解绑微信", description = "只删除当前 AppID 与 openid 这一条身份并作废该 openid 令牌；同账号的密码令牌继续有效，账号不会被删除。")
+    @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/unbind")
     public ApiResponse<WechatLinkResponse> unbind(Authentication authentication) {
         return ApiResponse.ok(wechatAuthService.unbind(CurrentUser.require(authentication, UserType.TOURIST)));
@@ -95,6 +105,8 @@ public class WechatAuthController {
      * @return 用户 ID、手机号、手机号绑定、微信绑定与账号打通状态
      * @throws com.suzhong.njl.web.ApiException 未配置 503；未登录 401；角色不是游客 403；账号不存在 401
      */
+    @Operation(summary = "打通状态查询", description = "手机号已绑、密码已设、微信已绑三者同时成立时 accountLinked=true；只读，不发新令牌。")
+    @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/link")
     public ApiResponse<WechatLinkResponse> link(Authentication authentication) {
         return ApiResponse.ok(wechatAuthService.link(CurrentUser.require(authentication, UserType.TOURIST)));

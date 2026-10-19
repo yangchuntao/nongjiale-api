@@ -20,6 +20,10 @@ import com.suzhong.njl.web.PageResult;
 import com.suzhong.njl.web.admin.dto.BannerAdminResponse;
 import com.suzhong.njl.web.admin.dto.BannerWriteRequest;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 /**
  * 运营端首页 Banner 管理接口（{@code /api/admin/banners}）。
  *
@@ -28,6 +32,8 @@ import com.suzhong.njl.web.admin.dto.BannerWriteRequest;
  * <p>职责：Banner 的增删改查与行内启停。投放范围分 {@code ALL}（全站）与 {@code CITY}（指定市），
  * 指定市必须存在且处于开通状态；图片与跳转链接只收 URL/站内路径，不做文件上传。
  */
+@Tag(name = "运营 · 首页 Banner", description = "首页 Banner 的增删改查与启停，图片与链接只收 URL")
+@SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequestMapping("/api/admin/banners")
 public class AdminBannerController {
@@ -50,6 +56,7 @@ public class AdminBannerController {
      * @param pageSize 每页条数，1 到 100，为空取 20；越界返回 400
      * @return 当页 Banner（含市 slug、市名与投放市当前是否开通）与总数
      */
+    @Operation(summary = "Banner 列表", description = "按排序号、ID 升序；关键词同时匹配标题与跳转链接，超 64 字返回 400。")
     @GetMapping
     public ApiResponse<PageResult<BannerAdminResponse>> list(
             @RequestParam(required = false) Boolean enabled,
@@ -73,6 +80,7 @@ public class AdminBannerController {
      * @return 新建后的 Banner
      * @throws com.suzhong.njl.web.ApiException 字段非法 400；城市不存在 404；投放市未开通 400
      */
+    @Operation(summary = "新建 Banner", description = "ALL 不能带城市，CITY 须指定已开通城市；enabled 缺省 true，sortOrder 缺省 100。")
     @PostMapping
     public ApiResponse<BannerAdminResponse> create(
             Authentication authentication,
@@ -87,6 +95,7 @@ public class AdminBannerController {
      * @return Banner 完整字段，含投放市的 slug、名称与开通状态
      * @throws com.suzhong.njl.web.ApiException Banner 不存在 404「Banner 不存在」
      */
+    @Operation(summary = "Banner 详情", description = "含投放市 slug、名称与开通状态；不存在返回 404。")
     @GetMapping("/{id}")
     public ApiResponse<BannerAdminResponse> detail(@PathVariable Long id) {
         return ApiResponse.ok(adminBannerService.detail(id));
@@ -104,6 +113,7 @@ public class AdminBannerController {
      * @return 更新后的 Banner
      * @throws com.suzhong.njl.web.ApiException 字段非法 400；Banner 或城市不存在 404；投放市未开通 400
      */
+    @Operation(summary = "全量更新 Banner", description = "整单覆盖，enabled 与 sortOrder 必填；投放市未开通返回 400。")
     @PutMapping("/{id}")
     public ApiResponse<BannerAdminResponse> update(
             Authentication authentication,
@@ -123,6 +133,7 @@ public class AdminBannerController {
      * @return 启用后的 Banner
      * @throws com.suzhong.njl.web.ApiException Banner 不存在 404；投放市已关闭 409「投放市未开通」
      */
+    @Operation(summary = "启用 Banner", description = "已启用时幂等返回；按市投放的 Banner 若投放市已关城返回 409。")
     @PostMapping("/{id}/enable")
     public ApiResponse<BannerAdminResponse> enable(Authentication authentication, @PathVariable Long id) {
         return ApiResponse.ok(adminBannerService.setEnabled(AdminPrincipal.adminId(authentication), id, true));
@@ -138,6 +149,7 @@ public class AdminBannerController {
      * @return 停用后的 Banner
      * @throws com.suzhong.njl.web.ApiException Banner 不存在 404
      */
+    @Operation(summary = "停用 Banner", description = "已停用时幂等返回；停用立即影响门户，不校验投放市状态。")
     @PostMapping("/{id}/disable")
     public ApiResponse<BannerAdminResponse> disable(Authentication authentication, @PathVariable Long id) {
         return ApiResponse.ok(adminBannerService.setEnabled(AdminPrincipal.adminId(authentication), id, false));
@@ -153,6 +165,7 @@ public class AdminBannerController {
      * @return 固定结构 {@code {"id": BannerID}}
      * @throws com.suzhong.njl.web.ApiException Banner 不存在 404
      */
+    @Operation(summary = "删除 Banner", description = "物理删除；删除后立即从门户首页消失。")
     @DeleteMapping("/{id}")
     public ApiResponse<Map<String, Long>> delete(Authentication authentication, @PathVariable Long id) {
         adminBannerService.delete(AdminPrincipal.adminId(authentication), id);

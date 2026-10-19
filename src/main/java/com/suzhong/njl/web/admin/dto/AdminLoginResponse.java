@@ -4,6 +4,8 @@ import java.time.Instant;
 
 import com.suzhong.njl.domain.enums.AdminRole;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 /**
  * 运营登录响应（{@code POST /api/admin/auth/login} 的 data）。
  *
@@ -16,10 +18,16 @@ import com.suzhong.njl.domain.enums.AdminRole;
  * @param role        角色码，取值见 {@link AdminRole}：OPERATOR（运营）、AGENT（客服）
  * @param displayName 账号展示名，非空，用于后台顶栏显示
  */
+@Schema(name = "AdminLoginResponse", description = "运营登录响应，用于 POST /api/admin/auth/login 的 data")
 public record AdminLoginResponse(
+        @Schema(description = "访问令牌原文，32 字节随机数的十六进制串，不透明；只在本次响应返回，后续放在 Authorization 头")
         String token,
+        @Schema(description = "令牌过期时间，UTC 的 ISO-8601 时间点，如 2026-10-19T10:00:00Z")
         Instant expiresAt,
+        @Schema(description = "运营账号 ID，对应 admin_user.id")
         Long adminId,
+        @Schema(description = "角色码，取值 OPERATOR（运营）、AGENT（客服），两者都能访问全部 /api/admin/**")
         AdminRole role,
+        @Schema(description = "账号展示名，非空，用于后台顶栏显示")
         String displayName) {
 }

@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 
 import com.suzhong.njl.domain.enums.ArticleStatus;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 /**
  * 攻略详情（{@code GET /api/articles/{id}} 的响应体，位于统一信封的 {@code data} 中）。
  *
@@ -19,13 +21,22 @@ import com.suzhong.njl.domain.enums.ArticleStatus;
  * @param regionId    归属地区 ID，可空；为空表示不限城市的通用攻略
  * @param publishedAt 发布时间，可空；未回填时前端按未知时间展示
  */
+@Schema(name = "ArticleDetailResponse", description = "攻略详情，GET /api/articles/{id} 的 data 响应体；只返回已发布攻略，草稿与不存在的 ID 一律 404")
 public record ArticleDetailResponse(
+        @Schema(description = "攻略 ID")
         Long id,
+        @Schema(description = "标题")
         String title,
+        @Schema(description = "封面图 URL，可空；为空时前端按无封面处理")
         String coverUrl,
+        @Schema(description = "摘要/导语，可空")
         String summary,
+        @Schema(description = "正文内容，可空")
         String body,
+        @Schema(description = "发布状态，DRAFT/PUBLISHED；门户详情实际只会是 PUBLISHED")
         ArticleStatus status,
+        @Schema(description = "归属地区 ID，可空；为空表示不限城市的通用攻略")
         Long regionId,
+        @Schema(description = "发布时间，可空；未回填时前端按未知时间展示")
         LocalDateTime publishedAt) {
 }

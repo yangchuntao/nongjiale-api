@@ -10,6 +10,9 @@ import com.suzhong.njl.web.ApiResponse;
 import com.suzhong.njl.web.merchant.dto.MerchantLoginRequest;
 import com.suzhong.njl.web.merchant.dto.MerchantLoginResponse;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import jakarta.validation.Valid;
 
 /**
@@ -18,6 +21,7 @@ import jakarta.validation.Valid;
  * <p>所属端：商家后台。登录公开；成功后签发 {@code MERCHANT} 角色 Bearer 令牌，
  * 只能访问 {@code /api/merchant/**}。本端没有注册与 {@code /auth/me}，账号由运营审核入驻后开通。
  */
+@Tag(name = "商家 · 认证", description = "商家端登录，登录成功后签发 MERCHANT 角色令牌")
 @RestController
 @RequestMapping("/api/merchant/auth")
 public class MerchantAuthController {
@@ -38,6 +42,7 @@ public class MerchantAuthController {
      * @return 令牌、过期时间、商家账号 ID、主体 ID、角色（固定 {@code MERCHANT}）与展示名
      * @throws com.suzhong.njl.web.ApiException 手机号或密码错误 401；账号或商家主体停用 403；字段格式不合法 400
      */
+    @Operation(summary = "商家登录", description = "手机号密码登录；账号不存在与密码错误统一提示，账号或主体停用返回 403。")
     @PostMapping("/login")
     public ApiResponse<MerchantLoginResponse> login(@Valid @RequestBody MerchantLoginRequest request) {
         return ApiResponse.ok(merchantAuthService.login(request));

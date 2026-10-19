@@ -2,6 +2,8 @@ package com.suzhong.njl.web.merchant.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 
@@ -14,11 +16,14 @@ import jakarta.validation.constraints.Pattern;
  * @param phone    商家账号手机号，必填，须匹配 {@code ^1\d{10}$}
  * @param password 登录密码，必填，明文传输，服务端用 BCrypt 比对
  */
+@Schema(name = "MerchantLoginRequest", description = "商家登录请求体；手机号或密码错误统一返回 401，账号被停用返回 403")
 @JsonIgnoreProperties(ignoreUnknown = false)
 public record MerchantLoginRequest(
+        @Schema(description = "商家账号手机号，必填，须匹配 ^1\\d{10}$", example = "13800001234")
         @NotBlank(message = "手机号不能为空")
         @Pattern(regexp = "^1\\d{10}$", message = "手机号格式不正确")
         String phone,
+        @Schema(description = "登录密码，必填，明文传输，服务端用 BCrypt 比对")
         @NotBlank(message = "密码不能为空")
         String password) {
 }

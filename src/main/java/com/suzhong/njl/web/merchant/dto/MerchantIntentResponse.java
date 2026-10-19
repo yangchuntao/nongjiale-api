@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 
 import com.suzhong.njl.domain.enums.IntentStatus;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 /**
  * 商家端预订意向（{@code GET /api/merchant/intents} 的 items 元素与
  * {@code GET /api/merchant/intents/{id}} 的响应体）。
@@ -26,18 +28,32 @@ import com.suzhong.njl.domain.enums.IntentStatus;
  * @param userRemark   游客备注，可空
  * @param createdAt    创建时间，服务器本地时间（Asia/Shanghai）
  */
+@Schema(name = "MerchantIntentResponse", description = "商家端预订意向；只返回本商家主体名下的意向，联系电话中间四位已脱敏")
 public record MerchantIntentResponse(
+        @Schema(description = "意向 ID")
         Long id,
+        @Schema(description = "意向单号，由「日期 + 随机十六进制」生成")
         String intentNo,
+        @Schema(description = "跟进状态，只能由运营推进")
         IntentStatus status,
+        @Schema(description = "门店 ID")
         Long storeId,
+        @Schema(description = "门店展示名，可空；门店被物理删除后为 null")
         String storeName,
+        @Schema(description = "到店日期，格式 yyyy-MM-dd")
         LocalDate checkIn,
+        @Schema(description = "离店日期，可空；游客只填晚数时为空")
         LocalDate checkOut,
+        @Schema(description = "入住晚数，可空；游客只填离店日期时为空")
         Integer nights,
+        @Schema(description = "入住人数")
         Integer guests,
+        @Schema(description = "联系人姓名")
         String contactName,
+        @Schema(description = "联系电话，中间四位脱敏，形如 138****1234；完整号码仅运营端可见")
         String contactPhone,
+        @Schema(description = "游客备注，可空")
         String userRemark,
+        @Schema(description = "创建时间，服务器本地时间（Asia/Shanghai）")
         LocalDateTime createdAt) {
 }

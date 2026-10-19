@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import com.suzhong.njl.domain.enums.MerchantOrgStatus;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 @JsonIgnoreProperties(ignoreUnknown = false)
 /**
  * 商家主体启停请求体（{@code PATCH /api/admin/merchants/{orgId}}）。
@@ -15,7 +17,10 @@ import com.suzhong.njl.domain.enums.MerchantOrgStatus;
  * @param status  主体状态，可空；取值见 {@link MerchantOrgStatus}：ACTIVE（启用）、DISABLED（停用）
  * @param enabled 账号开关，可空；true 启用全部账号，false 停用全部账号
  */
+@Schema(name = "MerchantStatusPatchRequest", description = "商家主体启停请求体，用于 PATCH /api/admin/merchants/{orgId}；status 与 enabled 至少传一个，都为空返回 400")
 public record MerchantStatusPatchRequest(
+        @Schema(description = "主体状态，可空，取值 ACTIVE（启用）、DISABLED（停用）；改主体状态，指向停用时吊销既有令牌")
         MerchantOrgStatus status,
+        @Schema(description = "账号开关，可空；true 启用主体下全部账号，false 停用全部账号，停用后旧令牌立即失效")
         Boolean enabled) {
 }

@@ -41,6 +41,21 @@ mybatis-plus:
       id-type: auto
   mapper-locations: classpath*:/mapper/**/*.xml
 
+# 在线接口文档。默认关闭；local profile 打开，生产用 OPENAPI_ENABLED=true 显式开启。
+springdoc:
+  api-docs:
+    enabled: ${OPENAPI_ENABLED:false}
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: ${OPENAPI_ENABLED:false}
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+  packages-to-scan: com.suzhong.njl.web
+  # 控制器未逐个声明 produces/consumes，这里统一成 JSON，避免文档里出现 */*
+  default-produces-media-type: application/json
+  default-consumes-media-type: application/json
+
 app:
   cors-allowed-origins:
     - http://localhost:43123

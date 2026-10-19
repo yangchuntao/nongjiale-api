@@ -2,6 +2,8 @@ package com.suzhong.njl.web.portal.dto;
 
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 /**
  * 首页聚合内容（{@code GET /api/home/feed} 的响应体，公开接口）。
  *
@@ -12,7 +14,10 @@ import java.util.List;
  * @param stores   推荐门店卡片，按首页排序号升序、ID 升序；无数据时为空列表而不是 null
  * @param articles 最新攻略摘要，最多 6 条；无数据时为空列表而不是 null
  */
+@Schema(name = "HomeFeedResponse", description = "首页聚合内容，GET /api/home/feed 的响应体；合并推荐门店与最新攻略，结果走 Redis 旁路缓存")
 public record HomeFeedResponse(
+        @Schema(description = "推荐门店卡片，按首页排序号升序、ID 升序；无数据时为空列表而不是 null")
         List<StoreCard> stores,
+        @Schema(description = "最新攻略摘要，最多 6 条；无数据时为空列表而不是 null")
         List<ArticleSummary> articles) {
 }

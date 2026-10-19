@@ -2,6 +2,8 @@ package com.suzhong.njl.web.portal.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 /**
  * 微信小程序静默登录请求体（{@code POST /api/auth/wechat/login}，公开接口）。
  *
@@ -13,5 +15,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
  * @param code 微信登录凭证，必填，非空白，长度不超过 128；一次性使用，过期需重新获取
  */
 @JsonIgnoreProperties(ignoreUnknown = false)
-public record WechatLoginRequest(String code) {
+@Schema(name = "WechatLoginRequest", description = "微信小程序静默登录请求体，POST /api/auth/wechat/login，公开接口；session_key 在客户端层即丢弃，不落库、不出现在响应里")
+public record WechatLoginRequest(
+        @Schema(description = "微信登录凭证，必填，非空白，长度不超过 128；由小程序 wx.login 获取，一次性使用，过期需重新获取")
+        String code) {
 }

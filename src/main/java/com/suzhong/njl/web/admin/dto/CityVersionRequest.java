@@ -2,6 +2,8 @@ package com.suzhong.njl.web.admin.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import jakarta.validation.constraints.NotNull;
 
 @JsonIgnoreProperties(ignoreUnknown = false)
@@ -14,6 +16,8 @@ import jakarta.validation.constraints.NotNull;
  *
  * @param version 清单版本号，必填；为空报「版本不能为空」
  */
+@Schema(name = "CityVersionRequest", description = "开城/关城请求体，用于 POST /api/admin/cities/{cityId}/open 与 POST /api/admin/cities/{cityId}/close")
 public record CityVersionRequest(
+        @Schema(description = "清单版本号，必填；没有清单行时必须是 0，为空报「版本不能为空」，与库内不一致返回 409「数据已被修改」")
         @NotNull(message = "版本不能为空") Long version) {
 }

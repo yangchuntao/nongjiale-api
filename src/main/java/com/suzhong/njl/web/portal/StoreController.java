@@ -13,6 +13,9 @@ import com.suzhong.njl.web.ApiResponse;
 import com.suzhong.njl.web.portal.dto.StoreDetailResponse;
 import com.suzhong.njl.web.portal.dto.StoreListResponse;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 /**
  * 门户门店接口（{@code /api/stores}）。
  *
@@ -21,6 +24,7 @@ import com.suzhong.njl.web.portal.dto.StoreListResponse;
  * <p>职责：门店列表与详情。列表只返回已开通市内的上架门店；未开通目的地返回空列表并带
  * {@code destinationStatus=CLOSED}，不抛异常。详情在下架或所属市未开通时返回 410。
  */
+@Tag(name = "门户 · 门店", description = "门店列表与详情查询")
 @RestController
 @RequestMapping("/api/stores")
 public class StoreController {
@@ -48,6 +52,7 @@ public class StoreController {
      * @return 当页门店卡片、总数、分页信息、目的地状态与空态提示
      * @throws com.suzhong.njl.web.ApiException 地区不存在/不可用、排序非法、关键词超长或分页非法 400
      */
+    @Operation(summary = "门店列表", description = "只返回已开通市内的上架门店；目的地未开通返回空列表并带 destinationStatus=CLOSED，不抛异常。")
     @GetMapping
     public ApiResponse<StoreListResponse> list(
             @RequestParam(required = false) Long regionId,
@@ -71,6 +76,7 @@ public class StoreController {
      * @return 门店详情、相册、套餐列表、设施标签与测试数据标记
      * @throws com.suzhong.njl.web.ApiException 门店不存在 404「房源不存在」；已下架或所属市未开通 410「已下架或不可用」
      */
+    @Operation(summary = "门店详情", description = "门店不存在返回 404；已下架或所属市未开通统一返回 410，避免命中旧的可用缓存。")
     @GetMapping("/{id}")
     public ApiResponse<StoreDetailResponse> detail(@PathVariable Long id) {
         return ApiResponse.ok(storeQueryService.detail(id));

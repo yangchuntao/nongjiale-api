@@ -21,6 +21,8 @@
         <java.version>17</java.version>
         <mybatis-plus.version>3.5.9</mybatis-plus.version>
         <jacoco.version>0.8.12</jacoco.version>
+        <!-- springdoc 2.6.x 对齐 Spring Boot 3.3，提供 /v3/api-docs 与 Swagger UI。 -->
+        <springdoc.version>2.6.0</springdoc.version>
         <!-- 合并门禁：JaCoCo LINE（行）覆盖率，低于此比例则 mvn test / mvn verify 失败。 -->
         <jacoco.line.minimum>0.85</jacoco.line.minimum>
         <!-- Flyway 10.10 声明支持到 H2 2.2.220；Boot 3.3.13 默认 2.2.224 会告警。 -->
@@ -66,6 +68,12 @@
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-mysql</artifactId>
+        </dependency>
+        <!-- 在线接口文档：仅运行期使用，默认关闭，由 springdoc.api-docs.enabled 控制。 -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>${springdoc.version}</version>
         </dependency>
         <dependency>
             <groupId>com.h2database</groupId>

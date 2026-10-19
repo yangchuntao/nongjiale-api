@@ -2,6 +2,8 @@ package com.suzhong.njl.web.portal.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 /**
  * 微信账号绑定请求体（{@code POST /api/auth/wechat/bind}，须微信渠道的游客 Bearer）。
  *
@@ -14,5 +16,12 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
  * @param password  密码，可空；凭证模式通常不传，手填模式必填，长度 6 到 64 位
  */
 @JsonIgnoreProperties(ignoreUnknown = false)
-public record WechatBindRequest(String phoneCode, String phone, String password) {
+@Schema(name = "WechatBindRequest", description = "微信账号绑定请求体，POST /api/auth/wechat/bind，须微信渠道的游客 Bearer；phoneCode 与 phone+password 两种模式互斥二选一")
+public record WechatBindRequest(
+        @Schema(description = "微信手机号凭证，凭证模式下非空，去空白后长度不超过 128")
+        String phoneCode,
+        @Schema(description = "手填手机号，手填模式下非空，须匹配 ^1\\d{10}$")
+        String phone,
+        @Schema(description = "密码，可空；凭证模式通常不传，手填模式必填，长度 6 到 64 位")
+        String password) {
 }

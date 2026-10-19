@@ -25,6 +25,10 @@ import com.suzhong.njl.web.admin.dto.AdminIntentItem;
 import com.suzhong.njl.web.admin.dto.IntentNoteRequest;
 import com.suzhong.njl.web.admin.dto.IntentStatusRequest;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import jakarta.validation.Valid;
 
 /**
@@ -35,6 +39,8 @@ import jakarta.validation.Valid;
  * <p>职责：意向列表、详情、状态机迁移、追加备注与 CSV 导出。运营可见完整手机号；
  * 状态只能按 {@code IntentStatus.canTransitTo} 的规则迁移，变更写状态备注与审计。
  */
+@Tag(name = "运营 · 意向", description = "意向查询、状态迁移、备注与导出，运营可见完整手机号")
+@SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequestMapping("/api/admin/intents")
 public class AdminIntentController {
@@ -62,6 +68,7 @@ public class AdminIntentController {
      * @param pageSize     每页条数，1 到 100，为空取 20；越界返回 400「分页参数不正确」
      * @return 当页意向（含完整联系人手机号、门店名）与总数
      */
+    @Operation(summary = "意向列表", description = "按更新时间倒序；到店与创建日期区间均可只传一端，运营可见完整手机号。")
     @GetMapping
     public ApiResponse<PageResult<AdminIntentItem>> list(
             @RequestParam(required = false) IntentStatus status,
@@ -93,6 +100,7 @@ public class AdminIntentController {
      * @return {@code text/csv} 字节流，文件名 {@code intents.csv}，不走 JSON 信封
      * @throws com.suzhong.njl.web.ApiException 结果超过 10000 条 400
      */
+    @Operation(summary = "导出意向", description = "筛选同列表且不分页，上限 10000 条，超限返回 400；响应不走 JSON 信封。")
     @GetMapping(value = "/export", produces = "text/csv")
     public ResponseEntity<byte[]> export(
             @RequestParam(required = false) IntentStatus status,
@@ -121,6 +129,7 @@ public class AdminIntentController {
      * @return 意向详情与备注列表
      * @throws com.suzhong.njl.web.ApiException 意向不存在 404「意向不存在」
      */
+    @Operation(summary = "意向详情", description = "含完整手机号、当前版本号与按 ID 升序的备注时间线；不存在返回 404。")
     @GetMapping("/{id:\\d+}")
     public ApiResponse<AdminIntentDetail> detail(@PathVariable Long id) {
         return ApiResponse.ok(adminIntentService.detail(id));
@@ -140,6 +149,7 @@ public class AdminIntentController {
      * @throws com.suzhong.njl.web.ApiException 意向不存在 404；目标状态或版本号缺失 400；
      *                                         迁移不合法、当前状态为空或版本冲突 409
      */
+    @Operation(summary = "迁移意向状态", description = "只能按状态机迁移，终态不可再改；非法迁移或版本冲突返回 409。")
     @PostMapping("/{id:\\d+}/status")
     public ApiResponse<AdminIntentDetail> changeStatus(
             Authentication authentication,
@@ -160,6 +170,7 @@ public class AdminIntentController {
      * @return 追加后的意向详情（含最新备注时间线）
      * @throws com.suzhong.njl.web.ApiException 意向不存在 404；备注为空或超长 400
      */
+    @Operation(summary = "追加备注", description = "只追加不修改历史备注、不改意向状态；内容必填且不超过 1000 字。")
     @PostMapping("/{id:\\d+}/notes")
     public ApiResponse<AdminIntentDetail> addNote(
             Authentication authentication,

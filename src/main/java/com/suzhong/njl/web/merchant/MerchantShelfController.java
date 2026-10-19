@@ -16,6 +16,10 @@ import com.suzhong.njl.web.PageResult;
 import com.suzhong.njl.web.merchant.dto.ShelfApplicationRequest;
 import com.suzhong.njl.web.merchant.dto.ShelfApplicationResponse;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import jakarta.validation.Valid;
 
 /**
@@ -26,6 +30,8 @@ import jakarta.validation.Valid;
  * <p>商家不能直接改门店上下架状态，只能提交申请由运营审批；同一门店同时只允许一条待审申请，
  * 重复提交返回 409。申请期间门店可见性不变。
  */
+@Tag(name = "商家 · 上下架申请", description = "商家提交上架/下架申请，由运营审批")
+@SecurityRequirement(name = "bearerAuth")
 @RestController
 public class MerchantShelfController {
 
@@ -49,6 +55,7 @@ public class MerchantShelfController {
      * @throws com.suzhong.njl.web.ApiException 未登录 401；账号或主体停用 403；
      *                                         门店不存在或不属于本主体 404；已有待审申请 409
      */
+    @Operation(summary = "提交上下架申请", description = "门店须属于本主体；同一门店已有待审申请时重复提交返回 409，提交不改变门店可见性。")
     @PostMapping("/api/merchant/stores/{id}/shelf-applications")
     public ApiResponse<ShelfApplicationResponse> apply(
             Authentication authentication,
@@ -69,6 +76,7 @@ public class MerchantShelfController {
      * @return 当页申请与总数
      * @throws com.suzhong.njl.web.ApiException 未登录 401；账号或主体停用 403
      */
+    @Operation(summary = "申请记录", description = "含已通过、已驳回与待审记录，按创建时间倒序，门店名按当前门店表补全。")
     @GetMapping("/api/merchant/shelf-applications")
     public ApiResponse<PageResult<ShelfApplicationResponse>> list(
             Authentication authentication,

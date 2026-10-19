@@ -2,6 +2,8 @@ package com.suzhong.njl.web.portal.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -17,13 +19,17 @@ import jakarta.validation.constraints.Size;
  * @param displayName 展示名，可空，最长 64 字；空白时用脱敏手机号作为默认展示名
  */
 @JsonIgnoreProperties(ignoreUnknown = false)
+@Schema(name = "PortalRegisterRequest", description = "游客注册请求体，POST /api/auth/register，公开接口；注册成功即签发游客令牌，手机号全局唯一")
 public record PortalRegisterRequest(
+        @Schema(description = "手机号，必填，须匹配 ^1\\d{10}$；同时作为登录账号")
         @NotBlank(message = "手机号不能为空")
         @Pattern(regexp = "^1\\d{10}$", message = "手机号格式不正确")
         String phone,
+        @Schema(description = "登录密码，必填，长度 6 到 64 位；服务端 BCrypt 存储，不落明文")
         @NotBlank(message = "密码不能为空")
         @Size(min = 6, max = 64, message = "密码长度为 6 到 64 位")
         String password,
+        @Schema(description = "展示名，可空，最长 64 字；空白时用脱敏手机号作为默认展示名")
         @Size(max = 64, message = "昵称过长")
         String displayName) {
 }

@@ -3,6 +3,8 @@ package com.suzhong.njl.web.admin.dto;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.suzhong.njl.domain.enums.IntentStatus;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
@@ -19,11 +21,15 @@ import jakarta.validation.constraints.Size;
  * @param note         变更说明，可空，最长 1000 字；空白串落库为 null
  * @param version      乐观锁版本号，必填；为空报「版本不能为空」，与库内不一致返回 409「数据已被修改」
  */
+@Schema(name = "IntentStatusRequest", description = "意向状态变更请求体，用于 POST /api/admin/intents/{id}/status；合法迁移见类说明，非法迁移返回 409")
 public record IntentStatusRequest(
+        @Schema(description = "目标状态，必填，取值 PENDING、CONFIRMED、RESCHEDULED、CHECKED_IN、CLOSED；为空报「目标状态不能为空」，非法码按「请求体格式不正确」拒绝")
         @NotNull(message = "目标状态不能为空")
         IntentStatus targetStatus,
+        @Schema(description = "变更说明，可空，最长 1000 字；空白串落库为 null")
         @Size(max = 1000, message = "备注过长")
         String note,
+        @Schema(description = "乐观锁版本号，必填；为空报「版本不能为空」，与库内不一致返回 409「数据已被修改」")
         @NotNull(message = "版本不能为空")
         Long version) {
 }

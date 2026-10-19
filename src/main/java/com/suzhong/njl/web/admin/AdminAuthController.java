@@ -16,6 +16,10 @@ import com.suzhong.njl.web.admin.dto.AdminLoginRequest;
 import com.suzhong.njl.web.admin.dto.AdminLoginResponse;
 import com.suzhong.njl.web.admin.dto.AdminMeResponse;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import jakarta.validation.Valid;
 
 import org.springframework.http.HttpStatus;
@@ -28,6 +32,7 @@ import org.springframework.http.HttpStatus;
  *
  * <p>令牌只存进程内存，默认有效期见 {@code app.security.token-ttl}，服务重启即失效。
  */
+@Tag(name = "运营 · 认证", description = "运营与客服登录、查询当前身份")
 @RestController
 @RequestMapping("/api/admin/auth")
 public class AdminAuthController {
@@ -48,6 +53,7 @@ public class AdminAuthController {
      * @return 令牌、过期时间、账号 ID、后台角色与展示名；不返回密码
      * @throws com.suzhong.njl.web.ApiException 手机号或密码错误 401；账号已停用 403；字段格式不合法 400
      */
+    @Operation(summary = "运营登录", description = "手机号密码登录；先校验密码再校验启用状态，停用账号返回 403，令牌服务重启即失效。")
     @PostMapping("/login")
     public ApiResponse<AdminLoginResponse> login(@Valid @RequestBody AdminLoginRequest request) {
         return ApiResponse.ok(adminAuthService.login(request));
@@ -63,6 +69,8 @@ public class AdminAuthController {
      * @return 后台账号 ID、手机号、角色与展示名
      * @throws com.suzhong.njl.web.ApiException 未携带有效令牌 401「未登录」；主体类型不符 403「无权限」
      */
+    @Operation(summary = "当前运营身份", description = "令牌主体类型须为 OPERATOR，OPERATOR 与 AGENT 两种后台角色均可调用。")
+    @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/me")
     public ApiResponse<AdminMeResponse> me(Authentication authentication) {
         if (authentication == null || !(authentication.getPrincipal() instanceof AuthenticatedUser user)) {

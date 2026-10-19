@@ -10,6 +10,9 @@ import com.suzhong.njl.service.portal.HomeBannerService;
 import com.suzhong.njl.web.ApiResponse;
 import com.suzhong.njl.web.portal.dto.HomeBannerItem;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 /**
  * 门户首页 Banner 接口（{@code /api/home/banners}）。
  *
@@ -18,6 +21,7 @@ import com.suzhong.njl.web.portal.dto.HomeBannerItem;
  * <p>只返回启用中的条目：全站 Banner 始终可见，指定市 Banner 仅在该市当前开通时可见；
  * 按 {@code sortOrder} 升序、ID 升序。无城市查询参数，也不进首页 feed 缓存，启停立即生效。
  */
+@Tag(name = "门户 · 首页 Banner", description = "首页可见 Banner 列表查询")
 @RestController
 @RequestMapping("/api/home/banners")
 public class HomeBannerController {
@@ -35,6 +39,7 @@ public class HomeBannerController {
      *
      * @return Banner 列表，可能为空数组；市级条目才带城市 ID、slug 与名称
      */
+    @Operation(summary = "Banner 列表", description = "只返回启用中的条目：全站 Banner 始终可见，指定市 Banner 仅在该市开通时可见，按排序号升序。")
     @GetMapping
     public ApiResponse<List<HomeBannerItem>> list() {
         return ApiResponse.ok(homeBannerService.list());

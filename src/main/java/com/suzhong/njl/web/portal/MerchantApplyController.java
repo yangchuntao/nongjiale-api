@@ -10,6 +10,9 @@ import com.suzhong.njl.web.ApiResponse;
 import com.suzhong.njl.web.portal.dto.MerchantApplyRequest;
 import com.suzhong.njl.web.portal.dto.MerchantApplyResponse;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import jakarta.validation.Valid;
 
 /**
@@ -20,6 +23,7 @@ import jakarta.validation.Valid;
  * <p>只接收资料并落一条待审记录，不在本接口创建账号或门店；审核与开通在运营端完成。
  * 允许选择尚未开城的市，联系电话选填，也不做重复提交限制。
  */
+@Tag(name = "门户 · 商家入驻", description = "商家入驻资料的提交")
 @RestController
 @RequestMapping("/api/merchant-applies")
 public class MerchantApplyController {
@@ -41,6 +45,7 @@ public class MerchantApplyController {
      * @throws com.suzhong.njl.web.ApiException 字段格式不合法 400；地区不存在或不可用 400「地区不存在」；
      *                                         联系电话格式不正确 400
      */
+    @Operation(summary = "提交入驻申请", description = "只落一条待审记录，不创建账号或门店；电话选填，填了须为 11 位手机号，地区填了须存在且启用。")
     @PostMapping
     public ApiResponse<MerchantApplyResponse> submit(@Valid @RequestBody MerchantApplyRequest request) {
         return ApiResponse.ok(merchantApplyService.submit(request));

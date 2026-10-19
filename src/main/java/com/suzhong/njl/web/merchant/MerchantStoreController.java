@@ -18,6 +18,10 @@ import com.suzhong.njl.web.PageResult;
 import com.suzhong.njl.web.merchant.dto.MerchantStoreResponse;
 import com.suzhong.njl.web.merchant.dto.MerchantStoreUpdateRequest;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import jakarta.validation.Valid;
 
 /**
@@ -29,6 +33,8 @@ import jakarta.validation.Valid;
  * <p>商家可维护门店资料，但不能改上下架、首页推荐、首页排序、测试数据标记与归属主体；
  * 这些字段在写回前按原值钉住。本端没有创建门店接口，建店由运营代建。
  */
+@Tag(name = "商家 · 门店", description = "商家维护本主体门店资料，不能改上下架与推荐位")
+@SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequestMapping("/api/merchant/stores")
 public class MerchantStoreController {
@@ -50,6 +56,7 @@ public class MerchantStoreController {
      * @return 当页门店与总数，含上下架状态、推荐位与版本号
      * @throws com.suzhong.njl.web.ApiException 未登录 401；账号或主体停用 403
      */
+    @Operation(summary = "门店列表", description = "包含下架与草稿门店，按门店 ID 升序，不返回其他主体数据。")
     @GetMapping
     public ApiResponse<PageResult<MerchantStoreResponse>> list(
             Authentication authentication,
@@ -68,6 +75,7 @@ public class MerchantStoreController {
      * @return 门店完整字段
      * @throws com.suzhong.njl.web.ApiException 未登录 401；账号或主体停用 403；门店不存在或不属于本主体 404
      */
+    @Operation(summary = "门店详情", description = "按门店 ID 与商家主体联合查询，跨主体访问返回 404。")
     @GetMapping("/{id}")
     public ApiResponse<MerchantStoreResponse> detail(Authentication authentication, @PathVariable Long id) {
         return ApiResponse.ok(merchantStoreService.detail(merchant(authentication), id));
@@ -87,6 +95,7 @@ public class MerchantStoreController {
      *                                         门店不存在或不属于本主体 404；地区不可用、字段校验失败或图集格式错误 400；
      *                                         版本冲突 409「数据已被修改」
      */
+    @Operation(summary = "编辑门店资料", description = "只改文案与地址，上下架与推荐位保持原值；版本号必填，版本冲突返回 409。")
     @PutMapping("/{id}")
     public ApiResponse<MerchantStoreResponse> update(
             Authentication authentication,

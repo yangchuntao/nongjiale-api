@@ -22,6 +22,10 @@ import com.suzhong.njl.web.admin.dto.MerchantStatusPatchRequest;
 import com.suzhong.njl.web.admin.dto.PlainPasswordRequest;
 import com.suzhong.njl.web.admin.dto.ResetPasswordResponse;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import jakarta.validation.Valid;
 
 /**
@@ -32,6 +36,8 @@ import jakarta.validation.Valid;
  * <p>职责：商家主体列表、启停切换、重置登录密码与代建门店。停用主体或账号会立即作废
  * 该主体的内存令牌；重置密码同样作废旧令牌，明文只在当次响应返回。
  */
+@Tag(name = "运营 · 商家", description = "商家主体启停、重置密码与代建门店")
+@SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequestMapping("/api/admin/merchants")
 public class AdminMerchantController {
@@ -54,6 +60,7 @@ public class AdminMerchantController {
      * @param pageSize 每页条数，1 到 100，为空取 20；越界返回 400「分页参数不正确」
      * @return 当页主体与总数
      */
+    @Operation(summary = "商家主体列表", description = "按主体 ID 倒序，每个主体带其全部登录账号与启用状态。")
     @GetMapping
     public ApiResponse<PageResult<AdminMerchantResponse>> list(
             @RequestParam(required = false) MerchantOrgStatus status,
@@ -75,6 +82,7 @@ public class AdminMerchantController {
      * @return 更新后的主体及其账号列表
      * @throws com.suzhong.njl.web.ApiException 两项都未传 400「请指定启停状态」；主体不存在 404
      */
+    @Operation(summary = "修改主体状态", description = "status 与 enabled 至少传一项；停用立即作废该主体全部令牌，两项都空返回 400。")
     @PatchMapping("/{orgId}")
     public ApiResponse<AdminMerchantResponse> updateStatus(
             Authentication authentication,
@@ -95,6 +103,7 @@ public class AdminMerchantController {
      * @throws com.suzhong.njl.web.ApiException 主体不存在 404「商家不存在」；主体下无账号 404「商家账号不存在」；
      *                                         密码长度不合法 400
      */
+    @Operation(summary = "重置商家密码", description = "请求体可省略，不传则随机生成；重置后作废全部令牌，明文只返回一次。")
     @PostMapping("/{orgId}/reset-password")
     public ApiResponse<ResetPasswordResponse> resetPassword(
             @PathVariable Long orgId,
@@ -114,6 +123,7 @@ public class AdminMerchantController {
      * @return 新建门店详情（含版本号 0）
      * @throws com.suzhong.njl.web.ApiException 商家不存在 404「商家不存在」；地区不可用或字段校验失败 400
      */
+    @Operation(summary = "代建门店", description = "名称与地区必填，shelfStatus 缺省 DRAFT；相册只收 URL 数组，创建后失效门店缓存。")
     @PostMapping("/{orgId}/stores")
     public ApiResponse<AdminStoreResponse> createStore(
             @PathVariable Long orgId,

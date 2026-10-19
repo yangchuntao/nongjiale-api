@@ -16,6 +16,10 @@ import com.suzhong.njl.web.PageResult;
 import com.suzhong.njl.web.admin.dto.RejectReasonRequest;
 import com.suzhong.njl.web.admin.dto.ShelfApplicationAdminItem;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import jakarta.validation.Valid;
 
 /**
@@ -26,6 +30,8 @@ import jakarta.validation.Valid;
  * <p>职责：查看商家提交的上架/下架申请并审批。通过后立即改门店 {@code shelfStatus}
  * 并失效门店缓存；驳回只记录原因，不改变门店可见性。只有待审申请可处理。
  */
+@Tag(name = "运营 · 上下架审核", description = "审核商家提交的上架/下架申请")
+@SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequestMapping("/api/admin/shelf-applications")
 public class AdminShelfController {
@@ -48,6 +54,7 @@ public class AdminShelfController {
      * @param pageSize     每页条数，1 到 100，为空取 20；越界返回 400「分页参数不正确」
      * @return 当页申请与总数
      */
+    @Operation(summary = "审核队列", description = "按创建时间倒序，可按状态、门店与商家主体筛选；门店名按当前门店表补全。")
     @GetMapping
     public ApiResponse<PageResult<ShelfApplicationAdminItem>> list(
             @RequestParam(required = false) ReviewStatus status,
@@ -70,6 +77,7 @@ public class AdminShelfController {
      * @throws com.suzhong.njl.web.ApiException 申请不存在或门店不存在 404；申请已审核 409「申请已审核」；
      *                                         门店更新冲突 409「数据已被修改」
      */
+    @Operation(summary = "通过上下架申请", description = "仅待审可审批；通过后立即改写门店状态并失效缓存，已审核 409。")
     @PostMapping("/{id}/approve")
     public ApiResponse<ShelfApplicationAdminItem> approve(Authentication authentication, @PathVariable Long id) {
         return ApiResponse.ok(adminShelfService.approve(AdminPrincipal.adminId(authentication), id));
@@ -87,6 +95,7 @@ public class AdminShelfController {
      * @return 审核后的申请
      * @throws com.suzhong.njl.web.ApiException 申请不存在 404；申请已审核 409；原因为空或超长 400
      */
+    @Operation(summary = "驳回上下架申请", description = "仅待审可驳回；原因必填且不超过 500 字，门店可见性保持不变。")
     @PostMapping("/{id}/reject")
     public ApiResponse<ShelfApplicationAdminItem> reject(
             Authentication authentication,

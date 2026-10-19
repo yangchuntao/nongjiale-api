@@ -12,6 +12,9 @@ import com.suzhong.njl.web.PageResult;
 import com.suzhong.njl.web.portal.dto.ArticleDetailResponse;
 import com.suzhong.njl.web.portal.dto.ArticleSummary;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 /**
  * 门户攻略接口（{@code /api/articles}）。
  *
@@ -20,6 +23,7 @@ import com.suzhong.njl.web.portal.dto.ArticleSummary;
  * <p>职责：已发布攻略的分页列表与详情。列表只返回已发布且可主推的攻略（地区为空、挂省，
  * 或所属市仍开通）；已发布攻略的直链详情不因关城失效，草稿始终 404。
  */
+@Tag(name = "门户 · 攻略", description = "已发布攻略的分页列表与详情查询")
 @RestController
 @RequestMapping("/api/articles")
 public class ArticleController {
@@ -39,6 +43,7 @@ public class ArticleController {
      * @param pageSize 每页条数，1 到 100，为空取 20；越界返回 400「分页参数不正确」
      * @return 当页攻略摘要（不含正文）与总数
      */
+    @Operation(summary = "攻略列表", description = "只返回已发布且可主推的攻略，关闭市的攻略不占名额；地区为空的通用攻略始终展示，按发布时间倒序。")
     @GetMapping
     public ApiResponse<PageResult<ArticleSummary>> list(
             @RequestParam(required = false) Integer page,
@@ -55,6 +60,7 @@ public class ArticleController {
      * @return 攻略正文、封面、摘要、状态、地区与发布时间
      * @throws com.suzhong.njl.web.ApiException 攻略不存在或仍是草稿 404「攻略不存在」
      */
+    @Operation(summary = "攻略详情", description = "只校验存在且已发布，不校验所属城市是否开通，关城后分享直链仍可打开；草稿返回 404。")
     @GetMapping("/{id}")
     public ApiResponse<ArticleDetailResponse> detail(@PathVariable Long id) {
         return ApiResponse.ok(articleQueryService.detail(id));

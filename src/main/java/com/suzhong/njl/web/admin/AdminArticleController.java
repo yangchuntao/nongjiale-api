@@ -20,6 +20,10 @@ import com.suzhong.njl.web.PageResult;
 import com.suzhong.njl.web.admin.dto.ArticleAdminResponse;
 import com.suzhong.njl.web.admin.dto.ArticleWriteRequest;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import jakarta.validation.Valid;
 
 /**
@@ -31,6 +35,8 @@ import jakarta.validation.Valid;
  * <p>职责：攻略的列表、详情、新建、全量更新与物理删除。列表可按 {@code DRAFT}/{@code PUBLISHED}
  * 筛选；只有已发布攻略会进入门户。写操作由服务层维护发布时间并失效攻略/首页缓存。
  */
+@Tag(name = "运营 · 攻略", description = "攻略的增删改查，仅已发布攻略进入门户")
+@SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequestMapping("/api/admin/articles")
 public class AdminArticleController {
@@ -51,6 +57,7 @@ public class AdminArticleController {
      * @param pageSize 每页条数，1 到 100，为空取 20；越界返回 400「分页参数不正确」
      * @return 当页攻略、总数、页码与页大小
      */
+    @Operation(summary = "攻略列表", description = "含草稿，按更新时间倒序；status 为空时草稿与已发布都返回。")
     @GetMapping
     public ApiResponse<PageResult<ArticleAdminResponse>> list(
             @RequestParam(required = false) ArticleStatus status,
@@ -70,6 +77,7 @@ public class AdminArticleController {
      * @return 新建后的攻略详情
      * @throws com.suzhong.njl.web.ApiException 字段校验失败 400；{@code regionId} 查不到 400「地区不存在」
      */
+    @Operation(summary = "新建攻略", description = "标题与状态必填；以 PUBLISHED 创建时立即写入发布时间，创建人取当前运营账号。")
     @PostMapping
     public ApiResponse<ArticleAdminResponse> create(
             Authentication authentication,
@@ -84,6 +92,7 @@ public class AdminArticleController {
      * @return 攻略完整字段，包括正文、状态与发布时间
      * @throws com.suzhong.njl.web.ApiException 攻略不存在 404「攻略不存在」
      */
+    @Operation(summary = "攻略详情", description = "草稿也可查看，返回正文、状态与发布时间；不存在返回 404。")
     @GetMapping("/{id}")
     public ApiResponse<ArticleAdminResponse> detail(@PathVariable Long id) {
         return ApiResponse.ok(adminArticleService.detail(id));
@@ -100,6 +109,7 @@ public class AdminArticleController {
      * @return 更新后的攻略详情
      * @throws com.suzhong.njl.web.ApiException 攻略不存在 404；字段校验失败或地区不存在 400
      */
+    @Operation(summary = "全量更新攻略", description = "按请求体覆盖全部字段；仅从非发布态切到已发布时补写发布时间。")
     @PutMapping("/{id}")
     public ApiResponse<ArticleAdminResponse> update(
             @PathVariable Long id,
@@ -116,6 +126,7 @@ public class AdminArticleController {
      * @return 固定结构 {@code {"id": 攻略ID}}
      * @throws com.suzhong.njl.web.ApiException 攻略不存在 404「攻略不存在」
      */
+    @Operation(summary = "删除攻略", description = "物理删除，不做软删除；删除后门户直链随即不可访问。")
     @DeleteMapping("/{id}")
     public ApiResponse<Map<String, Long>> delete(@PathVariable Long id) {
         adminArticleService.delete(id);

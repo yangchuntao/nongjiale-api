@@ -1,5 +1,7 @@
 package com.suzhong.njl.web.admin.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 /**
  * 单行城市意向汇总（{@code GET /api/admin/metrics/city-intents} 的 rows 元素）。
  *
@@ -14,11 +16,18 @@ package com.suzhong.njl.web.admin.dto;
  * @param checkedInCount 当前状态为 CHECKED_IN 的数量，文案为「已入住」
  * @param total          是否为合计行；true 时 {@code cityId} 为 null
  */
+@Schema(name = "CityIntentMetricRow", description = "单行城市意向汇总响应，用于 GET /api/admin/metrics/city-intents 的 rows 元素")
 public record CityIntentMetricRow(
+        @Schema(description = "市 ID；合计行为 null")
         Long cityId,
+        @Schema(description = "市名称；合计行为「合计」")
         String cityName,
+        @Schema(description = "意向数，统计时间窗内创建的全部意向，含已改期与所有状态")
         long intentCount,
+        @Schema(description = "当前状态为 CONFIRMED 的数量，是状态快照而非历史流转次数")
         long confirmedCount,
+        @Schema(description = "当前状态为 CHECKED_IN 的数量，文案为「已入住」")
         long checkedInCount,
+        @Schema(description = "是否为合计行；true 时 cityId 为 null")
         boolean total) {
 }

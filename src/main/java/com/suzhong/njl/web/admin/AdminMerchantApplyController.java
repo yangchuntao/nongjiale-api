@@ -19,6 +19,10 @@ import com.suzhong.njl.web.admin.dto.PlainPasswordRequest;
 import com.suzhong.njl.web.admin.dto.RejectMerchantApplyResponse;
 import com.suzhong.njl.web.admin.dto.RejectReasonRequest;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import jakarta.validation.Valid;
 
 /**
@@ -29,6 +33,8 @@ import jakarta.validation.Valid;
  * <p>职责：入驻申请队列、通过并开通商家主体与主账号、驳回并记录原因。只有待审申请可处理，
  * 通过时明文密码只在当次响应返回一次，不落库、不回显。
  */
+@Tag(name = "运营 · 入驻审核", description = "商家入驻申请队列，通过开通账号或驳回")
+@SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequestMapping("/api/admin/merchant-applies")
 public class AdminMerchantApplyController {
@@ -49,6 +55,7 @@ public class AdminMerchantApplyController {
      * @param pageSize 每页条数，1 到 100，为空取 20；越界返回 400「分页参数不正确」
      * @return 当页申请与总数
      */
+    @Operation(summary = "入驻申请列表", description = "按创建时间倒序；status 为空时返回全部申请。")
     @GetMapping
     public ApiResponse<PageResult<MerchantApplyItem>> list(
             @RequestParam(required = false) ReviewStatus status,
@@ -70,6 +77,7 @@ public class AdminMerchantApplyController {
      * @return 申请 ID、审核状态、新主体/账号 ID、手机号与一次性明文密码
      * @throws com.suzhong.njl.web.ApiException 申请不存在 404；已审核 409；电话无效 400；手机号已是商家账号 409
      */
+    @Operation(summary = "通过入驻申请", description = "仅待审可处理，电话须为未注册的 11 位手机号；明文密码只返回一次，已审核 409。")
     @PostMapping("/{id}/approve")
     public ApiResponse<ApproveMerchantApplyResponse> approve(
             Authentication authentication,
@@ -90,6 +98,7 @@ public class AdminMerchantApplyController {
      * @return 申请 ID、驳回状态与原因
      * @throws com.suzhong.njl.web.ApiException 申请不存在 404；已审核 409；原因为空或超长 400
      */
+    @Operation(summary = "驳回入驻申请", description = "仅待审可驳回；原因必填且不超过 500 字，驳回后进入终态不可再审核。")
     @PostMapping("/{id}/reject")
     public ApiResponse<RejectMerchantApplyResponse> reject(
             Authentication authentication,

@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 
 import com.suzhong.njl.domain.enums.IntentStatus;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 /**
  * 预订意向（{@code POST /api/booking-intents}、{@code GET /api/me/intents} 与
  * {@code GET /api/me/intents/{id}} 的响应体）。
@@ -26,18 +28,32 @@ import com.suzhong.njl.domain.enums.IntentStatus;
  * @param userRemark   游客备注，可空
  * @param createdAt    创建时间，服务器本地时间（Asia/Shanghai）
  */
+@Schema(name = "IntentResponse", description = "预订意向，POST /api/booking-intents、GET /api/me/intents 与 GET /api/me/intents/{id} 的响应体；只能看到自己的意向")
 public record IntentResponse(
+        @Schema(description = "意向 ID")
         Long id,
+        @Schema(description = "意向单号，由「日期 + 随机十六进制」生成，对客展示与查询均可用")
         String intentNo,
+        @Schema(description = "跟进状态：PENDING/CONFIRMED/RESCHEDULED/CHECKED_IN/CLOSED；新提交固定 PENDING")
         IntentStatus status,
+        @Schema(description = "门店 ID")
         Long storeId,
+        @Schema(description = "门店展示名，可空；门店被物理删除后为 null，不影响意向可读")
         String storeName,
+        @Schema(description = "到店日期，格式 yyyy-MM-dd")
         LocalDate checkIn,
+        @Schema(description = "离店日期，可空，格式 yyyy-MM-dd；只填晚数时为空")
         LocalDate checkOut,
+        @Schema(description = "入住晚数，可空；只填离店日期时为空")
         Integer nights,
+        @Schema(description = "入住人数")
         Integer guests,
+        @Schema(description = "联系人姓名")
         String contactName,
+        @Schema(description = "联系电话，完整 11 位，不做脱敏（脱敏只发生在商家/运营的只读接口）")
         String contactPhone,
+        @Schema(description = "游客备注，可空")
         String userRemark,
+        @Schema(description = "创建时间，服务器本地时间（Asia/Shanghai）")
         LocalDateTime createdAt) {
 }

@@ -5,3 +5,10 @@ spring:
     driver-class-name: org.h2.Driver
     username: sa
     password:
+
+# 本地默认打开 Swagger：http://localhost:8080/swagger-ui.html
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true

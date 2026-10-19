@@ -18,6 +18,10 @@ import com.suzhong.njl.web.admin.dto.CityDetailResponse;
 import com.suzhong.njl.web.admin.dto.CitySummaryResponse;
 import com.suzhong.njl.web.admin.dto.CityVersionRequest;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import jakarta.validation.Valid;
 
 /**
@@ -28,6 +32,8 @@ import jakarta.validation.Valid;
  * <p>职责：开城列表与详情、人工清单勾选、开通与关城。供给数与攻略数由服务层实时统计，
  * 不能手改；开通要求清单项齐备且供给/攻略达到配置门槛，关城不删除历史数据。
  */
+@Tag(name = "运营 · 开城", description = "开城清单、达标校验与城市开通/关闭")
+@SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequestMapping("/api/admin/cities")
 public class AdminCityController {
@@ -46,6 +52,7 @@ public class AdminCityController {
      *
      * @return 市级摘要列表，含开通状态、供给数、攻略数与清单更新时间
      */
+    @Operation(summary = "开城列表", description = "只返回启用中的市级地区，供给只计已上架且非测试门店，数据实时统计。")
     @GetMapping
     public ApiResponse<List<CitySummaryResponse>> list() {
         return ApiResponse.ok(adminCityService.list());
@@ -60,6 +67,7 @@ public class AdminCityController {
      * @return 城市详情；供给、攻略为实时计数，{@code supplyReady}/{@code articlesReady} 只读
      * @throws com.suzhong.njl.web.ApiException 地区不存在或不是市级 404「城市不存在」；地区已停用 400「地区不可用」
      */
+    @Operation(summary = "开城详情", description = "返回人工清单、实时达标情况与乐观锁版本号；不是市级地区返回 404。")
     @GetMapping("/{cityId}")
     public ApiResponse<CityDetailResponse> detail(@PathVariable Long cityId) {
         return ApiResponse.ok(adminCityService.detail(cityId));
@@ -79,6 +87,7 @@ public class AdminCityController {
      * @throws com.suzhong.njl.web.ApiException 带自动统计字段、未指定更新项、地区不可用或版本为空 400；
      *                                         城市不存在 404；版本冲突 409「数据已被修改」
      */
+    @Operation(summary = "修改开城清单", description = "只允许改三项人工清单且至少传一项；自动统计字段出现即 400，版本冲突 409。")
     @PatchMapping("/{cityId}/checklist")
     public ApiResponse<CityDetailResponse> patch(
             Authentication authentication,
@@ -100,6 +109,7 @@ public class AdminCityController {
      * @throws com.suzhong.njl.web.ApiException 城市不存在 404；地区不可用或版本为空 400；
      *                                         已开通、未达标或版本冲突 409
      */
+    @Operation(summary = "开通城市", description = "清单三项齐备且供给/攻略达门槛才可开通，未达标或版本冲突返回 409。")
     @PostMapping("/{cityId}/open")
     public ApiResponse<CityDetailResponse> open(
             Authentication authentication,
@@ -121,6 +131,7 @@ public class AdminCityController {
      * @throws com.suzhong.njl.web.ApiException 城市不存在 404；地区不可用或版本为空 400；
      *                                         该市未开通或版本冲突 409
      */
+    @Operation(summary = "关闭城市", description = "仅已开通的市可关闭；关城不删除历史数据，未开通或版本冲突返回 409。")
     @PostMapping("/{cityId}/close")
     public ApiResponse<CityDetailResponse> close(
             Authentication authentication,

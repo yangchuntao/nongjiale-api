@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 import com.suzhong.njl.domain.enums.IntentStatus;
 import com.suzhong.njl.domain.enums.NoteAction;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 /**
  * 意向跟进记录（{@code GET /api/admin/intents/{id}} 的 notes 元素，
  * 状态变更与追加备注接口也随详情整体返回）。
@@ -20,12 +22,20 @@ import com.suzhong.njl.domain.enums.NoteAction;
  * @param note       说明文字，可空；状态变更时是运营填的备注，纯备注时是正文
  * @param createdAt  记录时间，{@code Asia/Shanghai} 的 ISO-8601
  */
+@Schema(name = "IntentNoteItem", description = "意向跟进记录响应，用于 GET /api/admin/intents/{id} 的 notes 元素，状态变更与追加备注接口随详情整体返回")
 public record IntentNoteItem(
+        @Schema(description = "记录 ID，对应 intent_note.id")
         Long id,
+        @Schema(description = "操作运营 ID")
         Long adminId,
+        @Schema(description = "动作类型，取值 STATUS_CHANGE（状态变更）、COMMENT（备注）")
         NoteAction action,
+        @Schema(description = "变更前状态，仅 STATUS_CHANGE 有值，否则为 null")
         IntentStatus fromStatus,
+        @Schema(description = "变更后状态，仅 STATUS_CHANGE 有值，否则为 null")
         IntentStatus toStatus,
+        @Schema(description = "说明文字，可空；状态变更时是运营填的备注，纯备注时是正文")
         String note,
+        @Schema(description = "记录时间，Asia/Shanghai 的 ISO-8601")
         LocalDateTime createdAt) {
 }

@@ -13,12 +13,18 @@ import com.suzhong.njl.web.ApiResponse;
 import com.suzhong.njl.web.PageResult;
 import com.suzhong.njl.web.merchant.dto.MerchantIntentResponse;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 /**
  * 商家端预订意向接口（{@code /api/merchant/intents}）。
  *
  * <p>所属端：商家后台。需 {@code MERCHANT} 角色 Bearer 令牌，且仅能访问本主体数据；
  * 账号或主体停用由服务层再次校验。本端只读，不能改意向状态，联系电话中间四位脱敏。
  */
+@Tag(name = "商家 · 意向", description = "商家查看本主体预订意向，只读且手机号脱敏")
+@SecurityRequirement(name = "bearerAuth")
 @RestController
 public class MerchantIntentController {
 
@@ -39,6 +45,7 @@ public class MerchantIntentController {
      * @return 当页意向与总数，手机号已脱敏
      * @throws com.suzhong.njl.web.ApiException 未登录 401；账号或主体停用、令牌主体不符 403
      */
+    @Operation(summary = "意向列表", description = "按商家主体隔离，创建时间倒序；分页上限 100，手机号中间四位脱敏。")
     @GetMapping("/api/merchant/intents")
     public ApiResponse<PageResult<MerchantIntentResponse>> list(
             Authentication authentication,
@@ -59,6 +66,7 @@ public class MerchantIntentController {
      * @return 意向详情
      * @throws com.suzhong.njl.web.ApiException 未登录 401；账号或主体停用 403；意向不存在或不属于本主体 404
      */
+    @Operation(summary = "意向详情", description = "按意向 ID 与主体联合过滤，跨主体访问一律视为不存在；手机号已脱敏。")
     @GetMapping("/api/merchant/intents/{id}")
     public ApiResponse<MerchantIntentResponse> detail(Authentication authentication, @PathVariable Long id) {
         return ApiResponse.ok(merchantIntentService.detail(

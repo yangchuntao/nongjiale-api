@@ -4,6 +4,8 @@ import java.time.LocalDate;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -28,23 +30,32 @@ import jakarta.validation.constraints.Size;
  * @param userRemark   游客备注，可空，最长 500 字
  */
 @JsonIgnoreProperties(ignoreUnknown = false)
+@Schema(name = "CreateIntentRequest", description = "提交预订意向的请求体，POST /api/booking-intents，须游客 Bearer；未知字段会被拒绝")
 public record CreateIntentRequest(
+        @Schema(description = "门店 ID，必填；门店不存在 404，已下架或所属市未开通 410")
         @NotNull(message = "请选择房源")
         Long storeId,
+        @Schema(description = "到店日期，必填，格式 yyyy-MM-dd；早于今天（Asia/Shanghai）返回 409")
         @NotNull(message = "请填写到店日期")
         LocalDate checkIn,
+        @Schema(description = "离店日期，可空，格式 yyyy-MM-dd；与 nights 至少填一个，早于到店日期返回 409")
         LocalDate checkOut,
+        @Schema(description = "入住晚数，可空，整数且不小于 1；与 checkOut 至少填一个，两者都为空返回 400")
         @Min(value = 1, message = "晚数不正确")
         Integer nights,
+        @Schema(description = "入住人数，必填，整数且不小于 1")
         @NotNull(message = "请填写人数")
         @Min(value = 1, message = "人数不正确")
         Integer guests,
+        @Schema(description = "联系人姓名，必填，最长 64 字")
         @NotBlank(message = "请填写联系人")
         @Size(max = 64, message = "联系人过长")
         String contactName,
+        @Schema(description = "联系电话，必填，须匹配 ^1\\d{10}$（11 位手机号）")
         @NotBlank(message = "请填写联系电话")
         @Pattern(regexp = "^1\\d{10}$", message = "联系电话格式不正确")
         String contactPhone,
+        @Schema(description = "游客备注，可空，最长 500 字")
         @Size(max = 500, message = "备注过长")
         String userRemark) {
 }

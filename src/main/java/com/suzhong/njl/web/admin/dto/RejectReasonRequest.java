@@ -2,6 +2,8 @@ package com.suzhong.njl.web.admin.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
@@ -15,7 +17,9 @@ import jakarta.validation.constraints.Size;
  *
  * @param reason 驳回原因，必填，最长 500 字；为空报「驳回原因不能为空」，超长报「驳回原因过长」
  */
+@Schema(name = "RejectReasonRequest", description = "驳回原因请求体，入驻审核驳回与上下架申请驳回共用")
 public record RejectReasonRequest(
+        @Schema(description = "驳回原因，必填，最长 500 字，落库前去除首尾空白；为空报「驳回原因不能为空」，超长报「驳回原因过长」")
         @NotBlank(message = "驳回原因不能为空")
         @Size(max = 500, message = "驳回原因过长")
         String reason) {

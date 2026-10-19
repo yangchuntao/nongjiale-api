@@ -3,6 +3,8 @@ package com.suzhong.njl.web.admin.dto;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.suzhong.njl.domain.enums.ArticleStatus;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -22,16 +24,23 @@ import jakarta.validation.constraints.Size;
  * @param status   发布状态，必填，取值见 {@link ArticleStatus}：DRAFT、PUBLISHED；为空报「状态不能为空」
  * @param regionId 所属地区 ID，可空；传了但地区不存在返回 400「地区不存在」，不校验是否启用
  */
+@Schema(name = "ArticleWriteRequest", description = "攻略新建与全量更新请求体，用于 POST /api/admin/articles 与 PUT /api/admin/articles/{id}")
 public record ArticleWriteRequest(
+        @Schema(description = "标题，必填，最长 200；为空报「标题不能为空」，超长报「标题过长」")
         @NotBlank(message = "标题不能为空")
         @Size(max = 200, message = "标题过长")
         String title,
+        @Schema(description = "封面图 URL，可空，最长 512，超长报「封面地址过长」")
         @Size(max = 512, message = "封面地址过长")
         String coverUrl,
+        @Schema(description = "摘要，可空，最长 500，超长报「摘要过长」")
         @Size(max = 500, message = "摘要过长")
         String summary,
+        @Schema(description = "正文，可空，无长度上限校验")
         String body,
+        @Schema(description = "发布状态，必填，取值 DRAFT、PUBLISHED；为空报「状态不能为空」")
         @NotNull(message = "状态不能为空")
         ArticleStatus status,
+        @Schema(description = "所属地区 ID，可空；传了但地区不存在返回 400「地区不存在」，不校验是否启用")
         Long regionId) {
 }

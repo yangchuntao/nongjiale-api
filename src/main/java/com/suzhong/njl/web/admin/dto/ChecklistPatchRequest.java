@@ -3,6 +3,8 @@ package com.suzhong.njl.web.admin.dto;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSetter;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import jakarta.validation.constraints.NotNull;
 
 /**
@@ -14,27 +16,37 @@ import jakarta.validation.constraints.NotNull;
  * 城市不存在返回 404，城市节点停用返回 400「地区不可用」，版本不一致返回 409「数据已被修改」。
  * 未知字段返回 400「请求体格式不正确」。
  */
+@Schema(name = "ChecklistPatchRequest", description = "开城清单局部更新请求体，用于 PATCH /api/admin/cities/{cityId}/checklist；只能手改①④⑤，②③按实时计数推导")
 @JsonIgnoreProperties(ignoreUnknown = false)
 public class ChecklistPatchRequest {
 
     /** ①目的地数据是否齐备，可空；null 表示本次不改，非 null 时覆盖原值。 */
+    @Schema(description = "①目的地数据是否齐备，可空；null 表示本次不改，非 null 时覆盖原值")
     private Boolean destinationReady;
     /** ④客服覆盖是否已说明，可空；null 表示本次不改。 */
+    @Schema(description = "④客服覆盖是否已说明，可空；null 表示本次不改")
     private Boolean supportCovered;
     /** ⑤测数或脏数据是否已确认清理，可空；null 表示本次不改。 */
+    @Schema(description = "⑤测数或脏数据是否已确认清理，可空；null 表示本次不改")
     private Boolean dirtyDataCleared;
     /** 请求是否显式出现 {@code destinationReady}，用于区分「未传」与「传了 null」。 */
+    @Schema(description = "标记请求是否显式出现 destinationReady，用于区分「未传」与「传 null」：未传时按不改处理，传 null 也按不改处理")
     private boolean destinationReadySpecified;
     /** 请求是否显式出现 {@code supportCovered}。 */
+    @Schema(description = "标记请求是否显式出现 supportCovered，用于区分「未传」与「传 null」")
     private boolean supportCoveredSpecified;
     /** 请求是否显式出现 {@code dirtyDataCleared}。 */
+    @Schema(description = "标记请求是否显式出现 dirtyDataCleared，用于区分「未传」与「传 null」")
     private boolean dirtyDataClearedSpecified;
     /** 请求是否出现只读字段 {@code supplyReady}，出现即拒绝整次更新。 */
+    @Schema(description = "标记请求是否出现只读字段 supplyReady；只要出现（含传 null）即返回 400「供给达标与攻略达标按实时计数自动勾选，不能手改」")
     private boolean supplyReadySpecified;
     /** 请求是否出现只读字段 {@code articlesReady}，出现即拒绝整次更新。 */
+    @Schema(description = "标记请求是否出现只读字段 articlesReady；只要出现（含传 null）即返回 400「供给达标与攻略达标按实时计数自动勾选，不能手改」")
     private boolean articlesReadySpecified;
 
     /** 乐观锁版本号，必填；没有清单行时必须是 0，否则 409。 */
+    @Schema(description = "乐观锁版本号，必填；没有清单行时必须是 0，为空报「版本不能为空」，与库内不一致返回 409「数据已被修改」")
     @NotNull(message = "版本不能为空")
     private Long version;
 

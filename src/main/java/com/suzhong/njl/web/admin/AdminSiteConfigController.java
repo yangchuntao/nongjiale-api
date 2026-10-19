@@ -12,6 +12,10 @@ import com.suzhong.njl.web.ApiResponse;
 import com.suzhong.njl.web.admin.dto.SiteConfigResponse;
 import com.suzhong.njl.web.admin.dto.SiteConfigWriteRequest;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import jakarta.validation.Valid;
 
 /**
@@ -22,6 +26,8 @@ import jakarta.validation.Valid;
  * <p>职责：读取与整单更新站名、主色、客服电话。不含开城门槛等其他配置；
  * 更新只写这三项，成功后失效门户公开配置缓存。
  */
+@Tag(name = "运营 · 站点配置", description = "站名、主色与客服电话的读取与整单更新")
+@SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequestMapping("/api/admin/site-config")
 public class AdminSiteConfigController {
@@ -39,6 +45,7 @@ public class AdminSiteConfigController {
      *
      * @return 站名、主色（{@code #RRGGBB}）与客服电话
      */
+    @Operation(summary = "站点配置", description = "按固定键读取站名、主色与客服电话；缺行或值为 null 时返回空串。")
     @GetMapping
     public ApiResponse<SiteConfigResponse> get() {
         return ApiResponse.ok(adminSiteConfigService.get());
@@ -55,6 +62,7 @@ public class AdminSiteConfigController {
      * @return 更新后的三项配置
      * @throws com.suzhong.njl.web.ApiException 字段为空、超长或主色格式不正确 400
      */
+    @Operation(summary = "更新站点配置", description = "三项均必填，主色须为 #RRGGBB；写入前去空白，成功后失效公开配置缓存。")
     @PutMapping
     public ApiResponse<SiteConfigResponse> update(
             Authentication authentication,

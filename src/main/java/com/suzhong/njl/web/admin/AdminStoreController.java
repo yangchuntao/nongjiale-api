@@ -16,6 +16,10 @@ import com.suzhong.njl.web.PageResult;
 import com.suzhong.njl.web.admin.dto.AdminStoreResponse;
 import com.suzhong.njl.web.admin.dto.AdminStoreUpdateRequest;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import jakarta.validation.Valid;
 
 /**
@@ -26,6 +30,8 @@ import jakarta.validation.Valid;
  * <p>职责：全站门店查询与代编。代编可改上下架、首页推荐与测试数据标记；直接改
  * {@code shelfStatus} 会立即生效并写 {@code SHELF_FORCE} 审计，不走商家申请队列。
  */
+@Tag(name = "运营 · 门店", description = "全站门店查询与代编，可直接改上下架与推荐位")
+@SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequestMapping("/api/admin/stores")
 public class AdminStoreController {
@@ -51,6 +57,7 @@ public class AdminStoreController {
      * @param pageSize        每页条数，1 到 100，为空取 20；越界返回 400「分页参数不正确」
      * @return 当页门店与总数
      */
+    @Operation(summary = "门店列表", description = "门店名模糊匹配、其余条件等值过滤；含草稿、下架与测试数据。")
     @GetMapping
     public ApiResponse<PageResult<AdminStoreResponse>> list(
             @RequestParam(required = false) ShelfStatus shelfStatus,
@@ -71,6 +78,7 @@ public class AdminStoreController {
      * @return 门店完整字段，含商家主体、版本号与测试数据标记
      * @throws com.suzhong.njl.web.ApiException 门店不存在 404「门店不存在」
      */
+    @Operation(summary = "门店详情", description = "返回门店完整字段，含商家主体、版本号与测试数据标记；不存在 404。")
     @GetMapping("/{id}")
     public ApiResponse<AdminStoreResponse> detail(@PathVariable Long id) {
         return ApiResponse.ok(adminStoreService.detail(id));
@@ -90,6 +98,7 @@ public class AdminStoreController {
      * @throws com.suzhong.njl.web.ApiException 门店不存在 404；字段校验失败、地区不可用或图集格式错误 400；
      *                                         版本冲突 409「数据已被修改」
      */
+    @Operation(summary = "代编门店", description = "整单保存；改上下架立即生效并写 SHELF_FORCE 审计，版本冲突返回 409。")
     @PutMapping("/{id}")
     public ApiResponse<AdminStoreResponse> update(
             Authentication authentication,

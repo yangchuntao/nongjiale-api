@@ -18,6 +18,10 @@ import com.suzhong.njl.web.PageResult;
 import com.suzhong.njl.web.portal.dto.CreateIntentRequest;
 import com.suzhong.njl.web.portal.dto.IntentResponse;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import jakarta.validation.Valid;
 
 /**
@@ -28,6 +32,7 @@ import jakarta.validation.Valid;
  * <p>职责：提交意向与查看「我的意向」。平台无支付、无锁房；提交前账号必须已绑定手机号，
  * 且只能查看自己的意向，他人意向按 404 处理，避免探测单号。
  */
+@Tag(name = "门户 · 预订意向", description = "提交预订意向与查看我的意向")
 @RestController
 public class BookingIntentController {
 
@@ -50,6 +55,8 @@ public class BookingIntentController {
      * @throws com.suzhong.njl.web.ApiException 未登录 401；未绑定手机号 403；门店不存在 404；
      *                                         门店不可订 410；日期非法 409；离店日期与晚数同时缺失、字段格式错误 400
      */
+    @Operation(summary = "提交预订意向", description = "账号须已绑定手机号，否则 403 且不落库；门店须上架且所属市已开通，否则 410。初始状态 PENDING。")
+    @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/api/booking-intents")
     public ApiResponse<IntentResponse> create(Authentication authentication, @Valid @RequestBody CreateIntentRequest request) {
         AuthenticatedUser user = CurrentUser.require(authentication, UserType.TOURIST);
@@ -67,6 +74,8 @@ public class BookingIntentController {
      * @return 当页意向与总数
      * @throws com.suzhong.njl.web.ApiException 未登录 401；角色不是游客 403
      */
+    @Operation(summary = "我的意向列表", description = "按当前令牌的用户 ID 隔离，创建时间倒序；门店已删除时门店名为空。")
+    @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/api/me/intents")
     public ApiResponse<PageResult<IntentResponse>> mine(
             Authentication authentication,
@@ -86,6 +95,8 @@ public class BookingIntentController {
      * @return 意向详情与门店名
      * @throws com.suzhong.njl.web.ApiException 未登录 401；角色不是游客 403；意向不存在或不属于本人 404
      */
+    @Operation(summary = "我的意向详情", description = "不存在与不属于当前用户都返回 404，避免通过 ID 探测他人意向。")
+    @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/api/me/intents/{id}")
     public ApiResponse<IntentResponse> mineOne(Authentication authentication, @PathVariable Long id) {
         AuthenticatedUser user = CurrentUser.require(authentication, UserType.TOURIST);
