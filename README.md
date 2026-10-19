@@ -31,6 +31,29 @@ mvn spring-boot:run
 {"status":"UP","service":"nongjiale-api"}
 ```
 
+## 在线接口文档（Swagger）
+
+本地启动后直接访问：
+
+- `http://localhost:8080/swagger-ui.html` — 可视化文档，可按 Tag 分组调试，右上角 **Authorize** 填登录接口返回的 token
+- `http://localhost:8080/v3/api-docs` — OpenAPI 3 JSON，可直接导入 Apifox / Postman / 前端代码生成器
+
+开关由 `springdoc.api-docs.enabled` 与 `springdoc.swagger-ui.enabled` 控制，两者默认 `${OPENAPI_ENABLED:false}`；
+`local` profile 已显式打开。生产（`mysql` profile）默认关闭，确需开启时设置环境变量 `OPENAPI_ENABLED=true`。
+
+文档内容全部来自源码注解，不额外维护一份 YAML：
+
+| 注解 | 用在哪 | 作用 |
+|------|--------|------|
+| `@Tag(name, description)` | Controller 类 | 按「端 · 模块」分组，如「运营 · 开城」 |
+| `@Operation(summary, description)` | 接口方法 | 标题与业务规则，从方法 Javadoc 提炼 |
+| `@SecurityRequirement(name = "bearerAuth")` | 需登录的类或方法 | 显示锁标；公开接口不加 |
+| `@Schema(description, example)` | DTO 类与字段/record 组件 | 字段含义、单位、枚举取值、示例 |
+
+安全方案 `bearerAuth` 定义在 `config/OpenApiConfig.java`，描述令牌是 32 字节随机串、非 JWT、默认 12 小时、重启失效。
+
+> 注意：`ApiResponse` / `PageResult` 是泛型 record，**不要**给它们写 `@Schema(name = ...)`，否则 springdoc 会把所有接口的 `data` 指向同一个具体类型，响应结构串台。
+
 切 MySQL：
 
 ```bash

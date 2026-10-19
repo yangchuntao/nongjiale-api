@@ -2,6 +2,7 @@
 
 > 由源码扫描生成（26 个 Controller，69 个路由），基准地址 `http://localhost:8080`。
 > 除 `/health` 外统一信封 `{code, message, data}`，`code = 0` 表示成功。字段细节见 `docs/ADMIN-API.md`。
+> 在线版：本地启动后访问 `/swagger-ui.html`（OpenAPI JSON 为 `/v3/api-docs`），由源码注解生成，与本文档同源。
 
 ## 通用约定
 
