@@ -18,6 +18,14 @@ import com.suzhong.njl.web.merchant.dto.ShelfApplicationResponse;
 
 import jakarta.validation.Valid;
 
+/**
+ * 商家端上下架申请接口（{@code /api/merchant}）。
+ *
+ * <p>所属端：商家后台。需 {@code MERCHANT} 角色 Bearer 令牌，只能操作本主体名下门店。
+ *
+ * <p>商家不能直接改门店上下架状态，只能提交申请由运营审批；同一门店同时只允许一条待审申请，
+ * 重复提交返回 409。申请期间门店可见性不变。
+ */
 @RestController
 public class MerchantShelfController {
 
@@ -27,6 +35,20 @@ public class MerchantShelfController {
         this.merchantShelfService = merchantShelfService;
     }
 
+    /**
+     * {@code POST /api/merchant/stores/{id}/shelf-applications} — 提交上架/下架申请。
+     *
+     * <p>先校验门店属于本主体，再检查是否已有待审申请；申请原因选填，最长 500 字。
+     * 动作通过后才会改写门店状态，提交本身不改变门户可见性。
+     *
+     * @param authentication 当前商家令牌，用于解析主体 ID
+     * @param id             门店 ID，必须属于本主体
+     * @param request        {@code action} 必填，取值 {@code PUBLISH}（申请上架）或 {@code UNPUBLISH}（申请下架）；
+     *                       {@code reason} 可选，最长 500 字
+     * @return 新建申请，含门店名、动作与 {@code PENDING} 状态
+     * @throws com.suzhong.njl.web.ApiException 未登录 401；账号或主体停用 403；
+     *                                         门店不存在或不属于本主体 404；已有待审申请 409
+     */
     @PostMapping("/api/merchant/stores/{id}/shelf-applications")
     public ApiResponse<ShelfApplicationResponse> apply(
             Authentication authentication,
@@ -36,6 +58,17 @@ public class MerchantShelfController {
                 CurrentUser.require(authentication, UserType.MERCHANT), id, request));
     }
 
+    /**
+     * {@code GET /api/merchant/shelf-applications} — 本主体上下架申请记录。
+     *
+     * <p>按创建时间倒序、ID 倒序；包含已通过、已驳回与待审记录，门店名按当前门店表补全。
+     *
+     * @param authentication 当前商家令牌，用于解析主体 ID
+     * @param page           页码，从 1 开始，为空取 1
+     * @param pageSize       每页条数，1 到 100，为空取 20；越界返回 400「分页参数不正确」
+     * @return 当页申请与总数
+     * @throws com.suzhong.njl.web.ApiException 未登录 401；账号或主体停用 403
+     */
     @GetMapping("/api/merchant/shelf-applications")
     public ApiResponse<PageResult<ShelfApplicationResponse>> list(
             Authentication authentication,

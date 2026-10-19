@@ -2,6 +2,23 @@ package com.suzhong.njl.web.portal.dto;
 
 import com.suzhong.njl.domain.enums.BannerScope;
 
+/**
+ * 首页 Banner 条目（{@code GET /api/home/banners} 的响应数组元素，公开接口）。
+ *
+ * <p>只返回启用中的条目：全站条目始终可见，指定市条目仅在该市当前仍开通时出现；
+ * 按 {@code sortOrder} 升序，数字越小越靠前。接口不进首页 feed 缓存，运营启停后立即生效。
+ *
+ * @param id         Banner ID
+ * @param title      标题，可空
+ * @param imageUrl   图片 URL，必填，只接受外链地址，不是文件上传结果
+ * @param linkUrl    点击跳转 URL，必填；可以是站内路径（如 {@code /?city=yangzhou}）或外链
+ * @param scope      投放范围，见 {@link com.suzhong.njl.domain.enums.BannerScope}：{@code ALL} 全站、{@code CITY} 指定市
+ * @param cityId     投放市 ID，仅 {@code scope=CITY} 时有值，全站条目为 null
+ * @param citySlug   投放市 slug，仅 {@code scope=CITY} 时有值，全站条目为 null
+ * @param cityName   投放市展示名，仅 {@code scope=CITY} 时有值，全站条目为 null
+ * @param sortOrder  排序号，必填且非空，升序；数字越小越靠前
+ * @param enabled    是否启用；本接口只会返回 {@code true}，字段保留给前端做兼容
+ */
 public record HomeBannerItem(
         Long id,
         String title,

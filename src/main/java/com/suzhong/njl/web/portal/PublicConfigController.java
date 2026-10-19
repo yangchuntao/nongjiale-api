@@ -8,6 +8,14 @@ import com.suzhong.njl.service.portal.PublicConfigService;
 import com.suzhong.njl.web.ApiResponse;
 import com.suzhong.njl.web.portal.dto.PublicConfigResponse;
 
+/**
+ * 门户公开站点配置接口（{@code /api/config}）。
+ *
+ * <p>所属端：门户游客，公开接口，无需 Bearer。
+ *
+ * <p>供门户渲染品牌与「联系客服」；只含站名、主色、客服电话三个字段，不含开城门槛。
+ * 响应走 Redis 旁路缓存，运营更新配置后由服务端失效。
+ */
 @RestController
 @RequestMapping("/api/config")
 public class PublicConfigController {
@@ -18,6 +26,13 @@ public class PublicConfigController {
         this.publicConfigService = publicConfigService;
     }
 
+    /**
+     * {@code GET /api/config/public} — 公开站点配置（公开）。
+     *
+     * <p>未配置的项返回空串而不是 null，前端按「未配置」降级展示；不返回开城阈值等后台配置。
+     *
+     * @return 站名、主色与客服电话
+     */
     @GetMapping("/public")
     public ApiResponse<PublicConfigResponse> publicConfig() {
         return ApiResponse.ok(publicConfigService.publicConfig());

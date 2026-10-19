@@ -37,6 +37,25 @@ import com.suzhong.njl.web.admin.dto.CityChecklistView;
 import com.suzhong.njl.web.admin.dto.CityDetailResponse;
 import com.suzhong.njl.web.admin.dto.CitySummaryResponse;
 
+/**
+ * 开城管理服务（运营端，{@code /api/admin/cities}）。
+ *
+ * <p>职责：市的开关城状态维护，以及开城清单的查询与手勾。供给数、攻略数按实时计数推导，
+ * 运营只能手改①目的地数据、④客服覆盖、⑤脏数据清理三项；门槛值由 {@link OpenCityThresholds}
+ * 从站点配置读取，缺行或坏值回退 {@link CityRules} 的默认值。
+ *
+ * <p>事务边界：{@link #patch}、{@link #open}、{@link #close} 各为一个事务，
+ * 业务更新与审计写入同事务；{@link #list}、{@link #detail} 只读，不开事务。
+ *
+ * <p>关键约束：
+ * <ul>
+ *   <li>只有 {@code CITY} 层级且 {@code enabled=true} 的节点可操作，不存在或不是市返回 404，
+ *       停用返回 400「地区不可用」；</li>
+ *   <li>清单行先 {@code SELECT ... FOR UPDATE} 加锁，再比对 version；冲突统一 409「数据已被修改」；</li>
+ *   <li>开城必须五项全达标，否则 409 并附固定顺序的缺项文案；关城不删门店、攻略、意向，也不改 enabled；</li>
+ *   <li>开城/关城在事务提交后才失效地区与首页缓存，回滚不会误删缓存。</li>
+ * </ul>
+ */
 @Service
 public class AdminCityService {
 
@@ -65,6 +84,15 @@ public class AdminCityService {
         this.adminCache = adminCache;
     }
 
+    /**
+     * 查询开城列表，不分页。
+     *
+     * <p>流程：取全部启用的市 → 批量加载地区、清单与实时计数 → 逐市组装。
+     * 只含 {@code enabled=true} 且层级为市的节点，按 {@code sortOrder}、id 升序；
+     * 供给/攻略计数只算启用地区内的上架非测试门店与已发布攻略。
+     *
+     * @return 各市的开通态、实时计数与清单最近操作时间；没有清单行时时间为 null
+     */
     public List<CitySummaryResponse> list() {
         List<Region> cities = enabledCities();
         Map<Long, Region> byId = allRegions();
@@ -87,17 +115,40 @@ public class AdminCityService {
         return items;
     }
 
+    /**
+     * 查询单个市的开城详情。
+     *
+     * @param cityId 市 ID
+     * @return 开通态、生效门槛、三项手勾、两项实时推导、缺项与可开/可关标记
+     * @throws com.suzhong.njl.web.ApiException 不存在或不是市 404「城市不存在」；节点停用 400「地区不可用」
+     */
     public CityDetailResponse detail(Long cityId) {
         Region city = requireEnabledCity(cityId);
         return toDetail(city, checklistMapper.selectById(cityId), countOne(city), allRegions());
     }
 
+    /**
+     * 局部更新开城清单的手勾项。
+     *
+     * <p>流程：校验市可用 → 拒绝只读字段 → 要求至少改一项 → 加行锁并校验版本 →
+     * 合并三项手勾 → 按版本写回 → 写 {@code CITY_CHECKLIST} 审计 → 回读详情。
+     * 供给达标、攻略达标不落库，请求里出现即整体拒绝。
+     *
+     * @param adminId 当前运营账号 ID，写入清单 updated_by 与审计
+     * @param cityId  市 ID
+     * @param request 三个手勾项（省略或传 null 表示不改）与必填 version
+     * @return 更新后的城市详情
+     * @throws com.suzhong.njl.web.ApiException 请求带 {@code supplyReady}/{@code articlesReady} 或三项都没改时 400；
+     *         市不存在 404；节点停用 400；version 为空 400「版本不能为空」；版本不一致或并发插入冲突 409「数据已被修改」
+     */
     @Transactional
     public CityDetailResponse patch(long adminId, Long cityId, ChecklistPatchRequest request) {
         requireEnabledCity(cityId);
+        // ②③由实时计数推导，请求里出现就直接拒绝，不能静默忽略，否则前端会误以为手勾生效
         if (request.supplyReadySpecified() || request.articlesReadySpecified()) {
             throw new ApiException(HttpStatus.BAD_REQUEST, CityRules.AUTO_FIELD_MESSAGE);
         }
+        // 三项都没传非 null 值视为空更新，避免白刷版本号
         if (!request.hasManualChange()) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "请指定要更新的项");
         }
@@ -121,10 +172,25 @@ public class AdminCityService {
         return toDetail(requireEnabledCity(cityId), saved, countOne(requireEnabledCity(cityId)), allRegions());
     }
 
+    /**
+     * 开通城市。
+     *
+     * <p>流程：加行锁取清单 → 校验市可用 → 已开通则 409 → 校验版本 → 实时计数 →
+     * 五项缺项校验 → 改 {@code open_status=OPEN} → 按版本写回清单 → 写 {@code CITY_OPEN} 审计
+     * → 提交后失效缓存。
+     *
+     * @param adminId 当前运营账号 ID
+     * @param cityId  市 ID
+     * @param version 清单版本；没有清单行时必须为 0
+     * @return 开通后的城市详情
+     * @throws com.suzhong.njl.web.ApiException 市不存在 404；节点停用 400；已开通 409「该市已开通」；
+     *         version 为空 400；版本不一致 409；任一项未达标 409「未达标，不能开通：…」
+     */
     @Transactional
     public CityDetailResponse open(long adminId, Long cityId, long version) {
         RegionOpenChecklist locked = lockChecklist(cityId);
         Region city = requireEnabledCity(cityId);
+        // 已开通直接冲突，避免重复写审计、重复失效缓存
         if (CityRules.effective(city.getOpenStatus()) == RegionOpenStatus.OPEN) {
             throw new ApiException(HttpStatus.CONFLICT, "该市已开通");
         }
@@ -133,9 +199,11 @@ public class AdminCityService {
         boolean destination = destinationReady(locked);
         boolean support = supportCovered(locked);
         boolean dirty = dirtyDataCleared(locked);
+        // 门槛来自 site_config 的 open_city.min_stores / min_articles，坏配置由 OpenCityThresholds 回退默认值
         List<String> missing = CityRules.missingReasons(
                 destination, support, dirty, counts.storeCount(), counts.articleCount(),
                 thresholds.minStores(), thresholds.minArticles());
+        // 缺项顺序固定为目的地 / 供给 / 攻略 / 客服 / 测数，前端原样展示，不做二次排序
         if (!missing.isEmpty()) {
             throw new ApiException(HttpStatus.CONFLICT, CityRules.openRejectedMessage(missing));
         }
@@ -151,10 +219,25 @@ public class AdminCityService {
         return toDetail(city, saved, counts, allRegions());
     }
 
+    /**
+     * 关闭城市。
+     *
+     * <p>流程：加行锁取清单 → 校验市可用 → 未开通则 409 → 校验版本 → 改 {@code open_status=CLOSED}
+     * → 按版本写回清单 → 写 {@code CITY_CLOSE} 审计 → 提交后失效缓存。
+     * 关城不删意向、门店、攻略，也不改 {@code enabled}，历史数据全部保留。
+     *
+     * @param adminId 当前运营账号 ID
+     * @param cityId  市 ID
+     * @param version 清单版本；没有清单行时必须为 0
+     * @return 关城后的城市详情，此时 {@code canClose=false}
+     * @throws com.suzhong.njl.web.ApiException 市不存在 404；节点停用 400；未开通 409「该市未开通」；
+     *         version 为空 400；版本不一致 409「数据已被修改」
+     */
     @Transactional
     public CityDetailResponse close(long adminId, Long cityId, long version) {
         RegionOpenChecklist locked = lockChecklist(cityId);
         Region city = requireEnabledCity(cityId);
+        // 只有 OPEN 能关；重复关城按冲突处理，不重复写审计
         if (CityRules.effective(city.getOpenStatus()) != RegionOpenStatus.OPEN) {
             throw new ApiException(HttpStatus.CONFLICT, "该市未开通");
         }
@@ -174,6 +257,7 @@ public class AdminCityService {
         return toDetail(city, saved, countOne(city), allRegions());
     }
 
+    /** 取全部启用的市，按 {@code sortOrder}、id 升序，与运营列表顺序一致。 */
     private List<Region> enabledCities() {
         return regionMapper.selectList(Wrappers.<Region>lambdaQuery()
                 .eq(Region::getEnabled, true)
@@ -182,6 +266,7 @@ public class AdminCityService {
                 .orderByAsc(Region::getId));
     }
 
+    /** 校验目标是存在、层级为市且仍启用的节点；不存在或不是市 404，停用 400。 */
     private Region requireEnabledCity(Long cityId) {
         Region region = cityId == null ? null : regionMapper.selectById(cityId);
         if (region == null || region.getLevel() != RegionLevel.CITY) {
@@ -193,12 +278,21 @@ public class AdminCityService {
         return region;
     }
 
+    /**
+     * 对清单行加悲观锁（{@code SELECT ... FOR UPDATE}）。
+     * 没有清单行时返回 null；加锁可防止两个运营同时插入同一市的清单。
+     */
     private RegionOpenChecklist lockChecklist(Long cityId) {
         return checklistMapper.selectOne(Wrappers.<RegionOpenChecklist>lambdaQuery()
                 .eq(RegionOpenChecklist::getCityId, cityId)
                 .last("FOR UPDATE"));
     }
 
+    /**
+     * 校验乐观锁版本。
+     *
+     * <p>无清单行时约定版本为 0，传其他值说明客户端看到的是旧状态；有行时必须与库内版本一致。
+     */
     private void assertVersion(RegionOpenChecklist locked, Long version) {
         if (version == null) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "版本不能为空");
@@ -215,6 +309,10 @@ public class AdminCityService {
         }
     }
 
+    /**
+     * 写入开城清单：无行则插入并置初始版本 1，有行则按版本更新。
+     * 插入撞唯一键或更新影响行数不为 1，都视为并发冲突并返回 409。
+     */
     private RegionOpenChecklist saveChecklist(
             Long cityId,
             Long version,
@@ -234,6 +332,7 @@ public class AdminCityService {
             try {
                 checklistMapper.insert(created);
             } catch (DuplicateKeyException ex) {
+                // 并发下另一个运营已插入同一城市的清单行，按版本冲突让本次请求重试
                 throw new ApiException(HttpStatus.CONFLICT, "数据已被修改");
             }
             return checklistMapper.selectById(cityId);
@@ -242,6 +341,7 @@ public class AdminCityService {
         locked.setSupportCovered(supportCovered);
         locked.setDirtyDataCleared(dirtyDataCleared);
         locked.setUpdatedBy(adminId);
+        // 显式写入请求带来的 version，由 @Version 在 SQL 层再比一次；影响行数不为 1 即说明版本已被推进
         locked.setVersion(version);
         int updated = checklistMapper.updateById(locked);
         if (updated != 1) {
@@ -250,18 +350,22 @@ public class AdminCityService {
         return checklistMapper.selectById(cityId);
     }
 
+    /** 读取①目的地数据手勾；没有清单行时按未勾选处理。 */
     private boolean destinationReady(RegionOpenChecklist checklist) {
         return checklist != null && Boolean.TRUE.equals(checklist.getDestinationReady());
     }
 
+    /** 读取④客服覆盖手勾；没有清单行时按未勾选处理。 */
     private boolean supportCovered(RegionOpenChecklist checklist) {
         return checklist != null && Boolean.TRUE.equals(checklist.getSupportCovered());
     }
 
+    /** 读取⑤脏数据清理手勾；没有清单行时按未勾选处理。 */
     private boolean dirtyDataCleared(RegionOpenChecklist checklist) {
         return checklist != null && Boolean.TRUE.equals(checklist.getDirtyDataCleared());
     }
 
+    /** 组装审计用的三项手勾快照。 */
     private Map<String, Object> checklistDetail(boolean destination, boolean support, boolean dirty) {
         Map<String, Object> detail = new LinkedHashMap<>();
         detail.put("destinationReady", destination);
@@ -270,6 +374,10 @@ public class AdminCityService {
         return detail;
     }
 
+    /**
+     * 在事务提交后失效地区与首页缓存；当前没有活动事务时直接失效。
+     * 这样事务回滚时不会把缓存里仍然有效的数据删掉。
+     */
     private void evictAfterCommit() {
         if (!TransactionSynchronizationManager.isSynchronizationActive()) {
             adminCache.evictCityOpen();
@@ -278,11 +386,16 @@ public class AdminCityService {
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
+                // 事务提交后才删缓存：若事务回滚，缓存保持原值，避免删掉后被并发读回滚前的旧数据
                 adminCache.evictCityOpen();
             }
         });
     }
 
+    /**
+     * 组装城市详情：门槛取生效配置，②③按实时计数推导不落库，
+     * 缺项顺序由 {@link CityRules#missingReasons} 固定。
+     */
     private CityDetailResponse toDetail(
             Region city,
             RegionOpenChecklist checklist,
@@ -293,6 +406,7 @@ public class AdminCityService {
         boolean dirty = dirtyDataCleared(checklist);
         int minStores = thresholds.minStores();
         int minArticles = thresholds.minArticles();
+        // ②供给达标、③攻略达标是推导值：只影响展示与 canOpen，不写清单表
         boolean supplyReady = counts.storeCount() >= minStores;
         boolean articlesReady = counts.articleCount() >= minArticles;
         List<String> missing = CityRules.missingReasons(
@@ -318,10 +432,17 @@ public class AdminCityService {
                 checklist == null ? null : checklist.getUpdatedBy());
     }
 
+    /** 单市实时计数。 */
     private Counts countOne(Region city) {
         return countByCity(List.of(city)).get(city.getId());
     }
 
+    /**
+     * 批量统计各市供给与攻略数。
+     *
+     * <p>只算启用地区：上架且 {@code test_data=false} 的门店、已发布攻略；
+     * 门店/攻略挂在市本身或父节点为该市的区县上才计入，挂省的不计入任何市。
+     */
     private Map<Long, Counts> countByCity(List<Region> cities) {
         Map<Long, Counts> result = new HashMap<>();
         if (cities.isEmpty()) {
@@ -332,6 +453,7 @@ public class AdminCityService {
             cityIds.add(city.getId());
             result.put(city.getId(), new Counts(0, 0));
         }
+        // 只取启用地区，停用区县下的门店和攻略不计入开城门槛
         List<Region> regions = regionMapper.selectList(Wrappers.<Region>lambdaQuery().eq(Region::getEnabled, true));
         Map<Long, Region> byId = new HashMap<>();
         List<Long> supplyRegionIds = new ArrayList<>();
@@ -363,6 +485,7 @@ public class AdminCityService {
         return result;
     }
 
+    /** 把门店计入其归属市；不属于任何目标市时忽略。 */
     private void addStore(Map<Long, Counts> result, Region region, Set<Long> cityIds) {
         for (Long cityId : cityIds) {
             if (CityRules.countsTowardCity(region, cityId)) {
@@ -373,6 +496,7 @@ public class AdminCityService {
         }
     }
 
+    /** 把攻略计入其归属市；不属于任何目标市时忽略。 */
     private void addArticle(Map<Long, Counts> result, Region region, Set<Long> cityIds) {
         for (Long cityId : cityIds) {
             if (CityRules.countsTowardCity(region, cityId)) {
@@ -383,6 +507,7 @@ public class AdminCityService {
         }
     }
 
+    /** 批量取清单行，避免逐个市查询。 */
     private Map<Long, RegionOpenChecklist> checklists(List<Region> cities) {
         Map<Long, RegionOpenChecklist> byCity = new HashMap<>();
         if (cities.isEmpty()) {
@@ -400,6 +525,7 @@ public class AdminCityService {
         return byCity;
     }
 
+    /** 一次性加载全部地区，用于补省名与区县归属。 */
     private Map<Long, Region> allRegions() {
         Map<Long, Region> byId = new HashMap<>();
         List<Region> regions = regionMapper.selectList(Wrappers.<Region>lambdaQuery());
@@ -409,6 +535,7 @@ public class AdminCityService {
         return byId;
     }
 
+    /** 父节点恰好是省时返回省名，否则 null。 */
     private String provinceName(Region city, Map<Long, Region> byId) {
         if (city.getParentId() == null) {
             return null;
@@ -420,6 +547,15 @@ public class AdminCityService {
         return parent.getName();
     }
 
+    /**
+     * 单市实时计数快照，用于计算开城阈值是否达标。
+     *
+     * <p>口径：只统计启用地区；门店限 {@code ON_SHELF} 且 {@code test_data=false}；
+     * 攻略限 {@code PUBLISHED}；归属市由 {@code CityRules.countsTowardCity} 判定（市本级及其下辖区县）。
+     *
+     * @param storeCount   该市达标的有效供给门店数
+     * @param articleCount 该市达标的已发布攻略数
+     */
     private record Counts(long storeCount, long articleCount) {
     }
 }

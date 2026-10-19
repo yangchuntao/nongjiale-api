@@ -21,6 +21,14 @@ import com.suzhong.njl.web.admin.dto.RejectReasonRequest;
 
 import jakarta.validation.Valid;
 
+/**
+ * 运营端商家入驻审核接口（{@code /api/admin/merchant-applies}）。
+ *
+ * <p>所属端：运营后台。需 Bearer 令牌，角色 {@code OPERATOR} 或 {@code AGENT}。
+ *
+ * <p>职责：入驻申请队列、通过并开通商家主体与主账号、驳回并记录原因。只有待审申请可处理，
+ * 通过时明文密码只在当次响应返回一次，不落库、不回显。
+ */
 @RestController
 @RequestMapping("/api/admin/merchant-applies")
 public class AdminMerchantApplyController {
@@ -31,6 +39,16 @@ public class AdminMerchantApplyController {
         this.adminMerchantApplyService = adminMerchantApplyService;
     }
 
+    /**
+     * {@code GET /api/admin/merchant-applies} — 入驻申请队列。
+     *
+     * <p>按创建时间倒序、ID 倒序；不传状态时返回全部。
+     *
+     * @param status   审核状态，取值 {@code PENDING}/{@code APPROVED}/{@code REJECTED}，为空不筛选
+     * @param page     页码，从 1 开始，为空取 1
+     * @param pageSize 每页条数，1 到 100，为空取 20；越界返回 400「分页参数不正确」
+     * @return 当页申请与总数
+     */
     @GetMapping
     public ApiResponse<PageResult<MerchantApplyItem>> list(
             @RequestParam(required = false) ReviewStatus status,
@@ -39,6 +57,19 @@ public class AdminMerchantApplyController {
         return ApiResponse.ok(adminMerchantApplyService.list(status, page, pageSize));
     }
 
+    /**
+     * {@code POST /api/admin/merchant-applies/{id}/approve} — 通过入驻申请并开通账号。
+     *
+     * <p>申请的联系电话必须是 11 位手机号，且不能已存在商家账号；通过时新建 {@code ACTIVE} 商家主体
+     * 与一个启用的主账号。请求体可省略：不传密码则随机生成，密码长度 8 到 64 位。
+     * 明文密码只在本次响应返回，服务端只存 BCrypt 哈希。
+     *
+     * @param authentication 当前运营身份，写入审核人
+     * @param id             入驻申请 ID
+     * @param request        可选，仅含 {@code password}
+     * @return 申请 ID、审核状态、新主体/账号 ID、手机号与一次性明文密码
+     * @throws com.suzhong.njl.web.ApiException 申请不存在 404；已审核 409；电话无效 400；手机号已是商家账号 409
+     */
     @PostMapping("/{id}/approve")
     public ApiResponse<ApproveMerchantApplyResponse> approve(
             Authentication authentication,
@@ -47,6 +78,18 @@ public class AdminMerchantApplyController {
         return ApiResponse.ok(adminMerchantApplyService.approve(AdminPrincipal.adminId(authentication), id, request));
     }
 
+    /**
+     * {@code POST /api/admin/merchant-applies/{id}/reject} — 驳回入驻申请。
+     *
+     * <p>驳回原因必填且不超过 500 字，去首尾空白后落库；驳回后不创建主体或账号，
+     * 申请进入终态，不可再次审核。
+     *
+     * @param authentication 当前运营身份，写入审核人
+     * @param id             入驻申请 ID
+     * @param request        驳回原因，必填
+     * @return 申请 ID、驳回状态与原因
+     * @throws com.suzhong.njl.web.ApiException 申请不存在 404；已审核 409；原因为空或超长 400
+     */
     @PostMapping("/{id}/reject")
     public ApiResponse<RejectMerchantApplyResponse> reject(
             Authentication authentication,
