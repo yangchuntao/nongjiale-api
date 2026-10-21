@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小程序 UI · 页面索引</title>
+<link rel="stylesheet" href="../tokens.css">
+<style>
+.wrap { max-width:1060px; margin:0 auto; padding:var(--s7) var(--s5); }
+.hero { text-align:center; margin-bottom:var(--s6); }
+.hero h1 { font-size:32px; margin-bottom:8px; }
+.hero p { color:var(--text-2); }
+/* 手机小预览 */
+.screens { display:grid; grid-template-columns:repeat(3,1fr); gap:var(--s5); }
+.screen-card { display:block; background:#fff; border-radius:var(--r-lg); box-shadow:var(--shadow-1); overflow:hidden; transition:transform .2s, box-shadow .2s; }
+.screen-card:hover { transform:translateY(-4px); box-shadow:var(--shadow-3); }
+.mini { height:118px; display:flex; align-items:center; justify-content:center; }
+.mini .m { width:56px; height:98px; border-radius:9px; background:#fff; box-shadow:0 2px 8px rgba(0,0,0,.15); position:relative; overflow:hidden; }
+.mini .m i { position:absolute; left:4px; right:4px; height:11px; border-radius:2px; background:#E8F4FC; }
+.screen-body { padding:16px var(--s4) 20px; }
+.screen-body h3 { font-size:var(--fs-lg); margin-bottom:5px; }
+.screen-body p { font-size:var(--fs-sm); color:var(--text-2); line-height:1.65; }
+.screen-body .go { color:var(--brand); font-size:var(--fs-sm); margin-top:10px; display:inline-block; }
+.note { background:#fff; border-radius:var(--r-lg); box-shadow:var(--shadow-1); padding:var(--s5); margin-top:var(--s6); }
+.note h2 { font-size:var(--fs-xl); margin-bottom:var(--s3); }
+.note li { list-style:none; padding:8px 0; border-bottom:1px dashed var(--line); color:var(--text-2); font-size:var(--fs-md); }
+.note li:last-child { border:none; }
+.note b { color:var(--text-1); }
+.badge { display:inline-block; background:var(--brand-soft); color:var(--brand-deep); font-size:var(--fs-xs); padding:3px 10px; border-radius:999px; margin-bottom:12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <div class="badge">MVP-2 · 微信小程序 · 375pt</div>
+    <h1>小程序高保真 UI</h1>
+    <p>主色 #4BA3D9 · soft #E8F4FC · 三 Tab（首页 / 找店 / 我的）</p>
+  </div>
+
+  <div class="screens">
+    <a class="screen-card" href="mp-core.html">
+      <div class="mini" style="background:linear-gradient(135deg,#EAF4FB,#D4EAF7)">
+        <div class="m">
+          <i style="top:8px;height:26px;background:linear-gradient(135deg,#8CCCEA,#4BA3D9)"></i>
+          <i style="top:40px"></i><i style="top:56px;left:4px;right:26px"></i>
+        </div>
+      </div>
+      <div class="screen-body">
+        <h3>核心三屏</h3>
+        <p>MP-HOME 首页（Banner 轮播）· MP-LIST 找店 · MP-DETAIL 详情（含分享面板、外链复制弹层）</p>
+        <span class="go">查看 →</span>
+      </div>
+    </a>
+
+    <a class="screen-card" href="mp-intent.html">
+      <div class="mini" style="background:linear-gradient(135deg,#F4F8FC,#E1EFF9)">
+        <div class="m">
+          <i style="top:10px;height:8px;left:18px;right:18px"></i>
+          <i style="top:26px;height:30px;left:10px;right:10px"></i>
+          <i style="top:62px"></i><i style="top:78px"></i>
+        </div>
+      </div>
+      <div class="screen-body">
+        <h3>意向流程</h3>
+        <p>MP-LOGIN 登录（含校验失败态）· MP-INTENT-FORM 提交意向 · MP-INTENT-SUCCESS 成功 · MP-MY-INTENTS 我的意向（含空态）</p>
+        <span class="go">查看 →</span>
+      </div>
+    </a>
+
+    <a class="screen-card" href="mp-guide.html">
+      <div class="mini" style="background:linear-gradient(135deg,#EAF4FB,#CFE7F6)">
+        <div class="m">
+          <i style="top:8px;height:22px;background:linear-gradient(135deg,#9FD3EC,#3A8FC4)"></i>
+          <i style="top:36px;height:8px"></i><i style="top:50px;height:8px;right:14px"></i>
+          <i style="top:70px;height:20px;background:linear-gradient(135deg,#B5DCF0,#4BA3D9)"></i>
+        </div>
+      </div>
+      <div class="screen-body">
+        <h3>攻略</h3>
+        <p>MP-GUIDE-LIST 攻略列表 · MP-GUIDE-DETAIL 详情（富文本只读 + 站内门店卡）</p>
+        <span class="go">查看 →</span>
+      </div>
+    </a>
+  </div>
+
+  <div class="note">
+    <h2>小程序端设计约束（来自 MVP-2 规格）</h2>
+    <ul>
+      <li><b>禁绿色品牌：</b>主色只用 #4BA3D9；绿色仅作「已入住」等状态 Tag，不用作品牌色</li>
+      <li><b>底栏三 Tab：</b>首页 / 找店 / 我的；攻略不进底栏，从首页入口进；非 Tab 页隐藏底栏</li>
+      <li><b>Banner：</b>0 条不渲染 · 1 条静帧 · ≥2 轮播+指示点；外链优先 web-view，否则复制链接弹层</li>
+      <li><b>非锁房：</b>详情、意向表、成功页必显「意向不等于已锁房」，不可折叠掉关键句</li>
+      <li><b>无支付：</b>全路径无支付/定金/钱包；无商家运营配置入口</li>
+      <li><b>状态 Tag：</b>待跟进 / 已确认 / 已改期 / <b>已入住</b> / 已关闭；CHECKED_IN 只能用「已入住」</li>
+      <li><b>安全区：</b>顶避让刘海（44pt）、底避让 Home Indicator（34pt）；底栏与固定 CTA 均需避让</li>
+      <li><b>分享：</b>path 必须带 listingId，落地 MP-DETAIL；分享文案禁「已订成/支付/定金」</li>
+    </ul>
+  </div>
+
+</div>
+</body>
+</html>

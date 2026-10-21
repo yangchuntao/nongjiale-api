@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小程序高保真 · 意向流程</title>
+<link rel="stylesheet" href="mp-tokens.css">
+<style>
+/* ===== MP-LOGIN ===== */
+.login-wrap { padding: 40px var(--s5) 0; display:flex; flex-direction:column; min-height:100%; }
+.login-brand { text-align:center; margin-bottom:36px; }
+.login-logo {
+  width:68px; height:68px; border-radius:20px; margin:0 auto 18px;
+  background:linear-gradient(135deg,var(--brand),#7CC0E4);
+  display:flex; align-items:center; justify-content:center;
+  font-size:30px; color:#fff; font-weight:700;
+  box-shadow:0 10px 26px rgba(75,163,217,.35);
+}
+.login-brand h1 { font-size:var(--t2); font-weight:700; margin-bottom:10px; }
+.login-brand p { font-size:var(--b2); color:var(--text-2); }
+.login-steps { display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:28px; }
+.step { display:flex; align-items:center; gap:6px; font-size:var(--cap); color:var(--text-3); }
+.step .n { width:18px; height:18px; border-radius:50%; background:#E4EBF2; color:var(--text-3); display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:600; }
+.step.on { color:var(--brand); font-weight:600; }
+.step.on .n { background:var(--brand); color:#fff; }
+.step-line { width:22px; height:1px; background:var(--line); }
+
+.login-form { background:#fff; border-radius:var(--r-lg); padding:20px var(--s4); box-shadow:var(--shadow-card); }
+.fld { margin-bottom:16px; }
+.fld label { display:block; font-size:var(--b3); color:var(--text-2); margin-bottom:8px; }
+.fld .box { height:48px; border-radius:var(--r-md); background:#F6F9FB; border:1px solid var(--line); display:flex; align-items:center; padding:0 14px; font-size:var(--b1); color:var(--text-1); }
+.fld .box.ph { color:var(--text-3); }
+.fld .box.err { border-color:var(--danger); background:#FEFAFA; }
+.fld .errmsg { font-size:var(--cap); color:var(--danger); margin-top:6px; }
+.fld .code-row { display:flex; gap:10px; }
+.fld .code-row .box { flex:1; }
+.fld .code-btn { width:110px; height:48px; border-radius:var(--r-md); background:var(--brand-soft); color:var(--brand-deep); display:flex; align-items:center; justify-content:center; font-size:var(--b2); font-weight:600; flex-shrink:0; }
+
+.login-actions { margin-top:auto; padding-bottom: calc(20px + var(--safe-bottom)); }
+.login-actions .skip { text-align:center; font-size:var(--b2); color:var(--text-3); padding:16px; }
+.login-tip { text-align:center; font-size:var(--cap); color:var(--text-3); line-height:1.7; margin-top:16px; }
+
+/* ===== MP-INTENT-FORM ===== */
+.form-top-banner {
+  margin: 0; padding:14px var(--s4); background:var(--brand-soft);
+  display:flex; gap:10px; align-items:flex-start;
+}
+.form-top-banner .i { font-size:15px; flex-shrink:0; margin-top:1px; }
+.form-top-banner p { font-size:var(--b3); color:var(--brand-deep); line-height:1.6; }
+.form-top-banner b { font-weight:700; }
+
+.readonly-store { display:flex; gap:12px; padding:var(--s4); background:#fff; align-items:center; }
+.readonly-store .c { width:56px; height:56px; border-radius:10px; background:linear-gradient(135deg,#C2E2F4,#5FA8CF); flex-shrink:0; }
+.readonly-store .t b { font-size:var(--b1); font-weight:600; display:block; margin-bottom:5px; }
+.readonly-store .t span { font-size:var(--b3); color:var(--text-2); }
+
+.form-body { background:#fff; margin-top:10px; padding: 4px var(--s4) 8px; }
+.frow { display:flex; align-items:center; min-height:54px; border-bottom:1px solid var(--line); }
+.frow:last-child { border-bottom:none; }
+.frow .lb { width:80px; font-size:var(--b2); color:var(--text-1); flex-shrink:0; }
+.frow .lb em { color:var(--danger); font-style:normal; margin-right:2px; }
+.frow .vl { flex:1; font-size:var(--b2); color:var(--text-1); }
+.frow .vl.ph { color:var(--text-3); }
+.frow .ar { color:var(--text-3); font-size:14px; }
+.frow .unit { font-size:var(--b3); color:var(--text-3); margin-left:6px; }
+.frow .stepper { display:flex; align-items:center; gap:0; }
+.frow .stepper span { width:30px; height:30px; border-radius:8px; background:#F4F7FA; display:flex; align-items:center; justify-content:center; color:var(--text-2); font-size:15px; }
+.frow .stepper b { min-width:38px; text-align:center; font-size:var(--b2); font-weight:600; }
+.frow .unit-label { font-size:var(--b3); color:var(--text-3); margin-left:8px; }
+.nights-tip { padding:10px var(--s4); font-size:var(--cap); color:var(--text-3); background:#fff; }
+
+.form-cta {
+  position:absolute; left:0; right:0; bottom:0; background:#fff;
+  border-top:1px solid var(--line); padding: 10px var(--s4) calc(10px + var(--safe-bottom));
+  z-index:70;
+}
+.no-pay { text-align:center; font-size:10px; color:var(--text-3); margin-top:6px; }
+
+/* ===== MP-INTENT-SUCCESS ===== */
+.succ-wrap { padding: 36px var(--s5) 0; display:flex; flex-direction:column; min-height:100%; }
+.succ-icon {
+  width:78px; height:78px; border-radius:50%; margin:0 auto 22px;
+  background:linear-gradient(135deg,#7CC0E4,var(--brand));
+  display:flex; align-items:center; justify-content:center; font-size:36px; color:#fff;
+  box-shadow:0 12px 30px rgba(75,163,217,.34);
+}
+.succ-wrap h1 { font-size:var(--t2); font-weight:700; text-align:center; margin-bottom:8px; }
+.succ-wrap .sub { font-size:var(--b2); color:var(--text-2); text-align:center; margin-bottom:24px; }
+
+.order-no {
+  background:#fff; border-radius:var(--r-md); padding:16px var(--s4);
+  display:flex; align-items:center; box-shadow:var(--shadow-card); margin-bottom:12px;
+}
+.order-no .k { font-size:var(--b3); color:var(--text-2); }
+.order-no .v { margin-left:auto; font-family: ui-monospace, Menlo, monospace; font-size:var(--b1); font-weight:700; letter-spacing:.4px; }
+.order-no .cp { margin-left:10px; font-size:var(--cap); color:var(--brand); }
+
+.info-card { background:#fff; border-radius:var(--r-md); padding: 4px var(--s4); box-shadow:var(--shadow-card); margin-bottom:12px; }
+.info-card .kv2 { display:flex; padding:12px 0; font-size:var(--b2); border-bottom:1px solid var(--line); }
+.info-card .kv2:last-child { border:none; }
+.info-card .kv2 .k { color:var(--text-3); width:76px; flex-shrink:0; font-size:var(--b3); }
+.info-card .kv2 .v { color:var(--text-1); }
+
+.lock-notice {
+  background:#fff; border-radius:var(--r-md); padding: var(--s4);
+  box-shadow:var(--shadow-card); margin-bottom:20px; border-left:3px solid var(--brand);
+}
+.lock-notice p { font-size:var(--b3); color:var(--text-2); line-height:1.75; }
+.lock-notice p + p { margin-top:6px; }
+.lock-notice b { color:var(--text-1); font-weight:700; }
+.lock-notice .phone { color:var(--brand-deep); font-weight:700; }
+
+.succ-actions { margin-top:auto; padding-bottom: calc(16px + var(--safe-bottom)); display:flex; flex-direction:column; gap:10px; }
+
+/* ===== MP-MY-INTENTS ===== */
+.radius-tip { padding: 12px var(--s4); font-size:var(--cap); color:var(--text-3); line-height:1.6; }
+.info-banner {
+  margin: 0 var(--s4) 12px; padding: 12px 14px; border-radius:10px;
+  background: var(--info-soft); display:flex; gap:9px; align-items:flex-start;
+}
+.info-banner .i { font-size:14px; }
+.info-banner p { font-size:var(--cap); color:var(--brand-deep); line-height:1.6; }
+
+.intent-card { margin:0 var(--s4) 12px; background:#fff; border-radius:var(--r-md); padding:14px var(--s4); box-shadow:var(--shadow-card); }
+.intent-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+.intent-head .no { font-size:var(--cap); color:var(--text-3); font-family:ui-monospace,Menlo,monospace; }
+.intent-body { display:flex; gap:12px; }
+.intent-body .c { width:60px; height:60px; border-radius:9px; flex-shrink:0; }
+.intent-body .t { flex:1; min-width:0; }
+.intent-body .t b { font-size:var(--b1); font-weight:600; display:block; margin-bottom:6px; }
+.intent-body .t .d { font-size:var(--b3); color:var(--text-2); margin-bottom:3px; }
+.intent-body .t .n { font-size:var(--cap); color:var(--text-3); }
+.intent-foot { margin-top:10px; padding-top:10px; border-top:1px dashed var(--line); display:flex; align-items:center; }
+.intent-foot span { font-size:var(--cap); color:var(--text-3); }
+.intent-foot .go { margin-left:auto; font-size:var(--b3); color:var(--brand); }
+
+.empty-state { padding: 70px 40px; text-align:center; }
+.empty-state .e { font-size:44px; opacity:.4; margin-bottom:16px; }
+.empty-state p { font-size:var(--b2); color:var(--text-2); margin-bottom:5px; }
+.empty-state span { font-size:var(--b3); color:var(--text-3); }
+.empty-state .lnk { margin-top:18px; color:var(--brand); font-size:var(--b2); font-weight:600; }
+</style>
+</head>
+<body>
+
+<!-- ===================== MP-LOGIN ===================== -->
+<div class="phone-wrap">
+  <div class="frame-label">MP-LOGIN 登录 · 步骤 B<span>微信授权 + 补全手机号</span></div>
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="statusbar"><span>9:41</span><span class="right">▮▮▮ ⌁ ▰</span></div>
+    <div class="navbar"><span class="back">‹</span>登录</div>
+
+    <div class="screen">
+      <div class="login-wrap">
+        <div class="login-brand">
+          <div class="login-logo">垛</div>
+          <h1>登录后提交意向</h1>
+          <p>客服将电话联系您确认档期</p>
+        </div>
+
+        <div class="login-steps">
+          <div class="step on"><span class="n">✓</span>微信授权</div>
+          <div class="step-line"></div>
+          <div class="step on"><span class="n">2</span>补全手机号</div>
+        </div>
+
+        <div class="login-form">
+          <div class="fld">
+            <label>手机号</label>
+            <div class="box ph">请输入手机号</div>
+          </div>
+          <div class="fld">
+            <label>验证码</label>
+            <div class="code-row">
+              <div class="box ph">6 位验证码</div>
+              <div class="code-btn">获取验证码</div>
+            </div>
+          </div>
+          <div class="login-tip">
+            为与网页版账号打通、便于客服联系，<br>请补全手机号
+          </div>
+        </div>
+
+        <div class="login-actions">
+          <button class="btn-primary">确认</button>
+          <div class="skip">稍后再说</div>
+        </div>
+      </div>
+    </div>
+    <div class="home-indicator"></div>
+  </div>
+</div>
+
+<!-- ===================== MP-LOGIN 校验失败态 ===================== -->
+<div class="phone-wrap">
+  <div class="frame-label">MP-LOGIN · 校验失败态<span>字段红字 + 不提交</span></div>
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="statusbar"><span>9:41</span><span class="right">▮▮▮ ⌁ ▰</span></div>
+    <div class="navbar"><span class="back">‹</span>登录</div>
+
+    <div class="screen">
+      <div class="login-wrap">
+        <div class="login-brand">
+          <div class="login-logo">垛</div>
+          <h1>登录后提交意向</h1>
+          <p>客服将电话联系您确认档期</p>
+        </div>
+
+        <div class="login-steps">
+          <div class="step on"><span class="n">✓</span>微信授权</div>
+          <div class="step-line"></div>
+          <div class="step on"><span class="n">2</span>补全手机号</div>
+        </div>
+
+        <div class="login-form">
+          <div class="fld">
+            <label>手机号</label>
+            <div class="box err">1380000</div>
+            <div class="errmsg">请输入 11 位手机号</div>
+          </div>
+          <div class="fld">
+            <label>验证码</label>
+            <div class="code-row">
+              <div class="box ph">6 位验证码</div>
+              <div class="code-btn">重新获取(52s)</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="login-actions">
+          <button class="btn-primary disabled">确认</button>
+        </div>
+      </div>
+    </div>
+    <div class="home-indicator"></div>
+  </div>
+</div>
+
+<!-- ===================== MP-INTENT-FORM ===================== -->
+<div class="phone-wrap">
+  <div class="frame-label">MP-INTENT-FORM 提交意向<span>非锁房 Banner 必显 · 无支付字段</span></div>
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="statusbar"><span>9:41</span><span class="right">▮▮▮ ⌁ ▰</span></div>
+    <div class="navbar"><span class="back">‹</span>提交意向</div>
+
+    <div class="screen" style="padding-bottom:120px">
+      <div class="form-top-banner">
+        <span class="i">ℹ️</span>
+        <p>提交意向后，客服会联系您确认。<b>意向不等于已锁房。</b></p>
+      </div>
+
+      <div class="readonly-store">
+        <div class="c"></div>
+        <div class="t">
+          <b>垛田花海民宿</b>
+          <span>¥398 起/晚 · 双人水乡慢游</span>
+        </div>
+      </div>
+
+      <div class="form-body">
+        <div class="frow">
+          <span class="lb"><em>*</em>到店日</span>
+          <span class="vl">2026-10-24 周六</span>
+          <span class="ar">›</span>
+        </div>
+        <div class="frow">
+          <span class="lb"><em>*</em>离店日</span>
+          <span class="vl">2026-10-26 周一</span>
+          <span class="ar">›</span>
+        </div>
+        <div class="frow">
+          <span class="lb">晚数</span>
+          <span class="vl" style="color:var(--brand-deep); font-weight:600">2 晚</span>
+        </div>
+        <div class="frow">
+          <span class="lb"><em>*</em>人数</span>
+          <div class="vl stepper">
+            <span>−</span><b>2</b><span>+</span>
+            <span class="unit-label">人</span>
+          </div>
+        </div>
+        <div class="frow">
+          <span class="lb"><em>*</em>联系人</span>
+          <span class="vl ph">请填写姓名</span>
+        </div>
+        <div class="frow">
+          <span class="lb"><em>*</em>手机</span>
+          <span class="vl">138 0000 0000</span>
+        </div>
+        <div class="frow">
+          <span class="lb">备注</span>
+          <span class="vl ph">有老人同行，需要一楼房间</span>
+        </div>
+      </div>
+      <div class="nights-tip">共 2 晚 · 2 人 · 客服确认档期后回复</div>
+      <div style="height:12px; background:var(--bg)"></div>
+    </div>
+
+    <div class="form-cta">
+      <button class="btn-primary">提交意向</button>
+      <div class="no-pay">不收取定金 · 无需在线支付</div>
+    </div>
+    <div class="home-indicator"></div>
+  </div>
+</div>
+
+<!-- ===================== MP-INTENT-SUCCESS ===================== -->
+<div class="phone-wrap">
+  <div class="frame-label">MP-INTENT-SUCCESS 意向成功<span>单号(可复制) + 客服 + 非锁房必显</span></div>
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="statusbar"><span>9:41</span><span class="right">▮▮▮ ⌁ ▰</span></div>
+    <div class="navbar">提交结果</div>
+
+    <div class="screen">
+      <div class="succ-wrap">
+        <div class="succ-icon">✓</div>
+        <h1>意向已提交</h1>
+        <div class="sub">我们会尽快联系您确认</div>
+
+        <div class="order-no">
+          <span class="k">意向单号</span>
+          <span class="v">YZ202610210037</span>
+          <span class="cp">复制</span>
+        </div>
+
+        <div class="info-card">
+          <div class="kv2"><span class="k">门店</span><span class="v">垛田花海民宿</span></div>
+          <div class="kv2"><span class="k">意向日期</span><span class="v">10-24 至 10-26 · 共 2 晚</span></div>
+          <div class="kv2"><span class="k">人数</span><span class="v">2 人</span></div>
+          <div class="kv2"><span class="k">客服电话</span><span class="v" style="color:var(--brand-deep); font-weight:600">400-000-0000</span></div>
+        </div>
+
+        <div class="lock-notice">
+          <p><b>意向不等于已锁房，请勿理解为已订成或已支付。</b></p>
+          <p>我们会尽快联系您确认档期与接待安排。如有疑问可拨打客服电话 <span class="phone">400-000-0000</span>。</p>
+        </div>
+
+        <div class="succ-actions">
+          <button class="btn-primary">查看我的意向</button>
+          <button class="btn-ghost">返回首页</button>
+        </div>
+      </div>
+    </div>
+    <div class="home-indicator"></div>
+  </div>
+</div>
+
+<!-- ===================== MP-MY-INTENTS ===================== -->
+<div class="phone-wrap">
+  <div class="frame-label">MP-MY-INTENTS 我的意向<span>只读 · 状态 Tag · 无取消/支付</span></div>
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="statusbar"><span>9:41</span><span class="right">▮▮▮ ⌁ ▰</span></div>
+    <div class="navbar">我的意向</div>
+
+    <div class="screen">
+      <div class="radius-tip">以下为咨询意向，未锁房，以客服确认为准。</div>
+
+      <div class="info-banner">
+        <span class="i">ℹ️</span>
+        <p>网页版意向同步即将开通，当前仅显示本端提交的意向</p>
+      </div>
+
+      <div class="intent-card">
+        <div class="intent-head">
+          <span class="no">YZ202610210037</span>
+          <span class="tag tag-warn">待跟进</span>
+        </div>
+        <div class="intent-body">
+          <div class="c" style="background:linear-gradient(135deg,#C2E2F4,#5FA8CF)"></div>
+          <div class="t">
+            <b>垛田花海民宿</b>
+            <div class="d">10-24 至 10-26 · 2 晚</div>
+            <div class="n">2 人 · 联系人 王先生</div>
+          </div>
+        </div>
+        <div class="intent-foot">
+          <span>提交于 10-21 11:32</span>
+          <span class="go">查看 ›</span>
+        </div>
+      </div>
+
+      <div class="intent-card">
+        <div class="intent-head">
+          <span class="no">YZ202609280112</span>
+          <span class="tag tag-ok">已入住</span>
+        </div>
+        <div class="intent-body">
+          <div class="c" style="background:linear-gradient(135deg,#A8D8F0,#4BA3D9)"></div>
+          <div class="t">
+            <b>运河观景院</b>
+            <div class="d">09-30 至 10-02 · 2 晚</div>
+            <div class="n">3 人 · 联系人 王先生</div>
+          </div>
+        </div>
+        <div class="intent-foot">
+          <span>提交于 09-28 20:11</span>
+          <span class="go">查看 ›</span>
+        </div>
+      </div>
+
+      <div class="intent-card">
+        <div class="intent-head">
+          <span class="no">YZ202609150068</span>
+          <span class="tag tag-gray">已关闭</span>
+        </div>
+        <div class="intent-body">
+          <div class="c" style="background:linear-gradient(135deg,#D8E4EE,#A8C0D4)"></div>
+          <div class="t">
+            <b>竹林小屋</b>
+            <div class="d">09-20 至 09-21 · 1 晚</div>
+            <div class="n">2 人 · 联系人 王先生</div>
+          </div>
+        </div>
+        <div class="intent-foot">
+          <span>提交于 09-15 09:40</span>
+          <span class="go">查看 ›</span>
+        </div>
+      </div>
+
+      <div style="text-align:center; padding:14px; font-size:var(--cap); color:var(--text-3)">— 已经到底了 —</div>
+    </div>
+
+    <div class="tabbar">
+      <div class="tab"><span class="ico">🏠</span>首页</div>
+      <div class="tab"><span class="ico">🔍</span>找店</div>
+      <div class="tab on"><span class="ico">👤</span>我的</div>
+      <div class="home-indicator"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MP-MY-INTENTS 空态 ===================== -->
+<div class="phone-wrap">
+  <div class="frame-label">MP-MY-INTENTS · 空态<span>「还没有意向。去发现农家乐」</span></div>
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="statusbar"><span>9:41</span><span class="right">▮▮▮ ⌁ ▰</span></div>
+    <div class="navbar">我的意向</div>
+
+    <div class="screen">
+      <div class="radius-tip">以下为咨询意向，未锁房，以客服确认为准。</div>
+      <div class="empty-state">
+        <div class="e">📋</div>
+        <p>还没有意向</p>
+        <span>去发现苏中农家乐</span>
+        <div class="lnk">去找店 ›</div>
+      </div>
+    </div>
+
+    <div class="tabbar">
+      <div class="tab"><span class="ico">🏠</span>首页</div>
+      <div class="tab"><span class="ico">🔍</span>找店</div>
+      <div class="tab on"><span class="ico">👤</span>我的</div>
+      <div class="home-indicator"></div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

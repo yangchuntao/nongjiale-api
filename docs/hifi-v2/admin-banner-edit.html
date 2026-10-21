@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>运营端 · 新建 Banner · 垛里 Duoli</title>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="app.css">
+</head>
+<body class="app">
+
+<div class="shell">
+  <aside class="side">
+    <div class="side__brand">
+      <div class="name">垛里 · 运营端</div>
+      <div class="role">DUOLI ADMIN</div>
+    </div>
+    <nav class="side__nav" aria-label="运营端导航">
+      <div class="side__group">供给</div>
+      <a class="side__item" href="#">入驻申请</a>
+      <a class="side__item" href="#">商家</a>
+      <a class="side__item" href="#">房源</a>
+      <a class="side__item" href="#">上下架队列</a>
+      <div class="side__group">客源</div>
+      <a class="side__item" href="#">意向</a>
+      <a class="side__item" href="#">攻略</a>
+      <div class="side__group">增长</div>
+      <a class="side__item is-active" href="admin-banners.html">广告位</a>
+      <a class="side__item" href="#">开城 / 目的地</a>
+      <a class="side__item" href="#">种子看板</a>
+      <div class="side__group">站点</div>
+      <a class="side__item" href="#">站点配置</a>
+    </nav>
+    <div class="side__foot">
+      <span class="avatar" aria-hidden="true">运</span>
+      <div>
+        <div style="font-weight:600;color:var(--text-1)">运营小周</div>
+        <div style="font-size:var(--fs-003);color:var(--text-3)">超级管理员</div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <nav class="crumb" aria-label="面包屑">
+        <span>运营端</span>
+        <span class="sep" aria-hidden="true">/</span>
+        <span><a href="admin-banners.html">广告位</a></span>
+        <span class="sep" aria-hidden="true">/</span>
+        <span class="now">新建 Banner</span>
+      </nav>
+    </div>
+
+    <div class="content content--narrow">
+      <div class="page-head">
+        <div>
+          <h1>新建 Banner</h1>
+          <p class="desc">保存后立即在门户首页生效（若范围合法且已启用）。排序数字越小越靠前。</p>
+        </div>
+      </div>
+
+      <form class="form-grid" onsubmit="event.preventDefault(); toast('已保存');">
+        <!-- 左：表单 -->
+        <div>
+          <div class="card form-section">
+            <h3>基本内容</h3>
+            <div class="form-rows">
+              <div class="field">
+                <label class="label" for="t">标题 <span class="req">*</span></label>
+                <input class="input" id="t" type="text" placeholder="如：把周末，还给自己" maxlength="40">
+                <span class="hint">不超过 40 字。展示在 Banner 左下角。</span>
+              </div>
+              <div class="field">
+                <label class="label" for="s">副标题</label>
+                <input class="input" id="s" type="text" placeholder="如：苏中的水、田、院子" maxlength="60">
+                <span class="hint">可选。一行以内。</span>
+              </div>
+              <div class="field">
+                <label class="label" for="u">跳转链接</label>
+                <input class="input mono" id="u" type="text" placeholder="/guides/xxx 或 https://">
+                <span class="hint">站内路径用 <code class="mono">/</code> 开头（本页跳转）；http(s) 外链将在新标签页打开。</span>
+              </div>
+              <div class="field">
+                <span class="label">Banner 图 <span class="req">*</span></span>
+                <div class="uploader" role="button" tabindex="0" aria-label="上传 Banner 图，建议 1920×600">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V6M7 11l5-5 5 5M4 19h16"/></svg>
+                  <b>点击或拖拽上传</b>
+                  <span class="hint">建议 1920 × 600，JPG / PNG ≤ 2MB</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card form-section">
+            <h3>投放与排序</h3>
+            <div class="form-rows">
+              <div class="form-2col">
+                <div class="field">
+                  <label class="label" for="sc">投放范围 <span class="req">*</span></label>
+                  <select class="select" id="sc">
+                    <option>全站（所有游客可见）</option>
+                    <option>苏州市</option>
+                    <option>扬州市</option>
+                    <option>泰州市</option>
+                    <option>兴化市</option>
+                    <option disabled>南通市（未开通 · 不可选）</option>
+                  </select>
+                  <span class="hint hint--warn" id="scHint">全站投放与游客所选目的地无关。</span>
+                </div>
+                <div class="field">
+                  <label class="label" for="sort">排序值</label>
+                  <input class="input num" id="sort" type="number" value="10" min="0" step="1">
+                  <span class="hint">数字越小越靠前；首页轮播从最小一条开始。</span>
+                </div>
+              </div>
+              <div class="field">
+                <span class="label">启用状态</span>
+                <label class="check">
+                  <input type="checkbox" id="on" checked>
+                  <span class="box" aria-hidden="true"></span>
+                  <span class="check-label">保存后立即启用，门户首页展示</span>
+                </label>
+                <span class="hint">停用不删除数据，可随时再启用。</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-foot">
+            <a class="btn btn--ghost" href="admin-banners.html">取消</a>
+            <button class="btn btn--primary" type="submit">保存</button>
+          </div>
+        </div>
+
+        <!-- 右：实时预览 -->
+        <aside class="card form-section" aria-label="预览" style="position:sticky;top:calc(var(--topbar-h) + var(--s-4))">
+          <h3 style="margin-bottom:var(--s-3)">预览</h3>
+          <div class="preview-frame slide slide--field" style="position:relative;opacity:1;visibility:visible">
+            <div class="slide__field-art" aria-hidden="true"></div>
+            <div class="slide__cap">
+              <span class="eyebrow" style="color:rgba(255,255,255,.82)">垛里 · 住进千垛水乡</span>
+              <h4>把周末，还给自己</h4>
+              <p>苏中的水、田、院子</p>
+            </div>
+          </div>
+          <p class="preview-meta">门户首页 Banner 位 · 实际宽高比 16 : 5</p>
+
+          <hr class="rule" style="margin:var(--s-4) 0">
+
+          <div class="form-rows" style="gap:var(--s-3)">
+            <div class="row gap-2" style="justify-content:space-between;font-size:var(--fs-200)">
+              <span style="color:var(--text-2)">范围</span>
+              <span class="tag tag--brand">全站</span>
+            </div>
+            <div class="row gap-2" style="justify-content:space-between;font-size:var(--fs-200)">
+              <span style="color:var(--text-2)">排序</span>
+              <span class="num" style="font-weight:600">10</span>
+            </div>
+            <div class="row gap-2" style="justify-content:space-between;font-size:var(--fs-200)">
+              <span style="color:var(--text-2)">状态</span>
+              <span class="tag tag--ok tag--dot">启用</span>
+            </div>
+          </div>
+
+          <div class="book__note" style="margin-top:var(--s-4)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
+            <span>保存即生效。0 条 Banner 时首页隐藏整个区块；1 条静帧；≥2 条自动轮播。</span>
+          </div>
+        </aside>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div id="toastHost" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:var(--z-toast)"></div>
+
+<script>
+function toast(msg) {
+  var host = document.getElementById('toastHost');
+  var t = document.createElement('div');
+  t.className = 'toast';
+  t.setAttribute('role', 'status');
+  t.innerHTML = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 13 4 4L19 7"/></svg><strong>' + msg + '</strong>';
+  host.appendChild(t);
+  setTimeout(function () { t.remove(); }, 2600);
+}
+// 范围切换提示
+var sc = document.getElementById('sc');
+sc.addEventListener('change', function () {
+  var opt = sc.options[sc.selectedIndex];
+  var hint = document.getElementById('scHint');
+  if (opt.disabled) { hint.textContent = '该市未开通，不能作为投放目标。'; }
+  else if (opt.text.indexOf('全站') === 0) { hint.textContent = '全站投放与游客所选目的地无关。'; }
+  else { hint.textContent = '仅该市的游客在首页可见此 Banner；市关闭后自动不对客。'; }
+});
+// 标题实时同步预览
+document.getElementById('t').addEventListener('input', function () {
+  document.querySelector('.preview-frame h4').textContent = this.value || '把周末，还给自己';
+});
+document.getElementById('s').addEventListener('input', function () {
+  document.querySelector('.preview-frame p').textContent = this.value || '苏中的水、田、院子';
+});
+</script>
+
+</body>
+</html>

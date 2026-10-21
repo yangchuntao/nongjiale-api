@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小程序 · 可点击高保真原型</title>
+<link rel="stylesheet" href="mp-tokens.css">
+<style>
+body {
+  display:block; background:#E9EEF4; padding:0;
+  background-image: radial-gradient(circle at 20% 20%, #F0F6FB 0%, #E4EBF3 60%);
+  min-height:100vh;
+}
+.stage { display:flex; justify-content:center; gap:44px; align-items:flex-start; padding: 40px 24px 60px; }
+
+/* 左侧控制面板 */
+.panel {
+  width: 244px; flex-shrink:0; position:sticky; top:40px;
+  background:#fff; border-radius:18px; padding:20px;
+  box-shadow:0 10px 30px rgba(26,39,51,.08);
+}
+.panel h1 { font-size:16px; font-weight:700; margin-bottom:4px; }
+.panel .sub { font-size:11px; color:#9AA8B6; margin-bottom:18px; line-height:1.6; }
+.panel .grp { margin-bottom:16px; }
+.panel .grp-t { font-size:10px; color:#9AA8B6; letter-spacing:1px; margin-bottom:8px; text-transform:uppercase; }
+.panel button.jump {
+  display:block; width:100%; text-align:left; padding:8px 11px; margin-bottom:4px;
+  border-radius:8px; background:#F5F9FC; color:#415366; font-size:12px;
+  border:1px solid transparent; transition:all .15s; cursor:pointer;
+}
+.panel button.jump:hover { background:#E8F4FC; color:#2E7FB4; border-color:#D3E9F7; }
+.panel button.jump.cur { background:#4BA3D9; color:#fff; font-weight:600; }
+.panel .route-info {
+  margin-top:16px; padding-top:14px; border-top:1px solid #EDF1F5;
+  font-size:11px; color:#9AA8B6; line-height:1.9;
+}
+.panel .route-info b { color:#2E7FB4; font-family:ui-monospace,Menlo,monospace; font-size:10px; }
+
+/* 右侧纯手机（无 wrap） */
+.phone { flex-shrink:0; }
+
+/* 点击反馈：可点元素 */
+[data-go] { cursor:pointer; transition: opacity .12s, transform .12s; }
+[data-go]:active { opacity:.72; transform:scale(.985); }
+
+/* 页面切换动画 */
+@keyframes slideIn { from { opacity:0; transform: translateX(14px); } to { opacity:1; transform:none; } }
+@keyframes back { from { opacity:0; transform: translateX(-14px); } to { opacity:1; transform:none; } }
+.anim-fwd { animation: slideIn .22s ease-out; }
+.anim-back { animation: back .22s ease-out; }
+.screen > .view { min-height:100%; }
+
+/* ============ 各页面内部样式（与静态稿一致） ============ */
+.mp-banner { margin: 0 var(--s4); height:168px; border-radius:var(--r-lg); overflow:hidden; position:relative; box-shadow:var(--shadow-card); background:linear-gradient(120deg,#8CCCEA 0%,#4BA3D9 55%,#5FA8CF 100%); }
+.mp-banner .bdeco { position:absolute; right:-30px; top:-40px; width:160px; height:160px; border-radius:50%; background:rgba(255,255,255,.14); }
+.mp-banner .bdeco2 { position:absolute; right:50px; bottom:-50px; width:110px; height:110px; border-radius:50%; background:rgba(255,255,255,.10); }
+.mp-banner .cap { position:absolute; left:20px; bottom:34px; color:#fff; }
+.mp-banner .cap .k { font-size:10px; letter-spacing:3px; opacity:.85; }
+.mp-banner .cap h2 { font-size:var(--t2); font-weight:700; margin-top:4px; text-shadow:0 2px 8px rgba(0,0,0,.12); }
+.mp-banner .cap p { font-size:var(--b3); opacity:.9; margin-top:3px; }
+.bdots { position:absolute; bottom:12px; right:16px; display:flex; gap:5px; }
+.bdots i { width:5px; height:5px; border-radius:99px; background:rgba(255,255,255,.55); }
+.bdots i.on { width:14px; background:#fff; }
+
+.entry-main { margin:var(--s4); padding:20px; border-radius:var(--r-lg); background:linear-gradient(135deg,#FFF 0%,#F7FCFF 100%); box-shadow:var(--shadow-card); border:1px solid #EBF4FA; display:flex; align-items:center; gap:14px; }
+.entry-main .ic { width:52px; height:52px; border-radius:14px; flex-shrink:0; background:linear-gradient(135deg,var(--brand),#7CC0E4); display:flex; align-items:center; justify-content:center; font-size:24px; box-shadow:0 6px 14px rgba(75,163,217,.28); }
+.entry-main .tx { flex:1; }
+.entry-main .tx b { font-size:var(--t4); display:block; margin-bottom:4px; font-weight:700; }
+.entry-main .tx span { font-size:var(--b3); color:var(--text-2); }
+.entry-main .arrow { color:var(--text-3); font-size:16px; }
+.entry-sub { margin:0 var(--s4) var(--s4); padding:14px 18px; border-radius:var(--r-md); background:#fff; box-shadow:var(--shadow-card); display:flex; align-items:center; gap:12px; }
+.entry-sub .ic { width:36px; height:36px; border-radius:10px; background:var(--info-soft); display:flex; align-items:center; justify-content:center; font-size:18px; }
+.entry-sub .tx b { font-size:var(--b1); font-weight:600; }
+.entry-sub .tx span { font-size:var(--cap); color:var(--text-3); margin-left:8px; }
+.entry-sub .arrow { margin-left:auto; color:var(--text-3); font-size:14px; }
+.service-bar { margin:0 var(--s4) var(--s4); padding:13px 18px; border-radius:var(--r-md); background:var(--brand-soft); display:flex; align-items:center; gap:10px; }
+.service-bar b { font-size:var(--b2); color:var(--brand-deep); font-weight:600; }
+.service-bar span { margin-left:auto; font-size:var(--b3); color:var(--brand-deep); opacity:.85; }
+
+.sec-head { display:flex; align-items:center; justify-content:space-between; padding:0 var(--s4); margin:var(--s5) 0 var(--s3); }
+.sec-head h3 { font-size:var(--t3); font-weight:700; }
+.sec-head .more { font-size:var(--b3); color:var(--text-3); }
+.reco-scroll { display:flex; gap:12px; padding:0 var(--s4) 4px; overflow-x:auto; }
+.reco-scroll::-webkit-scrollbar { height:0; }
+.reco-card { width:196px; flex-shrink:0; border-radius:var(--r-md); overflow:hidden; background:#fff; box-shadow:var(--shadow-card); }
+.reco-cover { height:104px; position:relative; }
+.reco-cover .tag { position:absolute; top:8px; left:8px; background:rgba(255,255,255,.94); }
+.reco-body { padding:10px 12px 12px; }
+.reco-body b { font-size:var(--b2); display:block; margin-bottom:5px; font-weight:600; }
+.reco-body .meta { font-size:var(--cap); color:var(--text-3); }
+.reco-body .p { margin-top:6px; color:var(--brand-deep); font-weight:700; font-size:var(--b1); }
+.reco-body .p small { font-weight:400; font-size:10px; color:var(--text-3); }
+
+.search-sticky { padding:8px var(--s4) 12px; background:var(--bg); }
+.search-box { height:38px; border-radius:19px; background:#fff; display:flex; align-items:center; gap:8px; padding:0 14px; box-shadow:var(--shadow-card); color:var(--text-3); font-size:var(--b2); }
+.city-row { display:flex; gap:8px; padding:0 var(--s4) 10px; overflow-x:auto; }
+.city-row::-webkit-scrollbar { height:0; }
+.chip { flex-shrink:0; padding:6px 15px; border-radius:99px; background:#fff; color:var(--text-2); font-size:var(--b3); border:1px solid var(--line); }
+.chip.on { background:var(--brand); color:#fff; border-color:var(--brand); font-weight:600; box-shadow:0 3px 8px rgba(75,163,217,.28); }
+.list-card { display:flex; gap:12px; margin:0 var(--s4) 12px; padding:12px; border-radius:var(--r-md); background:#fff; box-shadow:var(--shadow-card); }
+.lc-cover { width:96px; height:96px; border-radius:10px; flex-shrink:0; }
+.lc-body { flex:1; min-width:0; display:flex; flex-direction:column; }
+.lc-body b { font-size:var(--b1); font-weight:600; margin-bottom:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.lc-body .sub { font-size:var(--b3); color:var(--text-2); margin-bottom:4px; }
+.lc-body .sell { font-size:var(--cap); color:var(--text-3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.lc-foot { margin-top:auto; display:flex; align-items:center; justify-content:space-between; }
+.lc-foot .p { color:var(--brand-deep); font-weight:700; font-size:var(--b1); }
+.lc-foot .p small { font-size:10px; font-weight:400; color:var(--text-3); }
+.lc-foot .tel { font-size:var(--cap); color:var(--text-3); }
+
+.gallery { height:222px; position:relative; }
+.gallery .img { height:100%; background:linear-gradient(135deg,#A8D8F0,#4BA3D9 70%,#3A8FC4); position:relative; }
+.gallery .gd { position:absolute; left:-40px; bottom:-70px; width:220px; height:220px; border-radius:50%; background:rgba(255,255,255,.12); }
+.gallery .gd2 { position:absolute; right:20px; top:-30px; width:130px; height:130px; border-radius:50%; background:rgba(255,255,255,.10); }
+.gallery .idx { position:absolute; right:14px; bottom:14px; background:rgba(0,0,0,.38); color:#fff; font-size:11px; padding:3px 9px; border-radius:99px; }
+.gallery .dots2 { position:absolute; left:0; right:0; bottom:14px; display:flex; justify-content:center; gap:5px; }
+.gallery .dots2 i { width:5px; height:5px; border-radius:99px; background:rgba(255,255,255,.6); }
+.gallery .dots2 i.on { width:14px; background:#fff; }
+.detail-body { background:#fff; margin-top:-16px; border-radius:18px 18px 0 0; position:relative; padding:18px var(--s4) var(--s4); }
+.detail-body h1 { font-size:var(--t3); font-weight:700; line-height:1.35; }
+.detail-price { margin-top:10px; display:flex; align-items:baseline; gap:6px; }
+.detail-price b { font-size:28px; color:var(--brand-deep); font-weight:700; }
+.detail-price span { font-size:var(--b3); color:var(--text-3); }
+.addr { margin-top:12px; display:flex; align-items:flex-start; gap:8px; font-size:var(--b3); color:var(--text-2); line-height:1.5; }
+.addr .act { margin-left:auto; color:var(--brand); font-size:var(--cap); white-space:nowrap; display:flex; gap:12px; }
+.notice-bar { margin:var(--s3) 0 0; padding:11px 14px; border-radius:10px; background:var(--brand-soft); color:var(--brand-deep); font-size:var(--b3); display:flex; align-items:center; gap:8px; }
+.block { padding:var(--s4); background:#fff; margin-top:10px; }
+.block h4 { font-size:var(--b1); font-weight:700; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+.block h4::before { content:""; width:3px; height:14px; border-radius:2px; background:var(--brand); }
+.pkg { display:flex; align-items:center; gap:12px; padding:12px 0; }
+.pkg + .pkg { border-top:1px dashed var(--line); }
+.pkg .pi { width:40px; height:40px; border-radius:10px; background:var(--brand-soft); display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+.pkg .pt { flex:1; }
+.pkg .pt b { font-size:var(--b2); font-weight:600; display:block; margin-bottom:3px; }
+.pkg .pt span { font-size:var(--cap); color:var(--text-3); }
+.pkg .pp { color:var(--brand-deep); font-weight:700; font-size:var(--b2); }
+.kv { display:flex; font-size:var(--b3); color:var(--text-2); padding:7px 0; }
+.kv .k { width:74px; color:var(--text-3); flex-shrink:0; }
+.kv .v { flex:1; color:var(--text-1); }
+
+.cta-bar { position:absolute; left:0; right:0; bottom:0; z-index:70; background:rgba(255,255,255,.97); backdrop-filter:blur(20px); border-top:1px solid var(--line); padding:10px var(--s4) calc(10px + var(--safe-bottom)); display:flex; gap:10px; align-items:center; }
+.cta-bar .share-btn { width:48px; height:48px; border-radius:var(--r-md); flex-shrink:0; border:1px solid var(--line); background:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; font-size:9px; color:var(--text-2); }
+.cta-bar .share-btn .i { font-size:17px; }
+.cta-main { flex:1; }
+.cta-sub { font-size:10px; color:var(--text-3); text-align:center; margin-top:4px; }
+
+.login-wrap { padding:40px var(--s5) 0; display:flex; flex-direction:column; min-height:100%; }
+.login-brand { text-align:center; margin-bottom:32px; }
+.login-logo { width:68px; height:68px; border-radius:20px; margin:0 auto 18px; background:linear-gradient(135deg,var(--brand),#7CC0E4); display:flex; align-items:center; justify-content:center; font-size:30px; color:#fff; font-weight:700; box-shadow:0 10px 26px rgba(75,163,217,.35); }
+.login-brand h1 { font-size:var(--t2); font-weight:700; margin-bottom:10px; }
+.login-brand p { font-size:var(--b2); color:var(--text-2); }
+.login-steps { display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:24px; }
+.step { display:flex; align-items:center; gap:6px; font-size:var(--cap); color:var(--text-3); }
+.step .n { width:18px; height:18px; border-radius:50%; background:#E4EBF2; color:var(--text-3); display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:600; }
+.step.on { color:var(--brand); font-weight:600; }
+.step.on .n { background:var(--brand); color:#fff; }
+.step-line { width:22px; height:1px; background:var(--line); }
+.login-form { background:#fff; border-radius:var(--r-lg); padding:20px var(--s4); box-shadow:var(--shadow-card); }
+.fld { margin-bottom:16px; }
+.fld label { display:block; font-size:var(--b3); color:var(--text-2); margin-bottom:8px; }
+.fld .box { height:48px; border-radius:var(--r-md); background:#F6F9FB; border:1px solid var(--line); display:flex; align-items:center; padding:0 14px; font-size:var(--b1); color:var(--text-3); }
+.fld .code-row { display:flex; gap:10px; }
+.fld .code-row .box { flex:1; }
+.fld .code-btn { width:110px; height:48px; border-radius:var(--r-md); background:var(--brand-soft); color:var(--brand-deep); display:flex; align-items:center; justify-content:center; font-size:var(--b2); font-weight:600; flex-shrink:0; }
+.login-actions { margin-top:auto; padding-bottom:calc(20px + var(--safe-bottom)); }
+.login-actions .skip { text-align:center; font-size:var(--b2); color:var(--text-3); padding:16px; }
+.login-tip { text-align:center; font-size:var(--cap); color:var(--text-3); line-height:1.7; margin-top:16px; }
+
+.form-top-banner { padding:14px var(--s4); background:var(--brand-soft); display:flex; gap:10px; align-items:flex-start; }
+.form-top-banner .i { font-size:15px; flex-shrink:0; margin-top:1px; }
+.form-top-banner p { font-size:var(--b3); color:var(--brand-deep); line-height:1.6; }
+.readonly-store { display:flex; gap:12px; padding:var(--s4); background:#fff; align-items:center; }
+.readonly-store .c { width:56px; height:56px; border-radius:10px; background:linear-gradient(135deg,#C2E2F4,#5FA8CF); flex-shrink:0; }
+.readonly-store .t b { font-size:var(--b1); font-weight:600; display:block; margin-bottom:5px; }
+.readonly-store .t span { font-size:var(--b3); color:var(--text-2); }
+.form-body { background:#fff; margin-top:10px; padding:4px var(--s4) 8px; }
+.frow { display:flex; align-items:center; min-height:54px; border-bottom:1px solid var(--line); }
+.frow:last-child { border-bottom:none; }
+.frow .lb { width:80px; font-size:var(--b2); color:var(--text-1); flex-shrink:0; }
+.frow .lb em { color:var(--danger); font-style:normal; margin-right:2px; }
+.frow .vl { flex:1; font-size:var(--b2); color:var(--text-1); }
+.frow .vl.ph { color:var(--text-3); }
+.frow .ar { color:var(--text-3); font-size:14px; }
+.frow .stepper { display:flex; align-items:center; }
+.frow .stepper span { width:30px; height:30px; border-radius:8px; background:#F4F7FA; display:flex; align-items:center; justify-content:center; color:var(--text-2); font-size:15px; }
+.frow .stepper b { min-width:38px; text-align:center; font-size:var(--b2); font-weight:600; }
+.frow .unit-label { font-size:var(--b3); color:var(--text-3); margin-left:8px; }
+.nights-tip { padding:10px var(--s4); font-size:var(--cap); color:var(--text-3); background:#fff; }
+.form-cta { position:absolute; left:0; right:0; bottom:0; background:#fff; border-top:1px solid var(--line); padding:10px var(--s4) calc(10px + var(--safe-bottom)); z-index:70; }
+.no-pay { text-align:center; font-size:10px; color:var(--text-3); margin-top:6px; }
+
+.succ-wrap { padding:36px var(--s5) 0; display:flex; flex-direction:column; min-height:100%; }
+.succ-icon { width:78px; height:78px; border-radius:50%; margin:0 auto 22px; background:linear-gradient(135deg,#7CC0E4,var(--brand)); display:flex; align-items:center; justify-content:center; font-size:36px; color:#fff; box-shadow:0 12px 30px rgba(75,163,217,.34); }
+.succ-wrap h1 { font-size:var(--t2); font-weight:700; text-align:center; margin-bottom:8px; }
+.succ-wrap .sub { font-size:var(--b2); color:var(--text-2); text-align:center; margin-bottom:24px; }
+.order-no { background:#fff; border-radius:var(--r-md); padding:16px var(--s4); display:flex; align-items:center; box-shadow:var(--shadow-card); margin-bottom:12px; }
+.order-no .k { font-size:var(--b3); color:var(--text-2); }
+.order-no .v { margin-left:auto; font-family:ui-monospace,Menlo,monospace; font-size:var(--b1); font-weight:700; letter-spacing:.4px; }
+.order-no .cp { margin-left:10px; font-size:var(--cap); color:var(--brand); }
+.info-card { background:#fff; border-radius:var(--r-md); padding:4px var(--s4); box-shadow:var(--shadow-card); margin-bottom:12px; }
+.info-card .kv2 { display:flex; padding:12px 0; font-size:var(--b2); border-bottom:1px solid var(--line); }
+.info-card .kv2:last-child { border:none; }
+.info-card .kv2 .k { color:var(--text-3); width:76px; flex-shrink:0; font-size:var(--b3); }
+.info-card .kv2 .v { color:var(--text-1); }
+.lock-notice { background:#fff; border-radius:var(--r-md); padding:var(--s4); box-shadow:var(--shadow-card); margin-bottom:20px; border-left:3px solid var(--brand); }
+.lock-notice p { font-size:var(--b3); color:var(--text-2); line-height:1.75; }
+.lock-notice p + p { margin-top:6px; }
+.lock-notice b { color:var(--text-1); font-weight:700; }
+.succ-actions { margin-top:auto; padding-bottom:calc(16px + var(--safe-bottom)); display:flex; flex-direction:column; gap:10px; }
+
+.radius-tip { padding:12px var(--s4); font-size:var(--cap); color:var(--text-3); line-height:1.6; }
+.info-banner { margin:0 var(--s4) 12px; padding:12px 14px; border-radius:10px; background:var(--info-soft); display:flex; gap:9px; align-items:flex-start; }
+.info-banner .i { font-size:14px; }
+.info-banner p { font-size:var(--cap); color:var(--brand-deep); line-height:1.6; }
+.intent-card { margin:0 var(--s4) 12px; background:#fff; border-radius:var(--r-md); padding:14px var(--s4); box-shadow:var(--shadow-card); }
+.intent-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+.intent-head .no { font-size:var(--cap); color:var(--text-3); font-family:ui-monospace,Menlo,monospace; }
+.intent-body { display:flex; gap:12px; }
+.intent-body .c { width:60px; height:60px; border-radius:9px; flex-shrink:0; }
+.intent-body .t { flex:1; min-width:0; }
+.intent-body .t b { font-size:var(--b1); font-weight:600; display:block; margin-bottom:6px; }
+.intent-body .t .d { font-size:var(--b3); color:var(--text-2); margin-bottom:3px; }
+.intent-body .t .n { font-size:var(--cap); color:var(--text-3); }
+.intent-foot { margin-top:10px; padding-top:10px; border-top:1px dashed var(--line); display:flex; align-items:center; }
+.intent-foot span { font-size:var(--cap); color:var(--text-3); }
+.intent-foot .go { margin-left:auto; font-size:var(--b3); color:var(--brand); }
+
+.guide-card { margin:0 var(--s4) 12px; background:#fff; border-radius:var(--r-md); overflow:hidden; box-shadow:var(--shadow-card); }
+.guide-cover { height:132px; position:relative; }
+.guide-cover .cat { position:absolute; left:10px; top:10px; background:rgba(255,255,255,.94); }
+.guide-cover .gd { position:absolute; right:-20px; bottom:-40px; width:120px; height:120px; border-radius:50%; background:rgba(255,255,255,.14); }
+.guide-body { padding:12px var(--s4) 14px; }
+.guide-body h3 { font-size:var(--b1); font-weight:700; line-height:1.45; margin-bottom:7px; }
+.guide-body p { font-size:var(--b3); color:var(--text-2); line-height:1.6; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.guide-meta { margin-top:10px; display:flex; align-items:center; gap:8px; font-size:var(--cap); color:var(--text-3); }
+
+.article-head { padding:20px var(--s4) 16px; background:#fff; }
+.article-head h1 { font-size:var(--t3); font-weight:700; line-height:1.42; margin-bottom:12px; }
+.article-meta { display:flex; align-items:center; gap:10px; font-size:var(--cap); color:var(--text-3); }
+.article-meta .av { width:24px; height:24px; border-radius:50%; background:linear-gradient(135deg,var(--brand),#7CC0E4); display:flex; align-items:center; justify-content:center; color:#fff; font-size:11px; font-weight:700; }
+.article-cover { height:184px; background:linear-gradient(135deg,#9FD3EC,#4BA3D9 65%,#3A8FC4); position:relative; }
+.article-cover .gd { position:absolute; left:-30px; top:-40px; width:160px; height:160px; border-radius:50%; background:rgba(255,255,255,.12); }
+.article-body { background:#fff; padding:20px var(--s4) 28px; }
+.article-body p { font-size:15px; line-height:1.95; color:#33414F; margin-bottom:16px; }
+.article-body h4 { font-size:var(--b1); font-weight:700; margin:22px 0 12px; padding-left:10px; border-left:3px solid var(--brand); }
+.article-body .quote { background:var(--brand-soft); border-radius:10px; padding:14px 16px; margin:16px 0; font-size:var(--b3); color:var(--brand-deep); line-height:1.8; }
+.article-body .tip-list { list-style:none; }
+.article-body .tip-list li { font-size:15px; line-height:1.9; color:#33414F; padding-left:20px; position:relative; margin-bottom:8px; }
+.article-body .tip-list li::before { content:"·"; position:absolute; left:6px; color:var(--brand); font-weight:700; }
+.article-store { display:flex; gap:12px; align-items:center; margin:8px var(--s4) 16px; padding:12px; background:#fff; border-radius:var(--r-md); box-shadow:var(--shadow-card); }
+.article-store .c { width:56px; height:56px; border-radius:9px; flex-shrink:0; background:linear-gradient(135deg,#C2E2F4,#5FA8CF); }
+.article-store .t b { font-size:var(--b2); font-weight:600; display:block; margin-bottom:4px; }
+.article-store .t span { font-size:var(--cap); color:var(--text-3); }
+.article-store .go { margin-left:auto; font-size:var(--b3); color:var(--brand); }
+
+/* 浮层 */
+.sheet-mask { position:absolute; inset:0; background:rgba(26,39,51,.45); z-index:200; display:flex; align-items:flex-end; }
+.sheet { background:#fff; border-radius:18px 18px 0 0; width:100%; padding:20px var(--s4) calc(16px + var(--safe-bottom)); }
+.sheet .st { font-size:var(--b3); color:var(--text-3); text-align:center; margin-bottom:18px; }
+.sheet .srow { display:flex; gap:22px; justify-content:center; margin-bottom:18px; }
+.sheet .si { display:flex; flex-direction:column; align-items:center; gap:7px; font-size:var(--cap); color:var(--text-2); }
+.sheet .si .b { width:52px; height:52px; border-radius:14px; background:#F4F7FA; display:flex; align-items:center; justify-content:center; font-size:23px; }
+.sheet .cancel { height:46px; border-radius:var(--r-md); background:#F4F7FA; display:flex; align-items:center; justify-content:center; font-size:var(--t4); font-weight:600; color:var(--text-2); }
+.dialog-mask { position:absolute; inset:0; background:rgba(26,39,51,.45); z-index:200; display:flex; align-items:center; justify-content:center; }
+.dialog { width:272px; background:#fff; border-radius:var(--r-lg); overflow:hidden; text-align:center; }
+.dialog .dt { padding:22px 20px 16px; }
+.dialog .dt b { font-size:var(--b1); font-weight:600; display:block; margin-bottom:8px; }
+.dialog .dt p { font-size:var(--b3); color:var(--text-2); line-height:1.6; }
+.dialog .dacts { display:flex; border-top:1px solid var(--line); }
+.dialog .dacts div { flex:1; padding:14px; font-size:var(--t4); color:var(--text-2); }
+.dialog .dacts div + div { border-left:1px solid var(--line); color:var(--brand); font-weight:600; }
+.toast { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); background:rgba(26,39,51,.86); color:#fff; padding:12px 20px; border-radius:10px; font-size:var(--b2); z-index:300; white-space:nowrap; transition:opacity .2s; }
+.toast.hide { opacity:0; pointer-events:none; }
+.hint-tap { position:absolute; inset:0; pointer-events:none; z-index:120; }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <!-- ============ 控制面板 ============ -->
+  <div class="panel">
+    <h1>小程序原型</h1>
+    <div class="sub">点击手机内任意卡片 / Tab / 按钮即可跳转，路由器带返回栈。</div>
+
+    <div class="grp">
+      <div class="grp-t">游客 · Tab 页</div>
+      <button class="jump" data-jump="home">首页 MP-HOME</button>
+      <button class="jump" data-jump="list">找店 MP-LIST</button>
+      <button class="jump" data-jump="my_intents">我的意向 MP-MY-INTENTS</button>
+    </div>
+    <div class="grp">
+      <div class="grp-t">详情与分享</div>
+      <button class="jump" data-jump="detail">门店详情 MP-DETAIL</button>
+    </div>
+    <div class="grp">
+      <div class="grp-t">意向流程</div>
+      <button class="jump" data-jump="login">登录 MP-LOGIN</button>
+      <button class="jump" data-jump="intent_form">提交意向 MP-INTENT-FORM</button>
+      <button class="jump" data-jump="intent_success">意向成功 MP-INTENT-SUCCESS</button>
+    </div>
+    <div class="grp">
+      <div class="grp-t">攻略</div>
+      <button class="jump" data-jump="guide_list">攻略列表</button>
+      <button class="jump" data-jump="guide_detail">攻略详情</button>
+    </div>
+
+    <div class="route-info">
+      当前页面：<b id="routeName">home</b><br>
+      返回栈：<span id="stackInfo">空</span>
+    </div>
+  </div>
+
+  <!-- ============ 手机 ============ -->
+  <div class="phone">
+    <div class="notch"></div>
+
+    <div class="statusbar">
+      <span>9:41</span>
+      <span class="right">▮▮▮ ⌁ ▰</span>
+    </div>
+
+    <div class="navbar" id="nav">
+      <span class="back" id="navBack" style="display:none">‹</span>
+      <span id="navTitle">荷塘月色</span>
+      <span class="share" id="navShare" style="display:none">···</span>
+    </div>
+
+    <div class="screen" id="screen"></div>
+
+    <div class="tabbar" id="tabbar">
+      <div class="tab" data-go="home"><span class="ico">🏠</span>首页</div>
+      <div class="tab" data-go="list"><span class="ico">🔍</span>找店</div>
+      <div class="tab" data-go="my_intents"><span class="ico">👤</span>我的</div>
+    </div>
+
+    <div class="home-indicator"></div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   极简路由器：每个页面是一个渲染函数 + 返回栈
+   ============================================================ */
+const screens = document.getElementById('screen');
+const navTitle = document.getElementById('navTitle');
+const navBack = document.getElementById('navBack');
+const navShare = document.getElementById('navShare');
+const tabbar = document.getElementById('tabbar');
+
+let stack = [];
+let current = null;
+let loggedIn = false;      // 登录状态（演示用）
+let personCount = 2;       // 意向表单人数
+
+const TAB_PAGES = ['home', 'list', 'my_intents'];
+
+const meta = {
+  home:        { title: '荷塘月色', tab: true },
+  list:        { title: '找店', tab: true },
+  detail:      { title: '', tab: false, transparent: true, share: true },
+  login:       { title: '登录', tab: false, back: true },
+  intent_form: { title: '提交意向', tab: false, back: true },
+  intent_success: { title: '提交结果', tab: false },
+  my_intents:  { title: '我的意向', tab: true },
+  guide_list:  { title: '出行攻略', tab: false, back: true },
+  guide_detail:{ title: '攻略', tab: false, back: true, share: true }
+};
+
+/* ---------- 页面模板 ---------- */
+const views = {
+
+  /* ========== MP-HOME ========== */
+  home: () => `
+    <div class="view anim-fwd">
+      <div class="mp-banner" data-go="detail">
+        <div class="bdeco"></div><div class="bdeco2"></div>
+        <div class="cap">
+          <div class="k">垛里 · 住进千垛水乡</div>
+          <h2>苏中逛一逛</h2>
+          <p>挑一处农家小院，慢下来</p>
+        </div>
+        <div class="bdots"><i class="on"></i><i></i></div>
+      </div>
+
+      <div class="entry-main" data-go="list">
+        <div class="ic">🏡</div>
+        <div class="tx"><b>找苏中农家乐</b><span>苏州 · 扬州 · 泰州 已开通</span></div>
+        <div class="arrow">›</div>
+      </div>
+
+      <div class="entry-sub" data-go="guide_list">
+        <div class="ic">📖</div>
+        <div class="tx"><b>出行攻略</b><span>路线 · 时节 · 玩法</span></div>
+        <div class="arrow">›</div>
+      </div>
+
+      <div class="service-bar" data-tel="1">
+        <span class="ic">📞</span><b>客服 400-000-0000</b><span>点击拨打 ›</span>
+      </div>
+
+      <div class="sec-head"><h3>为你推荐</h3><span class="more" data-go="list">更多 ›</span></div>
+      <div class="reco-scroll">
+        <div class="reco-card" data-go="detail">
+          <div class="reco-cover" style="background:linear-gradient(135deg,#A8D8F0,#4BA3D9)"><span class="tag tag-brand">已上架</span></div>
+          <div class="reco-body"><b>运河观景院</b><div class="meta">苏州 · 吴江</div><div class="p">¥328 <small>起/晚</small></div></div>
+        </div>
+        <div class="reco-card" data-go="detail">
+          <div class="reco-cover" style="background:linear-gradient(135deg,#9FD3EC,#3A8FC4)"><span class="tag tag-brand">已上架</span></div>
+          <div class="reco-body"><b>竹林小屋</b><div class="meta">扬州 · 邗江</div><div class="p">¥258 <small>起/晚</small></div></div>
+        </div>
+        <div class="reco-card" data-go="detail">
+          <div class="reco-cover" style="background:linear-gradient(135deg,#C2E2F4,#5FA8CF)"></div>
+          <div class="reco-body"><b>垛田花海民宿</b><div class="meta">泰州 · 兴化</div><div class="p">¥398 <small>起/晚</small></div></div>
+        </div>
+      </div>
+      <div style="height:20px"></div>
+    </div>`,
+
+  /* ========== MP-LIST ========== */
+  list: () => `
+    <div class="view anim-fwd">
+      <div class="search-sticky">
+        <div class="search-box" data-go="list_empty"><span>🔍</span><span>店名 / 关键词</span></div>
+      </div>
+      <div class="city-row">
+        <div class="chip on">全部已开通</div>
+        <div class="chip">苏州</div>
+        <div class="chip">扬州</div>
+        <div class="chip">泰州</div>
+      </div>
+
+      <div class="list-card" data-go="detail">
+        <div class="lc-cover" style="background:linear-gradient(135deg,#A8D8F0,#4BA3D9)"></div>
+        <div class="lc-body">
+          <b>运河观景院</b><div class="sub">苏州 · 吴江区</div>
+          <div class="sell">临河小院 · 含早餐 · 可带宠物</div>
+          <div class="lc-foot"><span class="p">¥328 <small>起/晚</small></span><span class="tel">📞 电话</span></div>
+        </div>
+      </div>
+      <div class="list-card" data-go="detail">
+        <div class="lc-cover" style="background:linear-gradient(135deg,#9FD3EC,#3A8FC4)"></div>
+        <div class="lc-body">
+          <b>竹林小屋</b><div class="sub">扬州 · 邗江区</div>
+          <div class="sell">竹林环绕 · 独院 · 家庭房</div>
+          <div class="lc-foot"><span class="p">¥258 <small>起/晚</small></span><span class="tel">📞 电话</span></div>
+        </div>
+      </div>
+      <div class="list-card" data-go="detail">
+        <div class="lc-cover" style="background:linear-gradient(135deg,#C2E2F4,#5FA8CF)"></div>
+        <div class="lc-body">
+          <b>垛田花海民宿</b><div class="sub">泰州 · 兴化市</div>
+          <div class="sell">千垛景区旁 · 观景露台</div>
+          <div class="lc-foot"><span class="p">¥398 <small>起/晚</small></span><span class="tel">📞 电话</span></div>
+        </div>
+      </div>
+      <div class="list-card" data-go="detail">
+        <div class="lc-cover" style="background:linear-gradient(135deg,#B5DCF0,#4BA3D9)"></div>
+        <div class="lc-body">
+          <b>水巷小筑</b><div class="sub">苏州 · 昆山市</div>
+          <div class="sell">古镇步行 5 分钟 · 含双早</div>
+          <div class="lc-foot"><span class="p">¥288 <small>起/晚</small></span><span class="tel">📞 电话</span></div>
+        </div>
+      </div>
+      <div style="text-align:center; padding:14px; font-size:var(--cap); color:var(--text-3)">— 已经到底了 —</div>
+    </div>`,
+
+  /* ========== MP-LIST 空态 ========== */
+  list_empty: () => `
+    <div class="view anim-fwd">
+      <div class="search-sticky">
+        <div class="search-box"><span>🔍</span><span style="color:var(--text-1)">不存在的小院</span></div>
+      </div>
+      <div class="city-row">
+        <div class="chip on">全部已开通</div>
+        <div class="chip">苏州</div>
+        <div class="chip">扬州</div>
+        <div class="chip">泰州</div>
+      </div>
+      <div style="padding:56px 40px; text-align:center; color:var(--text-3); font-size:var(--b3)">
+        <div style="font-size:34px; margin-bottom:16px; opacity:.45">🔍</div>
+        <div style="color:var(--text-2); margin-bottom:6px; font-size:var(--b2); font-weight:600">未找到相关门店</div>
+        <div>试试换个城市，或清空关键词</div>
+        <div style="margin-top:20px; color:var(--brand); font-size:var(--b2); font-weight:600" data-go="list">清空筛选</div>
+      </div>
+    </div>`,
+
+  /* ========== MP-DETAIL ========== */
+  detail: () => `
+    <div class="view anim-fwd" style="padding-bottom:110px">
+      <div class="gallery">
+        <div class="img"><div class="gd"></div><div class="gd2"></div></div>
+        <div class="dots2"><i class="on"></i><i></i><i></i><i></i></div>
+        <div class="idx">1 / 6</div>
+      </div>
+      <div class="detail-body">
+        <h1>垛田花海民宿</h1>
+        <div class="detail-price"><b>¥398</b><span>起 / 晚 · 含双早</span></div>
+        <div class="addr">
+          <span>📍</span>
+          <span>泰州兴化市千垛镇东旺村 128 号<br><span style="color:var(--text-3); font-size:11px">距千垛景区步行 8 分钟</span></span>
+          <span class="act"><span data-toast="地址已复制">复制</span><span data-toast="正在打开地图…">导航</span></span>
+        </div>
+        <div class="notice-bar"><span>ℹ️</span><span><b>意向不等于已锁房</b>，客服确认后才有安排</span></div>
+      </div>
+
+      <div class="block">
+        <h4>可咨询套餐</h4>
+        <div class="pkg">
+          <div class="pi">🌾</div>
+          <div class="pt"><b>双人水乡慢游</b><span>观景大床房 · 含双早 · 2 晚起</span></div>
+          <div class="pp">¥398<span style="font-size:10px;font-weight:400;color:var(--text-3)">/晚</span></div>
+        </div>
+        <div class="pkg">
+          <div class="pi">👨‍👩‍👧</div>
+          <div class="pt"><b>亲子垛田行</b><span>家庭房 · 含早餐 · 景区门票 2 张</span></div>
+          <div class="pp">¥528<span style="font-size:10px;font-weight:400;color:var(--text-3)">/晚</span></div>
+        </div>
+      </div>
+
+      <div class="block">
+        <h4>入住须知</h4>
+        <div class="kv"><span class="k">入住 / 离店</span><span class="v">14:00 后 / 12:00 前</span></div>
+        <div class="kv"><span class="k">接待人数</span><span class="v">1 – 6 人 / 间</span></div>
+        <div class="kv"><span class="k">可否加床</span><span class="v">可加 1 床（¥80/晚）</span></div>
+        <div class="kv"><span class="k">宠物</span><span class="v">可带小型宠物，需提前告知</span></div>
+        <div class="kv"><span class="k">门店电话</span><span class="v" style="color:var(--brand)" data-tel="1">138-0000-0000</span></div>
+      </div>
+      <div style="height:12px"></div>
+    </div>
+
+    <div class="cta-bar">
+      <div class="share-btn" data-sheet="1"><span class="i">↗</span>分享</div>
+      <div class="share-btn" data-tel="1"><span class="i">📞</span>电话</div>
+      <div class="cta-main">
+        <button class="btn-primary" data-submit-intent>提交意向</button>
+        <div class="cta-sub">客服确认后安排，非即时订成</div>
+      </div>
+    </div>`,
+
+  /* ========== MP-LOGIN ========== */
+  login: () => `
+    <div class="view anim-fwd">
+      <div class="login-wrap">
+        <div class="login-brand">
+          <div class="login-logo">垛</div>
+          <h1>登录后提交意向</h1>
+          <p>客服将电话联系您确认档期</p>
+        </div>
+        <div class="login-steps">
+          <div class="step on"><span class="n">✓</span>微信授权</div>
+          <div class="step-line"></div>
+          <div class="step on"><span class="n">2</span>补全手机号</div>
+        </div>
+        <div class="login-form">
+          <div class="fld"><label>手机号</label><div class="box" id="phoneBox">请输入手机号</div></div>
+          <div class="fld">
+            <label>验证码</label>
+            <div class="code-row">
+              <div class="box">6 位验证码</div>
+              <div class="code-btn" data-toast="验证码已发送">获取验证码</div>
+            </div>
+          </div>
+          <div class="login-tip">为与网页版账号打通、便于客服联系，<br>请补全手机号</div>
+        </div>
+        <div class="login-actions">
+          <button class="btn-primary" data-login-ok>确认</button>
+          <div class="skip" data-back>稍后再说</div>
+        </div>
+      </div>
+    </div>`,
+
+  /* ========== MP-INTENT-FORM ========== */
+  intent_form: () => `
+    <div class="view anim-fwd" style="padding-bottom:120px">
+      <div class="form-top-banner">
+        <span class="i">ℹ️</span>
+        <p>提交意向后，客服会联系您确认。<b>意向不等于已锁房。</b></p>
+      </div>
+      <div class="readonly-store">
+        <div class="c"></div>
+        <div class="t"><b>垛田花海民宿</b><span>¥398 起/晚 · 双人水乡慢游</span></div>
+      </div>
+      <div class="form-body">
+        <div class="frow"><span class="lb"><em>*</em>到店日</span><span class="vl">2026-10-24 周六</span><span class="ar">›</span></div>
+        <div class="frow"><span class="lb"><em>*</em>离店日</span><span class="vl">2026-10-26 周一</span><span class="ar">›</span></div>
+        <div class="frow"><span class="lb">晚数</span><span class="vl" style="color:var(--brand-deep);font-weight:600">2 晚</span></div>
+        <div class="frow">
+          <span class="lb"><em>*</em>人数</span>
+          <div class="vl stepper">
+            <span data-minus>−</span><b id="pCount">${personCount}</b><span data-plus>+</span>
+            <span class="unit-label">人</span>
+          </div>
+        </div>
+        <div class="frow"><span class="lb"><em>*</em>联系人</span><span class="vl ph">请填写姓名</span></div>
+        <div class="frow"><span class="lb"><em>*</em>手机</span><span class="vl">138 0000 0000</span></div>
+        <div class="frow"><span class="lb">备注</span><span class="vl ph">有老人同行，需要一楼房间</span></div>
+      </div>
+      <div class="nights-tip">共 2 晚 · ${personCount} 人 · 客服确认档期后回复</div>
+    </div>
+    <div class="form-cta">
+      <button class="btn-primary" data-go="intent_success">提交意向</button>
+      <div class="no-pay">不收取定金 · 无需在线支付</div>
+    </div>`,
+
+  /* ========== MP-INTENT-SUCCESS ========== */
+  intent_success: () => `
+    <div class="view anim-fwd">
+      <div class="succ-wrap">
+        <div class="succ-icon">✓</div>
+        <h1>意向已提交</h1>
+        <div class="sub">我们会尽快联系您确认</div>
+        <div class="order-no">
+          <span class="k">意向单号</span>
+          <span class="v">YZ202610210037</span>
+          <span class="cp" data-toast="已复制单号">复制</span>
+        </div>
+        <div class="info-card">
+          <div class="kv2"><span class="k">门店</span><span class="v">垛田花海民宿</span></div>
+          <div class="kv2"><span class="k">意向日期</span><span class="v">10-24 至 10-26 · 共 2 晚</span></div>
+          <div class="kv2"><span class="k">人数</span><span class="v">${personCount} 人</span></div>
+          <div class="kv2"><span class="k">客服电话</span><span class="v" style="color:var(--brand-deep);font-weight:600" data-tel="1">400-000-0000</span></div>
+        </div>
+        <div class="lock-notice">
+          <p><b>意向不等于已锁房，请勿理解为已订成或已支付。</b></p>
+          <p>我们会尽快联系您确认档期与接待安排。如有疑问可拨打客服电话 400-000-0000。</p>
+        </div>
+        <div class="succ-actions">
+          <button class="btn-primary" data-go="my_intents">查看我的意向</button>
+          <button class="btn-ghost" data-go="home">返回首页</button>
+        </div>
+      </div>
+    </div>`,
+
+  /* ========== MP-MY-INTENTS ========== */
+  my_intents: () => `
+    <div class="view anim-fwd">
+      <div class="radius-tip">以下为咨询意向，未锁房，以客服确认为准。</div>
+      <div class="info-banner">
+        <span class="i">ℹ️</span>
+        <p>网页版意向同步即将开通，当前仅显示本端提交的意向</p>
+      </div>
+      <div class="intent-card" data-toast="查看意向详情（演示）">
+        <div class="intent-head"><span class="no">YZ202610210037</span><span class="tag tag-warn">待跟进</span></div>
+        <div class="intent-body">
+          <div class="c" style="background:linear-gradient(135deg,#C2E2F4,#5FA8CF)"></div>
+          <div class="t"><b>垛田花海民宿</b><div class="d">10-24 至 10-26 · 2 晚</div><div class="n">${personCount} 人 · 联系人 王先生</div></div>
+        </div>
+        <div class="intent-foot"><span>提交于 10-21 11:32</span><span class="go">查看 ›</span></div>
+      </div>
+      <div class="intent-card" data-toast="查看意向详情（演示）">
+        <div class="intent-head"><span class="no">YZ202609280112</span><span class="tag tag-ok">已入住</span></div>
+        <div class="intent-body">
+          <div class="c" style="background:linear-gradient(135deg,#A8D8F0,#4BA3D9)"></div>
+          <div class="t"><b>运河观景院</b><div class="d">09-30 至 10-02 · 2 晚</div><div class="n">3 人 · 联系人 王先生</div></div>
+        </div>
+        <div class="intent-foot"><span>提交于 09-28 20:11</span><span class="go">查看 ›</span></div>
+      </div>
+      <div class="intent-card" data-toast="查看意向详情（演示）">
+        <div class="intent-head"><span class="no">YZ202609150068</span><span class="tag tag-gray">已关闭</span></div>
+        <div class="intent-body">
+          <div class="c" style="background:linear-gradient(135deg,#D8E4EE,#A8C0D4)"></div>
+          <div class="t"><b>竹林小屋</b><div class="d">09-20 至 09-21 · 1 晚</div><div class="n">2 人 · 联系人 王先生</div></div>
+        </div>
+        <div class="intent-foot"><span>提交于 09-15 09:40</span><span class="go">查看 ›</span></div>
+      </div>
+      <div style="text-align:center; padding:14px; font-size:var(--cap); color:var(--text-3)">— 已经到底了 —</div>
+    </div>`,
+
+  /* ========== MP-GUIDE-LIST ========== */
+  guide_list: () => `
+    <div class="view anim-fwd">
+      <div style="height:12px"></div>
+      <div class="guide-card" data-go="guide_detail">
+        <div class="guide-cover" style="background:linear-gradient(135deg,#8CCCEA,#4BA3D9 60%,#5FA8CF)">
+          <div class="gd"></div><span class="tag tag-brand cat">时节</span>
+        </div>
+        <div class="guide-body">
+          <h3>千垛菜花最全赏花时间表，别白跑一趟</h3>
+          <p>每年 3 月下旬到 4 月中是最佳花期，垛田被水网切成一块块金色岛屿。这篇整理了三年的开花记录，帮你挑准那一周。</p>
+          <div class="guide-meta"><span>2026-03-12</span><span>·</span><span>3 分钟阅读</span></div>
+        </div>
+      </div>
+      <div class="guide-card" data-go="guide_detail">
+        <div class="guide-cover" style="background:linear-gradient(135deg,#9FD3EC,#3A8FC4)">
+          <div class="gd"></div><span class="tag tag-brand cat">路线</span>
+        </div>
+        <div class="guide-body">
+          <h3>苏州到兴化两日自驾：水乡怎么串才顺</h3>
+          <p>从吴江出发走盐靖高速，首日落脚千垛，次日回程顺路逛兴化老城。含停车点与早茶店推荐。</p>
+          <div class="guide-meta"><span>2026-04-02</span><span>·</span><span>5 分钟阅读</span></div>
+        </div>
+      </div>
+      <div class="guide-card" data-go="guide_detail">
+        <div class="guide-cover" style="background:linear-gradient(135deg,#B5DCF0,#4BA3D9)">
+          <div class="gd"></div><span class="tag tag-brand cat">玩法</span>
+        </div>
+        <div class="guide-body">
+          <h3>带娃住农家乐，这 6 件事提前问清楚</h3>
+          <p>有没有独立卫浴、能不能加床、院子里有没有水塘——提前问明白，到了才不会手忙脚乱。</p>
+          <div class="guide-meta"><span>2026-05-18</span><span>·</span><span>4 分钟阅读</span></div>
+        </div>
+      </div>
+      <div style="text-align:center; padding:14px; font-size:var(--cap); color:var(--text-3)">— 已经到底了 —</div>
+    </div>`,
+
+  /* ========== MP-GUIDE-DETAIL ========== */
+  guide_detail: () => `
+    <div class="view anim-fwd">
+      <div class="article-head">
+        <h1>千垛菜花最全赏花时间表，别白跑一趟</h1>
+        <div class="article-meta">
+          <span class="av">垛</span><span>垛里编辑部</span><span>·</span>
+          <span>2026-03-12</span><span>·</span><span>3 分钟阅读</span>
+        </div>
+      </div>
+      <div class="article-cover"><div class="gd"></div></div>
+      <div class="article-body">
+        <p>每年春天，兴化的垛田会被水网切成一块块金色小岛，船从花海里穿过去——这就是千垛菜花。</p>
+        <p>但花期只有二十来天，来得早花没开足，来得晚只剩青秆。我们整理了近三年的开花记录，帮你挑准那一周。</p>
+        <h4>近三年花期参考</h4>
+        <div class="quote">
+          2024 年：3 月 22 日初花，4 月 5 日盛花，4 月 18 日谢<br>
+          2025 年：3 月 18 日初花，4 月 2 日盛花，4 月 16 日谢<br>
+          2026 年：3 月 25 日初花，4 月 8 日盛花（预计）
+        </div>
+        <h4>怎么挑日子</h4>
+        <p>如果你只想看「满眼金黄」，建议盯住盛花期的头一周。初花期虽然人少，但花不够密，拍照容易露出水面。</p>
+        <ul class="tip-list">
+          <li>工作日比周末人少一半，船票也更好买</li>
+          <li>上午 9 点前光线最柔，水面雾气还没散</li>
+          <li>下雨后两天花色最艳，别怕阴天</li>
+        </ul>
+        <h4>住在哪儿更省事</h4>
+        <p>千垛景区周边的农家乐步行就能到码头，比住兴化市区省下近一小时车程。旺季房源紧，建议提前两周咨询。</p>
+      </div>
+      <div class="article-store" data-go="detail">
+        <div class="c"></div>
+        <div class="t"><b>垛田花海民宿</b><span>距千垛景区步行 8 分钟 · ¥398 起</span></div>
+        <span class="go">查看 ›</span>
+      </div>
+      <div style="text-align:center; padding:24px 40px 30px; font-size:var(--cap); color:var(--text-3)">— 完 —</div>
+    </div>`
+};
+
+/* ---------- 渲染 ---------- */
+function render(route, direction = 'fwd') {
+  current = route;
+  const m = meta[route] || meta.home;
+
+  navTitle.textContent = m.title || '';
+  navBack.style.display = m.back ? 'block' : 'none';
+  navShare.style.display = m.share ? 'block' : 'none';
+  tabbar.style.display = m.tab ? 'flex' : 'none';
+
+  // 详情页导航透明浮在图上
+  const nav = document.getElementById('nav');
+  if (m.transparent) {
+    nav.style.position = 'absolute';
+    nav.style.top = 'var(--safe-top)';
+    nav.style.left = '0'; nav.style.right = '0';
+    nav.style.color = '#fff';
+    navBack.style.display = 'block';
+    navBack.style.color = '#fff';
+    navBack.style.textShadow = '0 1px 4px rgba(0,0,0,.35)';
+    navShare.style.color = '#fff';
+    navShare.style.textShadow = '0 1px 4px rgba(0,0,0,.35)';
+  } else {
+    nav.style.position = '';
+    nav.style.top = ''; nav.style.left = ''; nav.style.right = '';
+    nav.style.color = '';
+    navBack.style.color = '';
+    navBack.style.textShadow = '';
+    navShare.style.color = '';
+    navShare.style.textShadow = '';
+  }
+
+  screens.innerHTML = views[route] ? views[route]() : '<div class="view">404</div>';
+  screens.scrollTop = 0;
+  screens.querySelector('.view')?.classList.add(direction === 'back' ? 'anim-back' : 'anim-fwd');
+  screens.style.paddingBottom = '0';
+
+  // Tab 高亮
+  tabbar.querySelectorAll('.tab').forEach(t => {
+    t.classList.toggle('on', t.dataset.go === route);
+  });
+
+  // 面板状态
+  document.getElementById('routeName').textContent = route;
+  document.getElementById('stackInfo').textContent = stack.length ? stack.join(' → ') : '空';
+  document.querySelectorAll('.panel .jump').forEach(b => b.classList.toggle('cur', b.dataset.jump === route));
+}
+
+function go(route, opts = {}) {
+  if (route === current) return;
+  const isTab = TAB_PAGES.includes(route);
+  if (!opts.replace && !isTab) stack.push(current);
+  if (isTab) stack = [];            // switchTab 清栈
+  render(route, 'fwd');
+}
+
+function back() {
+  const prev = stack.pop();
+  render(prev || 'home', 'back');
+}
+
+/* ---------- 浮层 ---------- */
+function showSheet() {
+  const el = document.createElement('div');
+  el.className = 'sheet-mask';
+  el.innerHTML = `
+    <div class="sheet">
+      <div class="st">转发给朋友 / 分享到</div>
+      <div class="srow">
+        <div class="si"><div class="b">💬</div>微信好友</div>
+        <div class="si"><div class="b">👥</div>群聊</div>
+        <div class="si"><div class="b">🖼️</div>生成卡片</div>
+        <div class="si"><div class="b">🔗</div>复制链接</div>
+      </div>
+      <div class="cancel">取消</div>
+    </div>`;
+  el.addEventListener('click', e => { if (e.target === el || e.target.classList.contains('cancel')) el.remove(); });
+  document.querySelector('.phone').appendChild(el);
+}
+
+function showDialog() {
+  const el = document.createElement('div');
+  el.className = 'dialog-mask';
+  el.innerHTML = `
+    <div class="dialog">
+      <div class="dt"><b>该链接需在浏览器打开</b><p>复制链接后，在浏览器粘贴访问</p></div>
+      <div class="dacts"><div>取消</div><div>复制链接</div></div>
+    </div>`;
+  el.addEventListener('click', e => {
+    if (e.target.textContent === '复制链接') { el.remove(); toast('已复制，请到浏览器粘贴打开'); }
+    else if (e.target === el || e.target.textContent === '取消') el.remove();
+  });
+  document.querySelector('.phone').appendChild(el);
+}
+
+let toastTimer;
+function toast(msg) {
+  let t = document.querySelector('.phone > .toast');
+  if (!t) { t = document.createElement('div'); t.className = 'toast'; document.querySelector('.phone').appendChild(t); }
+  t.textContent = msg;
+  t.classList.remove('hide');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.add('hide'), 1600);
+}
+
+/* ---------- 事件委托 ---------- */
+document.addEventListener('click', e => {
+  const t = e.target;
+
+  // 返回
+  if (t.id === 'navBack' || t.dataset.back !== undefined) { back(); return; }
+
+  // 面板跳转
+  if (t.dataset.jump) { go(t.dataset.jump); return; }
+
+  // 分享面板
+  if (t.dataset.sheet) { showSheet(); return; }
+
+  // 复制链接演示（Banner 外链场景）
+  if (t.dataset.toast) { toast(t.dataset.toast); return; }
+
+  // tel
+  if (t.dataset.tel) { toast('调起系统拨号 400-000-0000'); return; }
+
+  // 详情主 CTA：未登录 → 登录；已登录 → 表单
+  if (t.dataset.submitIntent !== undefined) {
+    if (!loggedIn) { toast('需要授权后才能提交意向'); go('login'); }
+    else go('intent_form');
+    return;
+  }
+
+  // 登录成功
+  if (t.dataset.loginOk !== undefined) {
+    loggedIn = true;
+    toast('登录成功');
+    setTimeout(() => { back(); }, 500);
+    return;
+  }
+
+  // 人数加减（局部更新，不整页重渲染，避免动画与滚动跳动）
+  if (t.dataset.plus !== undefined || t.dataset.minus !== undefined) {
+    personCount = t.dataset.plus !== undefined
+      ? Math.min(8, personCount + 1)
+      : Math.max(1, personCount - 1);
+    const b = document.getElementById('pCount');
+    if (b) b.textContent = personCount;
+    const tip = document.querySelector('.nights-tip');
+    if (tip) tip.textContent = `共 2 晚 · ${personCount} 人 · 客服确认档期后回复`;
+    return;
+  }
+
+  // 页面跳转（含底栏 Tab）
+  const goEl = t.closest('[data-go]');
+  if (goEl) { go(goEl.dataset.go); }
+});
+
+/* ---------- 启动 ---------- */
+render('home');
+</script>
+
+</body>
+</html>

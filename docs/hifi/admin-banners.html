@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>高保真 · 运营端 · Banner 管理</title>
+<link rel="stylesheet" href="tokens.css">
+<style>
+.layout { display:flex; min-height:100vh; }
+.sidebar { width:224px; background:#fff; border-right:1px solid var(--line); padding:var(--s5) 0; flex-shrink:0; }
+.brand { padding:0 var(--s4) var(--s4); border-bottom:1px solid var(--line); margin-bottom:var(--s3); }
+.brand .name { font-size:var(--fs-xl); font-weight:700; }
+.brand .role { font-size:var(--fs-xs); color:var(--text-3); margin-top:2px; }
+.main { flex:1; display:flex; flex-direction:column; min-width:0; }
+.servicetop { background:#fff; border-bottom:1px solid var(--line); height:52px; display:flex; align-items:center; justify-content:flex-end; padding:0 var(--s6); color:var(--text-2); font-size:var(--fs-sm); }
+.content { padding:var(--s6); }
+/* 页头 */
+.page-head { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:var(--s5); }
+.page-head h1 { font-size:var(--fs-2xl); margin-bottom:6px; }
+.page-head .desc { color:var(--text-2); font-size:var(--fs-md); }
+/* 筛选区 */
+.filters { display:flex; gap:var(--s3); align-items:center; padding:var(--s4); margin-bottom:var(--s4); flex-wrap:wrap; }
+.filters label { color:var(--text-2); font-size:var(--fs-md); }
+.select { height:38px; border:1px solid var(--line); border-radius:var(--r-md); padding:0 10px; color:var(--text-1); background:#fff; font-family:inherit; }
+/* 表格 */
+.table-card { overflow:hidden; }
+table { width:100%; border-collapse:collapse; }
+thead th { text-align:left; padding:14px 16px; background:#F8FAFC; color:var(--text-2); font-size:var(--fs-sm); font-weight:600; border-bottom:1px solid var(--line); white-space:nowrap; }
+tbody td { padding:14px 16px; border-bottom:1px solid var(--line); font-size:var(--fs-md); vertical-align:middle; }
+tbody tr:last-child td { border-bottom:none; }
+tbody tr { transition:background .12s; }
+tbody tr:hover { background:#FAFDFF; }
+.thumb { width:120px; height:48px; border-radius:var(--r-sm); object-fit:cover; display:block; }
+.link { color:var(--brand); cursor:pointer; font-size:var(--fs-md); }
+.link:hover { color:var(--brand-deep); text-decoration:underline; }
+.link.danger { color:var(--danger); }
+.ops { display:flex; gap:var(--s3); align-items:center; white-space:nowrap; }
+.sort-num { font-weight:600; color:var(--text-1); }
+.warn-tip { display:inline-flex; align-items:center; gap:4px; color:var(--amber); font-size:var(--fs-xs); margin-left:6px; }
+/* 状态示意条 */
+.state-bar { margin-top:var(--s5); display:flex; gap:var(--s3); flex-wrap:wrap; }
+.state-chip { padding:8px 14px; border:1px dashed var(--line); border-radius:var(--r-md); background:#fff; color:var(--text-3); font-size:var(--fs-xs); }
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- 侧栏：运营端完整菜单 -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="name">荷塘月色</div>
+      <div class="role">垛里 Duoli · 运营端</div>
+    </div>
+    <div class="side-item">📥 入驻申请</div>
+    <div class="side-item">🏪 商家</div>
+    <div class="side-item">🏡 房源</div>
+    <div class="side-item">🔄 上下架队列</div>
+    <div class="side-item">✉️ 意向</div>
+    <div class="side-item">📖 攻略</div>
+    <div class="side-item active">📢 广告位</div>
+    <div class="side-item">🗺️ 开城 / 目的地</div>
+    <div class="side-item">🌱 种子面板</div>
+    <div class="side-item">⚙️ 站点配置</div>
+  </aside>
+
+  <!-- 主区 -->
+  <div class="main">
+    <div class="servicetop">客服 400-000-0000</div>
+    <div class="content">
+      <div class="page-head">
+        <div>
+          <h1>Banner 管理</h1>
+          <p class="desc">仅影响门户首页 Banner；数字越小越靠前。全站投放与游客所选目的地无关。</p>
+        </div>
+        <button class="btn btn-primary">＋ 新建 Banner</button>
+      </div>
+
+      <!-- 筛选区 -->
+      <div class="filters card">
+        <label>状态</label>
+        <select class="select"><option>全部</option><option>启用</option><option>停用</option></select>
+        <label>范围</label>
+        <select class="select"><option>全部</option><option>全站</option><option>苏州市</option><option>扬州市</option></select>
+        <label>关键词</label>
+        <input class="input" style="width:220px" placeholder="标题或链接">
+        <button class="btn btn-ghost">筛选</button>
+      </div>
+
+      <!-- 列表 -->
+      <div class="table-card card">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:140px">图片</th>
+              <th>标题 / 链接</th>
+              <th style="width:170px">范围</th>
+              <th style="width:120px">启用</th>
+              <th style="width:80px">排序</th>
+              <th style="width:160px">操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><div class="thumb" style="background:linear-gradient(120deg,#7EC4E8,#4BA3D9 60%,#5BAE8D)"></div></td>
+              <td>
+                <div style="font-weight:600;margin-bottom:4px">苏中逛一逛</div>
+                <div style="color:var(--text-3);font-size:var(--fs-sm)">/guides/suzhou-weekend</div>
+              </td>
+              <td><span class="tag tag-brand">全站</span><div style="color:var(--text-3);font-size:var(--fs-xs);margin-top:4px">所有游客可见，与目的地无关</div></td>
+              <td><span class="toggle on"></span> <span class="tag tag-green">启用</span></td>
+              <td><span class="sort-num">10</span></td>
+              <td><div class="ops"><span class="link">编辑</span><span class="link danger">删除</span></div></td>
+            </tr>
+            <tr>
+              <td><div class="thumb" style="background:linear-gradient(120deg,#8FD3B6,#5BAE8D 60%,#4BA3D9)"></div></td>
+              <td>
+                <div style="font-weight:600;margin-bottom:4px">扬州周末</div>
+                <div style="color:var(--text-3);font-size:var(--fs-sm)">https://example.com/yangzhou</div>
+              </td>
+              <td><span class="tag tag-brand">扬州市</span></td>
+              <td><span class="toggle on"></span> <span class="tag tag-green">启用</span></td>
+              <td><span class="sort-num">20</span></td>
+              <td><div class="ops"><span class="link">编辑</span><span class="link danger">删除</span></div></td>
+            </tr>
+            <tr style="opacity:.75">
+              <td><div class="thumb skeleton"></div></td>
+              <td>
+                <div style="font-weight:600;margin-bottom:4px">南通早茶季</div>
+                <div style="color:var(--text-3);font-size:var(--fs-sm)">/guides/nantong-food</div>
+              </td>
+              <td><span class="tag tag-amber">南通市</span><span class="warn-tip">⚠ 该市未开通 · 不对客</span></td>
+              <td><span class="toggle"></span> <span class="tag tag-gray">停用</span></td>
+              <td><span class="sort-num">30</span></td>
+              <td><div class="ops"><span class="link">编辑</span><span class="link danger">删除</span></div></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 六态 / 文案速查示意 -->
+      <div class="state-bar">
+        <span class="state-chip">loading：表骨架</span>
+        <span class="state-chip">empty：暂无 Banner，点击新建投放</span>
+        <span class="state-chip">error：列表加载失败，请重试</span>
+        <span class="state-chip">删除确认：删除后不可恢复，确认删除该 Banner？</span>
+        <span class="state-chip">停用 Toast：已停用，首页将不再展示</span>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

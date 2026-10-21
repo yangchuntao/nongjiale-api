@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>高保真 · 商家端 · 门店</title>
+<link rel="stylesheet" href="tokens.css">
+<style>
+.layout { display:flex; min-height:100vh; }
+/* ---------- 侧栏 ---------- */
+.sidebar { width:220px; background:#fff; border-right:1px solid var(--line); padding:var(--s5) 0; flex-shrink:0; }
+.brand { padding:0 var(--s4) var(--s4); border-bottom:1px solid var(--line); margin-bottom:var(--s3); }
+.brand .name { font-size:var(--fs-xl); font-weight:700; color:var(--text-1); }
+.brand .role { font-size:var(--fs-xs); color:var(--text-3); margin-top:2px; }
+/* ---------- 主区 ---------- */
+.main { flex:1; display:flex; flex-direction:column; }
+.servicetop { background:#fff; border-bottom:1px solid var(--line); height:52px; display:flex; align-items:center; padding:0 var(--s6); color:var(--text-2); font-size:var(--fs-sm); justify-content:flex-end; }
+.content { padding:var(--s6); max-width:1040px; }
+.page-head { margin-bottom:var(--s5); }
+.page-head h1 { font-size:var(--fs-2xl); margin-bottom:6px; }
+.page-head p { color:var(--text-2); font-size:var(--fs-md); }
+/* ---------- 门店卡片 ---------- */
+.store-list { display:flex; flex-direction:column; gap:var(--s4); }
+.store-item { display:flex; gap:var(--s4); padding:var(--s4); align-items:center; cursor:pointer; transition:box-shadow .2s, transform .2s; }
+.store-item:hover { box-shadow:var(--shadow-2); transform:translateY(-2px); }
+.store-thumb { width:132px; height:88px; border-radius:var(--r-md); flex-shrink:0; position:relative; overflow:hidden; }
+.t1 { background:linear-gradient(135deg,#A8D8F0,#4BA3D9); }
+.t2 { background:linear-gradient(135deg,#B8E4CD,#5BAE8D); }
+.store-thumb .tag { position:absolute; top:8px; left:8px; background:rgba(255,255,255,.92); }
+.store-info { flex:1; }
+.store-info h3 { font-size:var(--fs-lg); margin-bottom:8px; display:flex; align-items:center; gap:10px; }
+.store-info .meta { display:flex; gap:var(--s4); color:var(--text-2); font-size:var(--fs-sm); align-items:center; }
+.price { color:var(--brand-deep); font-weight:700; font-size:var(--fs-lg); }
+.price small { font-weight:400; color:var(--text-3); font-size:var(--fs-xs); }
+.store-actions { display:flex; flex-direction:column; gap:var(--s2); align-items:flex-end; }
+.link { color:var(--brand); font-size:var(--fs-md); cursor:pointer; }
+.link:hover { color:var(--brand-deep); text-decoration:underline; }
+/* 空态示意块 */
+.empty-hint { margin-top:var(--s6); border:1px dashed var(--line); border-radius:var(--r-lg); padding:var(--s5); color:var(--text-3); font-size:var(--fs-sm); background:#fff; }
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- 侧栏 -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="name">站点名称</div>
+      <div class="role">垛里 Duoli · 商家端</div>
+    </div>
+    <div class="side-item active">🏠 门店</div>
+    <div class="side-item">📝 本店意向</div>
+  </aside>
+
+  <!-- 主区 -->
+  <div class="main">
+    <div class="servicetop">客服 400-000-0000</div>
+    <div class="content">
+      <div class="page-head">
+        <h1>门店</h1>
+        <p>门店由运营代为开通，开通后可在此维护房源与查看意向。</p>
+      </div>
+
+      <div class="store-list">
+        <div class="store-item card">
+          <div class="store-thumb t1"><span class="tag tag-brand">已上架</span></div>
+          <div class="store-info">
+            <h3>视觉抽检 · 运河观景院</h3>
+            <div class="meta">
+              <span>📍 地区 5</span>
+              <span class="price">¥328 <small>起 / 晚</small></span>
+              <span class="tag tag-green">已上架</span>
+            </div>
+          </div>
+          <div class="store-actions">
+            <span class="link">管理房源</span>
+            <span class="link" style="color:var(--text-2)">查看意向</span>
+          </div>
+        </div>
+
+        <div class="store-item card">
+          <div class="store-thumb t2"><span class="tag tag-brand">已上架</span></div>
+          <div class="store-info">
+            <h3>视觉抽检 · 竹林小屋</h3>
+            <div class="meta">
+              <span>📍 地区 6</span>
+              <span class="price">¥258 <small>起 / 晚</small></span>
+              <span class="tag tag-green">已上架</span>
+            </div>
+          </div>
+          <div class="store-actions">
+            <span class="link">管理房源</span>
+            <span class="link" style="color:var(--text-2)">查看意向</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 六态示意：empty -->
+      <div class="empty-hint">
+        空态：暂无门店 · 门店由运营代为开通，开通后将自动出现在这里（文案禁区：不出现「广告位 / 买位 / 推广」入口）。
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

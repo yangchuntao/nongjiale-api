@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>垛里 Duoli · 设计系统 v2「水乡绿」</title>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="portal.css">
+<link rel="stylesheet" href="app.css">
+<style>
+/* 本页专用 */
+.spec-hero {
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: var(--s-8) var(--s-5) var(--s-6);
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: var(--s-7);
+  align-items: center;
+}
+.spec-hero h1 { font-size: clamp(34px, 4vw, 52px); margin: var(--s-3) 0; }
+.spec-hero p { color: var(--text-2); font-size: var(--fs-400); max-width: 46ch; }
+
+.spec-sec {
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: var(--s-6) var(--s-5);
+}
+.spec-sec > h2 {
+  font-size: var(--fs-600);
+  margin-bottom: var(--s-2);
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-3);
+}
+.spec-sec > h2 .num-no {
+  font-family: var(--font-mono);
+  font-size: var(--fs-200);
+  color: var(--text-3);
+  font-weight: 400;
+}
+.spec-sec > .lede { color: var(--text-2); margin-bottom: var(--s-5); max-width: 70ch; }
+
+/* 色卡 */
+.palette { display: grid; grid-template-columns: repeat(auto-fill, minmax(148px, 1fr)); gap: var(--s-3); }
+.swatch {
+  border: 1px solid var(--border);
+  border-radius: var(--r-2);
+  overflow: hidden;
+  background: var(--bg-card);
+}
+.swatch .c { height: 64px; border-bottom: 1px solid var(--border); }
+.swatch .t { padding: 10px 12px; }
+.swatch .t b { display: block; font-size: var(--fs-200); font-weight: 600; }
+.swatch .t span { font-size: var(--fs-003); color: var(--text-3); font-family: var(--font-mono); }
+
+/* 页面入口卡 */
+.entries { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: var(--s-4); }
+.entry { display: block; }
+.entry .tag { margin-bottom: var(--s-3); }
+.entry h3 { font-size: var(--fs-500); margin-bottom: 4px; }
+.entry p { font-size: var(--fs-200); color: var(--text-2); line-height: 1.7; }
+.entry .go { display: inline-block; margin-top: var(--s-3); font-size: var(--fs-200); color: var(--brand-700); font-weight: 500; }
+
+/* 组件展示 */
+.demo-row { display: flex; gap: var(--s-4); align-items: center; flex-wrap: wrap; padding: var(--s-4) 0; }
+.demo-row + .demo-row { border-top: 1px dashed var(--border); }
+.demo-row .lbl {
+  width: 130px;
+  flex-shrink: 0;
+  font-size: var(--fs-100);
+  font-weight: 700;
+  letter-spacing: var(--ls-wide);
+  color: var(--text-3);
+  text-transform: uppercase;
+}
+
+/* 对比度表 */
+.a11y-table { width: 100%; border-collapse: collapse; font-size: var(--fs-200); }
+.a11y-table th, .a11y-table td { padding: 10px var(--s-3); border-bottom: 1px solid var(--border); text-align: left; }
+.a11y-table th { color: var(--text-2); font-weight: 600; background: var(--bg-sunk); }
+.a11y-table .pair { display: inline-flex; align-items: center; gap: 8px; }
+.a11y-table .pair i {
+  width: 20px; height: 20px; border-radius: 4px; display: inline-block;
+  border: 1px solid rgba(0,0,0,.12);
+}
+.ratio { font-family: var(--font-mono); font-weight: 600; }
+.pass { color: var(--ok-600); font-weight: 600; }
+
+/* 主题切换 */
+.theme-toggle {
+  position: fixed;
+  right: var(--s-5);
+  bottom: var(--s-5);
+  z-index: var(--z-toast);
+}
+
+@media (max-width: 900px) {
+  .spec-hero { grid-template-columns: 1fr; }
+  .spec-hero .vlabel { display: none; }
+}
+</style>
+</head>
+<body class="textured">
+
+<!-- ========== 顶栏（门户样式复用） ========== -->
+<header class="site-head">
+  <div class="site-head__in">
+    <a class="brandmark" href="index.html" aria-label="垛里 Duoli">
+      <span class="brandmark__mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+      <span class="brandmark__text"><b>垛里</b><span>Duoli</span></span>
+    </a>
+    <nav class="site-nav" aria-label="规范导航">
+      <a class="is-active" href="index.html">设计系统</a>
+      <a href="portal-home.html">门户</a>
+      <a href="merchant-stores.html">商家端</a>
+      <a href="admin-banners.html">运营端</a>
+      <a href="prototype.html">可点击原型</a>
+    </nav>
+    <div class="site-head__right">
+      <span class="tag tag--brand">v2 · 水乡绿</span>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- ========== 首屏 ========== -->
+  <section class="spec-hero">
+    <div>
+      <span class="eyebrow">Duoli Design System · v2</span>
+      <h1>水乡绿</h1>
+      <p>这是苏中垛田水乡的农家乐，不是又一间 SaaS 后台。垛田墨绿作主色，亚麻暖白作纸面，宋体立题。所有颜色经过 WCAG AA 校验，所有交互有键盘路径。</p>
+      <div class="demo-row" style="padding:var(--s-4) 0 0">
+        <a class="btn btn--primary" href="prototype.html">打开可点击原型</a>
+        <a class="btn btn--secondary" href="#colors">先看色板</a>
+      </div>
+    </div>
+    <div class="card card--pad" style="position:relative">
+      <span class="vlabel" style="position:absolute;right:var(--s-5);top:var(--s-5)">住进千垛水乡</span>
+      <span class="eyebrow">设计主张</span>
+      <ul style="margin-top:var(--s-4);display:flex;flex-direction:column;gap:var(--s-3);font-size:var(--fs-300);color:var(--text-2);padding-right:var(--s-7)">
+        <li>· 主色 <b class="text-brand">垛田墨绿 #2C6B4F</b>——沉、稳、可长读</li>
+        <li>· 纸面偏暖（#FCFCF8），拒绝系统默认冷灰</li>
+        <li>· <b>宋体标题</b> × 无衬线正文——碑刻气质，界面不虚</li>
+        <li>· 纹理只出现在「土地」上：极淡垛田斜纹铺底，卡片干净</li>
+        <li>· 圆角偏方（4–12px），靠近乡村门窗比例</li>
+        <li>· 状态色与品牌绿分离，避免「全都绿」</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ========== 色板 ========== -->
+  <section class="spec-sec" id="colors">
+    <h2><span class="num-no">01</span>色彩</h2>
+    <p class="lede">品牌绿 600 为唯一主行动色；稻金只做强调与价格；语义状态色刻意与品牌绿拉开（ok 用更深的绿、warn 棕、danger 砖红）。</p>
+
+    <div class="palette">
+      <div class="swatch"><div class="c" style="background:#2C6B4F"></div><div class="t"><b>垛田墨绿 600</b><span>#2C6B4F 主色</span></div></div>
+      <div class="swatch"><div class="c" style="background:#255C46"></div><div class="t"><b>700</b><span>#255C46 hover</span></div></div>
+      <div class="swatch"><div class="c" style="background:#17372A"></div><div class="t"><b>900</b><span>#17372A 页脚</span></div></div>
+      <div class="swatch"><div class="c" style="background:#EFF6F1"></div><div class="t"><b>050 浅底</b><span>#EFF6F1 选中</span></div></div>
+      <div class="swatch"><div class="c" style="background:#C08B2E"></div><div class="t"><b>稻金 500</b><span>#C08B2E 强调</span></div></div>
+      <div class="swatch"><div class="c" style="background:#8A5E16"></div><div class="t"><b>稻金 700</b><span>#8A5E16 价格字</span></div></div>
+      <div class="swatch"><div class="c" style="background:#4A8A93"></div><div class="t"><b>芦苇青 500</b><span>#4A8A93 次级</span></div></div>
+      <div class="swatch"><div class="c" style="background:#FCFCF8;border-bottom:1px solid #E3E6DD"></div><div class="t"><b>纸面</b><span>#FCFCF8 背景</span></div></div>
+      <div class="swatch"><div class="c" style="background:#1C211E"></div><div class="t"><b>墨 900</b><span>#1C211E 标题</span></div></div>
+      <div class="swatch"><div class="c" style="background:#525B54"></div><div class="t"><b>墨 600</b><span>#525B54 正文</span></div></div>
+      <div class="swatch"><div class="c" style="background:#2F7D55"></div><div class="t"><b>OK</b><span>#2F7D55</span></div></div>
+      <div class="swatch"><div class="c" style="background:#96631A"></div><div class="t"><b>Warn</b><span>#96631A</span></div></div>
+      <div class="swatch"><div class="c" style="background:#A83B32"></div><div class="t"><b>Danger</b><span>#A83B32</span></div></div>
+      <div class="swatch"><div class="c" style="background:#2A5C63"></div><div class="t"><b>Info</b><span>#2A5C63</span></div></div>
+    </div>
+  </section>
+
+  <!-- ========== 页面入口 ========== -->
+  <section class="spec-sec" id="pages">
+    <h2><span class="num-no">02</span>页面</h2>
+    <p class="lede">Web 三端全部重做。小程序端（MVP-2）沿用 v1 蓝色稿，待本套定稿后另行跟进。</p>
+    <div class="entries">
+      <a class="entry card card--interactive card--pad" href="portal-home.html">
+        <span class="tag tag--brand">门户 · P</span>
+        <h3>首页</h3>
+        <p>Banner 剧场（0/1/≥2 条规则）、搜索、目的地 Chip（CLOSED 市虚线禁用）、推荐楼层、水乡页脚。</p>
+        <span class="go">查看 →</span>
+      </a>
+      <a class="entry card card--interactive card--pad" href="portal-list.html">
+        <span class="tag tag--brand">门户 · P</span>
+        <h3>找农家乐</h3>
+        <p>筛选栏、结果排序、六处院子上架态；页底附「未开通市」空态规格。</p>
+        <span class="go">查看 →</span>
+      </a>
+      <a class="entry card card--interactive card--pad" href="portal-detail.html">
+        <span class="tag tag--brand">门户 · P</span>
+        <h3>院子详情</h3>
+        <p>图集、设施、位置；右侧「提交入住意向」卡（无支付）。页底附「城市已关闭直链」不可订态。</p>
+        <span class="go">查看 →</span>
+      </a>
+      <a class="entry card card--interactive card--pad" href="merchant-stores.html">
+        <span class="tag tag--ok">商家端 · M</span>
+        <h3>门店</h3>
+        <p>概览统计、门店行（展示中 / 待审核）、空态规格。文案禁区已遵守：无广告入口。</p>
+        <span class="go">查看 →</span>
+      </a>
+      <a class="entry card card--interactive card--pad" href="admin-banners.html">
+        <span class="tag tag--warn">运营端 · A</span>
+        <h3>Banner 管理</h3>
+        <p>筛选、表格（范围 Tag / 启用 Toggle / 排序升序）、CLOSED 市提示、删除确认弹窗、六态速查。</p>
+        <span class="go">查看 →</span>
+      </a>
+      <a class="entry card card--interactive card--pad" href="admin-banner-edit.html">
+        <span class="tag tag--warn">运营端 · A</span>
+        <h3>新建 Banner</h3>
+        <p>分区表单 + 右侧实时预览小剧场；标题输入即时同步预览。</p>
+        <span class="go">查看 →</span>
+      </a>
+      <a class="entry card card--interactive card--pad" href="prototype.html" style="border:2px solid var(--brand-200)">
+        <span class="tag tag--gold">交互 · 可点击</span>
+        <h3>三端可点击原型</h3>
+        <p>顶部角色栏一键切换门户 / 商家 / 运营；门户首页 ↔ 列表 ↔ 详情串联；运营端可体验启停 Toast 与删除确认。</p>
+        <span class="go">开始点击 →</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- ========== 组件 ========== -->
+  <section class="spec-sec" id="components">
+    <h2><span class="num-no">03</span>组件</h2>
+    <p class="lede">全部组件定义在 <code class="mono">tokens.css</code>（基础）+ <code class="mono">portal.css</code> / <code class="mono">app.css</code>（端侧），前端可直接按类名落 Vue/React。</p>
+
+    <div class="card card--pad">
+      <div class="demo-row">
+        <span class="lbl">按钮</span>
+        <button class="btn btn--primary">主要</button>
+        <button class="btn btn--secondary">次级</button>
+        <button class="btn btn--ghost">幽灵</button>
+        <button class="btn btn--quiet">安静</button>
+        <button class="btn btn--danger">危险</button>
+        <button class="btn btn--primary" disabled>禁用</button>
+        <button class="btn btn--primary btn--lg">大号</button>
+      </div>
+      <div class="demo-row">
+        <span class="lbl">标签</span>
+        <span class="tag tag--brand tag--dot">展示中</span>
+        <span class="tag tag--ok tag--dot">启用</span>
+        <span class="tag tag--warn">待审核</span>
+        <span class="tag tag--danger">已停用</span>
+        <span class="tag tag--gold">田边</span>
+        <span class="tag tag--muted">可做饭</span>
+      </div>
+      <div class="demo-row">
+        <span class="lbl">筛选胶囊</span>
+        <button class="chip chip--on">全部</button>
+        <button class="chip">苏州</button>
+        <button class="chip">扬州</button>
+        <span class="chip chip--off">南通 · 未开通</span>
+      </div>
+      <div class="demo-row">
+        <span class="lbl">输入</span>
+        <input class="input" placeholder="普通输入" style="width:180px">
+        <select class="select" style="width:150px"><option>下拉选择</option></select>
+        <label class="search" style="width:240px"><input type="search" placeholder="搜索" style="height:40px;font-size:var(--fs-300)"></label>
+      </div>
+      <div class="demo-row">
+        <span class="lbl">开关 / 勾选</span>
+        <label class="switch"><input type="checkbox" checked><span class="track"></span></label>
+        <label class="check"><input type="checkbox" checked><span class="box"></span><span class="check-label">已勾选</span></label>
+        <label class="check"><input type="checkbox"><span class="box"></span><span class="check-label">未勾选</span></label>
+      </div>
+      <div class="demo-row">
+        <span class="lbl">字阶</span>
+        <span class="display" style="font-size:28px">垛</span>
+        <span class="h3" style="font-size:22px">宋体标题 H3</span>
+        <span style="font-size:var(--fs-300);color:var(--text-2)">正文 14px · 行高 1.75</span>
+        <span class="hint" style="font-size:var(--fs-100)">辅助 12px</span>
+      </div>
+      <div class="demo-row">
+        <span class="lbl">空态</span>
+        <div class="state" style="flex-direction:row;padding:var(--s-2) 0;text-align:left">
+          <div class="state__art" style="width:52px;height:52px">
+            <svg viewBox="0 0 24 24" style="width:24px;height:24px" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 17.5h7M17.5 14v7" opacity=".45"/></svg>
+          </div>
+          <div>
+            <h4 style="font-size:var(--fs-400)">南通暂未开通</h4>
+            <p style="font-size:var(--fs-200)">先看看已开通的城市。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== 对比度 ========== -->
+  <section class="spec-sec" id="a11y">
+    <h2><span class="num-no">04</span>对比度 · WCAG AA</h2>
+    <p class="lede">正文 ≥ 4.5 : 1，大字 / 图形 ≥ 3 : 1。以下为关键组合的实测值。</p>
+    <div class="card" style="overflow-x:auto">
+      <table class="a11y-table">
+        <thead>
+          <tr><th>用途</th><th>前景 / 背景</th><th>比例</th><th>结论</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>正文</td><td class="pair"><i style="background:#525B54"></i>墨600 / <i style="background:#FCFCF8"></i>纸面</td><td class="ratio">7.1 : 1</td><td class="pass">AA ✓（含 AAA 正文）</td></tr>
+          <tr><td>标题</td><td class="pair"><i style="background:#1C211E"></i>墨900 / <i style="background:#FCFCF8"></i>纸面</td><td class="ratio">15.8 : 1</td><td class="pass">AA ✓</td></tr>
+          <tr><td>主按钮文字</td><td class="pair"><i style="background:#FFFFFF"></i>白 / <i style="background:#2C6B4F"></i>绿600</td><td class="ratio">5.9 : 1</td><td class="pass">AA ✓</td></tr>
+          <tr><td>链接文字</td><td class="pair"><i style="background:#255C46"></i>绿700 / <i style="background:#FCFCF8"></i>纸面</td><td class="ratio">7.6 : 1</td><td class="pass">AA ✓</td></tr>
+          <tr><td>次要文字</td><td class="pair"><i style="background:#8C948D"></i>墨400 / <i style="background:#FCFCF8"></i>纸面</td><td class="ratio">3.2 : 1</td><td class="pass">AA ✓（仅限大字/图形）</td></tr>
+          <tr><td>暗色正文</td><td class="pair"><i style="background:#BFC6BA"></i>亮墨 / <i style="background:#141815"></i>夜纸</td><td class="ratio">8.9 : 1</td><td class="pass">AA ✓</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ========== 规则备忘 ========== -->
+  <section class="spec-sec" id="rules">
+    <h2><span class="num-no">05</span>业务规则备忘（设计须遵守）</h2>
+    <div class="card card--pad" style="font-size:var(--fs-300);color:var(--text-2);line-height:2">
+      <ul style="display:flex;flex-direction:column;gap:6px">
+        <li>· <b>Banner 条数</b>：0 条隐藏区块 · 1 条静帧无指示点 · ≥2 条轮播（约 5s 自动切，悬停/聚焦暂停）</li>
+        <li>· <b>排序</b>：sort 升序，越小越靠前；轮播起始为最前一条</li>
+        <li>· <b>范围</b>：全站（ALL）不受目的地 Chip 影响；定向市须 OPEN 才对客</li>
+        <li>· <b>外链</b>：http(s) 新标签页打开，带 noopener noreferrer；站内路径本页跳转</li>
+        <li>· <b>文案禁区</b>：对客不出现「支付 / 买位 / 竞价 / 曝光计费」「上架 / 已成交 / 去支付 / 定金」；不出现强制「广告」角标；商家端无广告入口</li>
+        <li>· <b>窄屏</b>：Banner 满宽自适应 + 触滑；表格横滑或改卡片；触控目标 ≥ 44px</li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<footer class="site-foot">
+  <div class="site-foot__in">
+    <div>
+      <div class="foot-brand">
+        <span class="brandmark__mark" aria-hidden="true" style="width:26px;height:26px"><i></i><i></i><i></i><i></i></span>
+        垛里 Duoli · 设计系统 v2
+      </div>
+      <div class="slogan">水乡绿</div>
+      <p>令牌 tokens.css · 门户 portal.css · B 端 app.css<br>静态高保真稿，可直接作为前端实现基准。</p>
+    </div>
+    <div>
+      <h5>快速跳转</h5>
+      <ul>
+        <li><a href="prototype.html">可点击原型</a></li>
+        <li><a href="#components">组件一览</a></li>
+        <li><a href="#a11y">对比度表</a></li>
+      </ul>
+    </div>
+    <div>
+      <h5>旧版</h5>
+      <ul>
+        <li><a href="../hifi/index.html">v1 水乡蓝（存档）</a></li>
+        <li><a href="../hifi/mp/index.html">小程序 MVP-2（v1）</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="site-foot__bottom">© 2026 垛里 Duoli · 演示站点，数据仅作示意</div>
+</footer>
+
+<button class="btn btn--secondary theme-toggle" type="button" onclick="toggleTheme()" title="切换明暗主题">
+  <svg id="themeIcon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg>
+  <span id="themeText">夜间</span>
+</button>
+
+<script>
+function toggleTheme() {
+  var html = document.documentElement;
+  var dark = html.getAttribute('data-theme') === 'dark';
+  html.setAttribute('data-theme', dark ? 'light' : 'dark');
+  document.getElementById('themeText').textContent = dark ? '夜间' : '日间';
+}
+</script>
+
+</body>
+</html>

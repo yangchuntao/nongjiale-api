@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>垛里 Duoli · 高保真设计规范与页面索引</title>
+<link rel="stylesheet" href="tokens.css">
+<style>
+.wrap { max-width:1100px; margin:0 auto; padding:var(--s7) var(--s5); }
+.hero { text-align:center; margin-bottom:var(--s7); }
+.hero .logo-badge { width:56px; height:56px; font-size:24px; border-radius:14px; margin:0 auto var(--s4); background:linear-gradient(135deg,var(--brand),var(--green)); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; box-shadow:0 4px 16px rgba(75,163,217,.35); }
+.hero h1 { font-size:36px; margin-bottom:var(--s2); }
+.hero p { color:var(--text-2); }
+.sec { margin-bottom:var(--s7); }
+.sec h2 { font-size:var(--fs-2xl); margin-bottom:var(--s4); }
+/* 色板 */
+.palette { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:var(--s4); }
+.swatch { border-radius:var(--r-md); overflow:hidden; box-shadow:var(--shadow-1); background:#fff; }
+.swatch .c { height:72px; }
+.swatch .t { padding:10px 12px; font-size:var(--fs-xs); color:var(--text-2); }
+.swatch .t b { display:block; color:var(--text-1); font-size:var(--fs-sm); margin-bottom:2px; }
+/* 页面入口 */
+.pages { display:grid; grid-template-columns:repeat(3,1fr); gap:var(--s5); }
+.page-card { display:block; padding:var(--s5); transition:transform .2s, box-shadow .2s; }
+.page-card:hover { transform:translateY(-4px); box-shadow:var(--shadow-3); }
+.page-card .icon { width:44px; height:44px; border-radius:var(--r-md); display:flex; align-items:center; justify-content:center; font-size:22px; margin-bottom:var(--s3); }
+.page-card h3 { font-size:var(--fs-lg); margin-bottom:6px; }
+.page-card p { color:var(--text-2); font-size:var(--fs-sm); line-height:1.7; }
+.page-card .go { color:var(--brand); font-size:var(--fs-sm); margin-top:var(--s3); display:inline-block; }
+/* 规则表 */
+.rules { background:#fff; border-radius:var(--r-lg); box-shadow:var(--shadow-1); padding:var(--s5); }
+.rules li { list-style:none; padding:8px 0; color:var(--text-2); font-size:var(--fs-md); border-bottom:1px dashed var(--line); }
+.rules li:last-child { border:none; }
+.rules b { color:var(--text-1); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <div class="logo-badge">垛</div>
+    <h1>垛里 Duoli · 高保真设计系统</h1>
+    <p>基于 MVP-1.5 低保真稿与品牌视觉升级 · 主色 #4BA3D9 / Soft #E8F4FC · 垛田绿 #5BAE8D</p>
+  </div>
+
+  <div class="sec">
+    <h2>色彩令牌</h2>
+    <div class="palette">
+      <div class="swatch"><div class="c" style="background:#4BA3D9"></div><div class="t"><b>Brand 主色</b>#4BA3D9</div></div>
+      <div class="swatch"><div class="c" style="background:#2E7FB4"></div><div class="t"><b>Brand Deep</b>#2E7FB4</div></div>
+      <div class="swatch"><div class="c" style="background:#E8F4FC"></div><div class="t"><b>Brand Soft</b>#E8F4FC</div></div>
+      <div class="swatch"><div class="c" style="background:#5BAE8D"></div><div class="t"><b>垛田绿 辅助</b>#5BAE8D</div></div>
+      <div class="swatch"><div class="c" style="background:#34A97B"></div><div class="t"><b>Success</b>#34A97B</div></div>
+      <div class="swatch"><div class="c" style="background:#E8A23D"></div><div class="t"><b>Warning</b>#E8A23D</div></div>
+      <div class="swatch"><div class="c" style="background:#D9534F"></div><div class="t"><b>Danger</b>#D9534F</div></div>
+      <div class="swatch"><div class="c" style="background:#F5F8FB;border-bottom:1px solid #E5EBF2"></div><div class="t"><b>Background</b>#F5F8FB</div></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h2>可点击原型（推荐从这里开始）</h2>
+    <div class="pages">
+      <a class="page-card card" href="prototype-web.html" style="border:2px solid var(--brand-soft)">
+        <div class="icon" style="background:var(--brand-soft)">🖱️</div>
+        <h3>Web 三端 · 可点击原型</h3>
+        <p>顶栏切换门户 / 商家 / 运营；门户首页 ↔ 找农家乐列表 ↔ 详情，运营端可切启停、删除确认</p>
+        <span class="go">开始点击 →</span>
+      </a>
+      <a class="page-card card" href="mp/prototype.html" style="border:2px solid var(--brand-soft)">
+        <div class="icon" style="background:var(--brand-soft)">📱</div>
+        <h3>小程序 · 可点击原型</h3>
+        <p>单画布带返回栈：首页 → 详情 → 登录 → 意向表 → 成功 → 我的意向，含分享面板与 Toast</p>
+        <span class="go">开始点击 →</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h2>静态设计稿（逐屏对比查看）</h2>
+    <div class="pages">
+      <a class="page-card card" href="portal-home.html">
+        <div class="icon" style="background:var(--brand-soft)">🖥️</div>
+        <h3>门户首页 · P-HOME</h3>
+        <p>顶栏 + Banner 轮播（≥2 条规则）+ 搜索区 + 苏中目的地 Chip（含 CLOSED 置灰）+ 推荐楼层 + 页脚</p>
+        <span class="go">查看 →</span>
+      </a>
+      <a class="page-card card" href="merchant-stores.html">
+        <div class="icon" style="background:var(--green-soft)">🏪</div>
+        <h3>商家端 · 门店</h3>
+        <p>侧边栏 + 客服条 + 门店卡片（封面 / 地区 / 价格 / 已上架）+ 空态说明</p>
+        <span class="go">查看 →</span>
+      </a>
+      <a class="page-card card" href="admin-banners.html">
+        <div class="icon" style="background:#FBF2E2">📢</div>
+        <h3>运营端 · Banner 管理</h3>
+        <p>完整侧栏菜单 + 筛选区 + 表格（范围 Tag / 启用 Toggle / 排序升序 / 操作）+ 六态与文案速查</p>
+        <span class="go">查看 →</span>
+      </a>
+      <a class="page-card card" href="mp/index.html" style="grid-column:1/-1;border:2px solid var(--brand-soft)">
+        <div class="icon" style="background:var(--brand-soft)">📱</div>
+        <h3>微信小程序 · 10 页高保真（MVP-2）</h3>
+        <p>首页 / 找店 / 详情（含分享面板、外链复制弹层）· 登录 / 提交意向 / 成功 / 我的意向（含空态）· 攻略列表 / 详情 — 375pt 手机画布，含安全区与底栏规范</p>
+        <span class="go">进入小程序分区 →</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h2>关键交互规则（来自 MVP-1.5 规格）</h2>
+    <div class="rules">
+      <li><b>Banner 条数：</b>0 条隐藏区块 · 1 条静帧无指示点 · ≥2 条轮播（约 5s 自动切，悬停/聚焦暂停）</li>
+      <li><b>排序：</b>按 sort 升序，数字越小越靠前；轮播起始为排序最前一条</li>
+      <li><b>范围：</b>全站（ALL）不受目的地 Chip / URL 市参影响；定向市须为 OPEN 才对客</li>
+      <li><b>外链：</b>http(s) 链接新标签页打开，带 noopener noreferrer；站内 / 开头同 tab</li>
+      <li><b>文案禁区：</b>不出现支付 / 买位 / 竞价 / 曝光计费；不出现强制「广告 / 赞助」角标；商家端无广告入口</li>
+      <li><b>窄屏：</b>Banner 满宽自适应 + 触滑，指示点保留；表格横滑或改卡片</li>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

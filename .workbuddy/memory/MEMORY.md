@@ -10,6 +10,13 @@
 - 提交信息用中文，采用 `feat:` / `docs:` / `fix:` 前缀；代码与 `.workbuddy/memory` 变更可同一提交。
 - 提交前至少跑 `mvn -DskipTests compile`，改动涉及行为时跑 `mvn test`（含 JaCoCo 行覆盖率门禁）。
 
+## 部署目标
+
+- 用户有一台**百度云轻量应用服务器**；部署方案按 Ubuntu 22.04 / 2C2G / 单机（Nginx + API + MySQL 8 + Redis）落地。
+- 部署手册 `docs/DEPLOYMENT.md`，三端操作手册 `docs/USER-GUIDE.md`，可直接使用的配置在 `deploy/`。
+- 生产必须设 `SPRING_PROFILES_ACTIVE=mysql`（yml 默认 `local` 是 H2 内存库）；Redis 口令只能走 `SPRING_DATA_REDIS_PASSWORD`；CORS 用 `APP_CORS_ALLOWED_ORIGINS` 覆盖。
+- 令牌在进程内存，**只能单实例**，重启全员重新登录。
+
 ## 接口文档
 
 - 已接入 springdoc-openapi 2.6.0：`/v3/api-docs`、`/swagger-ui.html`，由 `springdoc.*.enabled` 控制，默认 `${OPENAPI_ENABLED:false}`，仅 `local` profile 打开。

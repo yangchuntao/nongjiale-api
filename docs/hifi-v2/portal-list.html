@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>找农家乐 · 垛里 Duoli</title>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="portal.css">
+</head>
+<body class="textured">
+
+<header class="site-head">
+  <div class="site-head__in">
+    <a class="brandmark" href="portal-home.html" aria-label="垛里 Duoli 首页">
+      <span class="brandmark__mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+      <span class="brandmark__text"><b>垛里</b><span>Duoli</span></span>
+    </a>
+    <nav class="site-nav" aria-label="主导航">
+      <a href="portal-home.html">首页</a>
+      <a class="is-active" href="portal-list.html">找农家乐</a>
+      <a href="portal-home.html#guides">出游攻略</a>
+      <a href="merchant-stores.html">商家入驻</a>
+    </nav>
+    <div class="site-head__right">
+      <a class="phone-link" href="tel:4000000000">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2Z"/>
+        </svg>
+        <span>客服 400-000-0000</span>
+      </a>
+      <a class="btn btn--secondary btn--sm" href="merchant-stores.html">商家端</a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="list-head">
+    <nav class="crumbs" aria-label="面包屑" style="margin-bottom:var(--s-3)">
+      <a href="portal-home.html">首页</a>
+      <span aria-hidden="true">/</span>
+      <span class="now">找农家乐</span>
+    </nav>
+    <h1>苏中的农家小院</h1>
+    <p class="desc">只展示已开通城市里真实可询的院子。所有价格为院方报价，提交意向后由客服确认档期。</p>
+  </div>
+
+  <!-- 筛选 -->
+  <div class="filters">
+    <div class="filters__bar">
+      <label class="search grow-search" for="q2">
+        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true" style="color:var(--text-3)">
+          <circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>
+        </svg>
+        <input id="q2" type="search" placeholder="搜索院子名或地名" style="height:40px;font-size:var(--fs-300)" autocomplete="off">
+      </label>
+      <span class="sep" aria-hidden="true"></span>
+      <label class="sr-only" for="city">城市</label>
+      <select class="select" id="city">
+        <option>全部城市</option>
+        <option>苏州</option>
+        <option>扬州</option>
+        <option>泰州</option>
+        <option>兴化</option>
+      </select>
+      <label class="sr-only" for="type">类型</label>
+      <select class="select" id="type">
+        <option>全部类型</option>
+        <option>整院</option>
+        <option>单间</option>
+        <option>临水</option>
+        <option>田边</option>
+      </select>
+      <label class="sr-only" for="price">价格</label>
+      <select class="select" id="price">
+        <option>不限价格</option>
+        <option>¥200 以下</option>
+        <option>¥200 – 400</option>
+        <option>¥400 以上</option>
+      </select>
+      <button class="btn btn--ghost btn--sm" type="button" style="margin-left:auto">重置</button>
+    </div>
+  </div>
+
+  <div class="result-bar">
+    <span>找到 <b>6</b> 处院子 · 苏州 / 扬州 / 泰州 / 兴化</span>
+    <span class="row gap-2">
+      <span>排序</span>
+      <select class="select" aria-label="排序方式" style="width:auto;min-height:34px;padding:4px 32px 4px 10px;font-size:var(--fs-200)">
+        <option>推荐优先</option>
+        <option>价格从低到高</option>
+        <option>评分最高</option>
+      </select>
+    </span>
+  </div>
+
+  <!-- 结果网格 -->
+  <div class="stays-grid">
+    <article class="stay" tabindex="0" role="link" onclick="location.href='portal-detail.html'" onkeydown="if(event.key==='Enter')location.href='portal-detail.html'">
+      <div class="stay__cover">
+        <div class="cover-art cover-art--paddy"></div>
+        <div class="stay__badges"><span class="tag tag--gold">田边</span></div>
+      </div>
+      <div class="stay__body">
+        <h3 class="stay__name">千垛水上农家</h3>
+        <div class="stay__meta">
+          <span>兴化 · 千垛镇</span><span class="dot"></span><span>整院 4 间</span><span class="dot"></span>
+          <span class="stay__rate"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m12 2 3 6.5 7 .9-5 4.9 1.2 7L12 18l-6.2 3.3L7 14.3 2 9.4l7-.9z"/></svg>4.9</span>
+        </div>
+        <div class="stay__foot">
+          <div><span class="price">¥398<small>起 / 晚</small></span></div>
+          <span class="stay__hint">提交意向后客服确认</span>
+        </div>
+      </div>
+    </article>
+
+    <article class="stay" tabindex="0" role="link" onclick="location.href='portal-detail.html'" onkeydown="if(event.key==='Enter')location.href='portal-detail.html'">
+      <div class="stay__cover">
+        <div class="cover-art cover-art--water"></div>
+        <div class="stay__badges"><span class="tag tag--gold">临水</span></div>
+      </div>
+      <div class="stay__body">
+        <h3 class="stay__name">运河观景院</h3>
+        <div class="stay__meta">
+          <span>扬州 · 广陵区</span><span class="dot"></span><span>单间 / 整院</span><span class="dot"></span>
+          <span class="stay__rate"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m12 2 3 6.5 7 .9-5 4.9 1.2 7L12 18l-6.2 3.3L7 14.3 2 9.4l7-.9z"/></svg>4.8</span>
+        </div>
+        <div class="stay__foot">
+          <div><span class="price">¥328<small>起 / 晚</small></span></div>
+          <span class="stay__hint">提交意向后客服确认</span>
+        </div>
+      </div>
+    </article>
+
+    <article class="stay" tabindex="0" role="link" onclick="location.href='portal-detail.html'" onkeydown="if(event.key==='Enter')location.href='portal-detail.html'">
+      <div class="stay__cover">
+        <div class="cover-art cover-art--reed"></div>
+      </div>
+      <div class="stay__body">
+        <h3 class="stay__name">竹林小屋</h3>
+        <div class="stay__meta">
+          <span>苏州 · 吴中区</span><span class="dot"></span><span>整院 3 间</span><span class="dot"></span>
+          <span class="stay__rate"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m12 2 3 6.5 7 .9-5 4.9 1.2 7L12 18l-6.2 3.3L7 14.3 2 9.4l7-.9z"/></svg>4.6</span>
+        </div>
+        <div class="stay__foot">
+          <div><span class="price">¥258<small>起 / 晚</small></span></div>
+          <span class="stay__hint">提交意向后客服确认</span>
+        </div>
+      </div>
+    </article>
+
+    <article class="stay" tabindex="0" role="link" onclick="location.href='portal-detail.html'" onkeydown="if(event.key==='Enter')location.href='portal-detail.html'">
+      <div class="stay__cover">
+        <div class="cover-art cover-art--grain"></div>
+        <div class="stay__badges"><span class="tag tag--gold">秋收</span></div>
+      </div>
+      <div class="stay__body">
+        <h3 class="stay__name">稻田边的老屋</h3>
+        <div class="stay__meta">
+          <span>泰州 · 姜堰区</span><span class="dot"></span><span>整院 5 间</span><span class="dot"></span>
+          <span class="stay__rate"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m12 2 3 6.5 7 .9-5 4.9 1.2 7L12 18l-6.2 3.3L7 14.3 2 9.4l7-.9z"/></svg>4.7</span>
+        </div>
+        <div class="stay__foot">
+          <div><span class="price">¥288<small>起 / 晚</small></span></div>
+          <span class="stay__hint">提交意向后客服确认</span>
+        </div>
+      </div>
+    </article>
+
+    <article class="stay" tabindex="0" role="link" onclick="location.href='portal-detail.html'" onkeydown="if(event.key==='Enter')location.href='portal-detail.html'">
+      <div class="stay__cover">
+        <div class="cover-art cover-art--dawn"></div>
+      </div>
+      <div class="stay__body">
+        <h3 class="stay__name">晨雾小院</h3>
+        <div class="stay__meta">
+          <span>兴化 · 李中镇</span><span class="dot"></span><span>单间 6 间</span><span class="dot"></span>
+          <span class="stay__rate"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m12 2 3 6.5 7 .9-5 4.9 1.2 7L12 18l-6.2 3.3L7 14.3 2 9.4l7-.9z"/></svg>4.5</span>
+        </div>
+        <div class="stay__foot">
+          <div><span class="price">¥228<small>起 / 晚</small></span></div>
+          <span class="stay__hint">提交意向后客服确认</span>
+        </div>
+      </div>
+    </article>
+
+    <article class="stay" tabindex="0" role="link" onclick="location.href='portal-detail.html'" onkeydown="if(event.key==='Enter')location.href='portal-detail.html'">
+      <div class="stay__cover">
+        <div class="cover-art cover-art--night"></div>
+      </div>
+      <div class="stay__body">
+        <h3 class="stay__name">月下荷塘居</h3>
+        <div class="stay__meta">
+          <span>扬州 · 邗江区</span><span class="dot"></span><span>整院 4 间</span><span class="dot"></span>
+          <span class="stay__rate"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m12 2 3 6.5 7 .9-5 4.9 1.2 7L12 18l-6.2 3.3L7 14.3 2 9.4l7-.9z"/></svg>4.8</span>
+        </div>
+        <div class="stay__foot">
+          <div><span class="price">¥368<small>起 / 晚</small></span></div>
+          <span class="stay__hint">提交意向后客服确认</span>
+        </div>
+      </div>
+    </article>
+  </div>
+
+  <!-- ========== 空态示意：选到未开通市（放在同页做设计对照，实际由状态切换） ========== -->
+  <section style="max-width:var(--container);margin:0 auto;padding:0 var(--s-5) var(--gap-section)">
+    <div class="card" style="border-style:dashed;background:transparent;box-shadow:none">
+      <div class="state">
+        <div class="state__art" aria-hidden="true">
+          <!-- 未开通：空心的垛田格子 -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+            <rect x="3" y="14" width="7" height="7" rx="1"/>
+            <path d="M14 17.5h7M17.5 14v7" opacity=".45"/>
+          </svg>
+        </div>
+        <h4>南通暂未开通</h4>
+        <p>这座城市还在准备中，暂时没有可选的院子。可以先看看已开通的<a class="link" href="portal-list.html">苏州、扬州、泰州、兴化</a>。</p>
+        <button class="btn btn--secondary" type="button">看看其他城市</button>
+      </div>
+    </div>
+    <p class="hint" style="text-align:center;margin-top:var(--s-3)">空态规格：选到未开通 / 已关闭城市时出现。不展示其他城市的院子，避免串数据。</p>
+  </section>
+</main>
+
+<footer class="site-foot">
+  <div class="site-foot__in">
+    <div>
+      <div class="foot-brand">
+        <span class="brandmark__mark" aria-hidden="true" style="width:26px;height:26px"><i></i><i></i><i></i><i></i></span>
+        垛里 Duoli
+      </div>
+      <div class="slogan">住进千垛水乡</div>
+      <p>挑选苏中真实的农家小院。<br>提交意向后由客服联系确认档期，站内不涉及在线付款。</p>
+    </div>
+    <div>
+      <h5>去哪看看</h5>
+      <ul>
+        <li><a href="portal-list.html">找农家乐</a></li>
+        <li><a href="portal-home.html#guides">出游攻略</a></li>
+        <li><a href="merchant-stores.html">商家入驻</a></li>
+      </ul>
+    </div>
+    <div>
+      <h5>联系我们</h5>
+      <ul>
+        <li>客服 400-000-0000</li>
+        <li>每天 9:00 – 18:00</li>
+        <li>contact@duoli.example</li>
+      </ul>
+    </div>
+  </div>
+  <div class="site-foot__bottom">© 2026 垛里 Duoli · 演示站点，数据仅作示意</div>
+</footer>
+
+</body>
+</html>

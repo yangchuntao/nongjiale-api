@@ -49,8 +49,64 @@ public class Region {
     /** 对客开通态，枚举 {@link RegionOpenStatus}：{@code OPEN} 已开通、{@code CLOSED} 未开通。只对市有意义，省、区县保持空；空在门户上按未开通处理。 */
     private RegionOpenStatus openStatus;
 
-    /** 种子市场标识，枚举 {@link SeedMarket}，当前固定为 {@code SUZHONG}；用于区分种子数据所属市场。 */
+    /** 种子市场标识，枚举 {@link SeedMarket}，可空；苏中种子数据为 {@code SUZHONG}，全国同步导入的区划为 null。 */
     private SeedMarket seedMarket;
+
+    /** 国家标准行政区划代码，如 {@code 320500}（苏州市）；全局唯一，是区划同步的幂等键。存量种子可能为空。 */
+    private String adcode;
+
+    /** 数据来源，{@link RegionSource} 的字符串码：{@code SEED} 迁移种子、{@code SYNC} 区划同步。 */
+    private String source;
+
+    /** 地区简称，如「江苏省」→「江苏」；同步导入时由全称推导，可空。 */
+    private String shortName;
+
+    /** 政府驻地经度，可空；来自数据源 center，不参与业务判断。 */
+    private java.math.BigDecimal centerLng;
+
+    /** 政府驻地纬度，可空；来自数据源 center，不参与业务判断。 */
+    private java.math.BigDecimal centerLat;
+
+    public String getAdcode() {
+        return adcode;
+    }
+
+    public void setAdcode(String adcode) {
+        this.adcode = adcode;
+    }
+
+    public String getSource() {
+        return source;
+    }
+
+    public void setSource(String source) {
+        this.source = source;
+    }
+
+    public String getShortName() {
+        return shortName;
+    }
+
+    public void setShortName(String shortName) {
+        this.shortName = shortName;
+    }
+
+    public java.math.BigDecimal getCenterLng() {
+        return centerLng;
+    }
+
+    public void setCenterLng(java.math.BigDecimal centerLng) {
+        this.centerLng = centerLng;
+    }
+
+    public java.math.BigDecimal getCenterLat() {
+        return centerLat;
+    }
+
+    public void setCenterLat(java.math.BigDecimal centerLat) {
+        this.centerLat = centerLat;
+    }
+
 
     public Long getId() {
         return id;

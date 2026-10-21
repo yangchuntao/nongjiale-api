@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小程序高保真 · 首页 / 找店 / 详情</title>
+<link rel="stylesheet" href="mp-tokens.css">
+<style>
+/* ===== MP-HOME ===== */
+.mp-banner {
+  margin: 0 var(--s4); height: 168px; border-radius: var(--r-lg); overflow:hidden;
+  position:relative; box-shadow: var(--shadow-card);
+  background: linear-gradient(120deg,#8CCCEA 0%, #4BA3D9 55%, #5FA8CF 100%);
+}
+.mp-banner .bdeco { position:absolute; right:-30px; top:-40px; width:160px; height:160px; border-radius:50%; background:rgba(255,255,255,.14); }
+.mp-banner .bdeco2 { position:absolute; right:50px; bottom:-50px; width:110px; height:110px; border-radius:50%; background:rgba(255,255,255,.10); }
+.mp-banner .cap { position:absolute; left:20px; bottom:34px; color:#fff; }
+.mp-banner .cap .k { font-size:10px; letter-spacing:3px; opacity:.85; }
+.mp-banner .cap h2 { font-size:var(--t2); font-weight:700; margin-top:4px; text-shadow:0 2px 8px rgba(0,0,0,.12); }
+.mp-banner .cap p { font-size:var(--b3); opacity:.9; margin-top:3px; }
+.bdots { position:absolute; bottom:12px; right:16px; display:flex; gap:5px; }
+.bdots i { width:5px; height:5px; border-radius:99px; background:rgba(255,255,255,.55); }
+.bdots i.on { width:14px; background:#fff; }
+
+/* 主入口卡：找店 */
+.entry-main {
+  margin: var(--s4); padding: 20px; border-radius: var(--r-lg);
+  background: linear-gradient(135deg, #FFFFFF 0%, #F7FCFF 100%);
+  box-shadow: var(--shadow-card); border:1px solid #EBF4FA;
+  display:flex; align-items:center; gap:14px; cursor:pointer;
+}
+.entry-main .ic {
+  width:52px; height:52px; border-radius:14px; flex-shrink:0;
+  background: linear-gradient(135deg, var(--brand), #7CC0E4);
+  display:flex; align-items:center; justify-content:center; font-size:24px;
+  box-shadow: 0 6px 14px rgba(75,163,217,.28);
+}
+.entry-main .tx { flex:1; }
+.entry-main .tx b { font-size:var(--t4); display:block; margin-bottom:4px; font-weight:700; }
+.entry-main .tx span { font-size:var(--b3); color:var(--text-2); }
+.entry-main .arrow { color:var(--text-3); font-size:16px; }
+
+/* 次入口：攻略 */
+.entry-sub {
+  margin: 0 var(--s4) var(--s4); padding: 14px 18px; border-radius: var(--r-md);
+  background:#fff; box-shadow: var(--shadow-card);
+  display:flex; align-items:center; gap:12px; cursor:pointer;
+}
+.entry-sub .ic { width:36px; height:36px; border-radius:10px; background:var(--info-soft); display:flex; align-items:center; justify-content:center; font-size:18px; }
+.entry-sub .tx b { font-size:var(--b1); font-weight:600; }
+.entry-sub .tx span { font-size:var(--cap); color:var(--text-3); margin-left:8px; }
+.entry-sub .arrow { margin-left:auto; color:var(--text-3); font-size:14px; }
+
+/* 客服条 */
+.service-bar {
+  margin: 0 var(--s4) var(--s4); padding:13px 18px; border-radius:var(--r-md);
+  background: var(--brand-soft); display:flex; align-items:center; gap:10px; cursor:pointer;
+}
+.service-bar .ic { font-size:16px; }
+.service-bar b { font-size:var(--b2); color:var(--brand-deep); font-weight:600; }
+.service-bar span { margin-left:auto; font-size:var(--b3); color:var(--brand-deep); opacity:.85; }
+
+/* 推荐店卡（横滑） */
+.reco-scroll { display:flex; gap:12px; padding: 0 var(--s4) 4px; overflow-x:auto; }
+.reco-scroll::-webkit-scrollbar { height:0; }
+.reco-card { width: 196px; flex-shrink:0; border-radius:var(--r-md); overflow:hidden; background:#fff; box-shadow:var(--shadow-card); }
+.reco-cover { height:104px; position:relative; }
+.reco-cover .tag { position:absolute; top:8px; left:8px; background:rgba(255,255,255,.94); }
+.reco-body { padding:10px 12px 12px; }
+.reco-body b { font-size:var(--b2); display:block; margin-bottom:5px; font-weight:600; }
+.reco-body .meta { font-size:var(--cap); color:var(--text-3); display:flex; gap:8px; }
+.reco-body .p { margin-top:6px; color:var(--brand-deep); font-weight:700; font-size:var(--b1); }
+.reco-body .p small { font-weight:400; font-size:10px; color:var(--text-3); }
+
+/* ===== MP-LIST ===== */
+.search-sticky { padding: 8px var(--s4) 12px; background: var(--bg); position:sticky; top:0; z-index:40; }
+.search-box {
+  height:38px; border-radius:19px; background:#fff; display:flex; align-items:center;
+  gap:8px; padding:0 14px; box-shadow: var(--shadow-card); color:var(--text-3); font-size:var(--b2);
+}
+.city-row { display:flex; gap:8px; padding: 0 var(--s4) 10px; overflow-x:auto; position:sticky; top:58px; background:var(--bg); z-index:39; }
+.city-row::-webkit-scrollbar { height:0; }
+.chip { flex-shrink:0; padding:6px 15px; border-radius:99px; background:#fff; color:var(--text-2); font-size:var(--b3); border:1px solid var(--line); cursor:pointer; }
+.chip.on { background:var(--brand); color:#fff; border-color:var(--brand); font-weight:600; box-shadow:0 3px 8px rgba(75,163,217,.28); }
+.chip.off { color:#BFCAD6; background:#F7F9FB; border-style:dashed; cursor:not-allowed; }
+
+.list-card { display:flex; gap:12px; margin: 0 var(--s4) 12px; padding:12px; border-radius:var(--r-md); background:#fff; box-shadow:var(--shadow-card); cursor:pointer; }
+.lc-cover { width:96px; height:96px; border-radius:10px; flex-shrink:0; position:relative; }
+.lc-body { flex:1; min-width:0; display:flex; flex-direction:column; }
+.lc-body b { font-size:var(--b1); font-weight:600; margin-bottom:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.lc-body .sub { font-size:var(--b3); color:var(--text-2); margin-bottom:4px; }
+.lc-body .sell { font-size:var(--cap); color:var(--text-3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.lc-foot { margin-top:auto; display:flex; align-items:center; justify-content:space-between; }
+.lc-foot .p { color:var(--brand-deep); font-weight:700; font-size:var(--b1); }
+.lc-foot .p small { font-size:10px; font-weight:400; color:var(--text-3); }
+.lc-foot .tel { font-size:var(--cap); color:var(--text-3); }
+
+/* ===== MP-DETAIL ===== */
+.gallery { height:222px; position:relative; }
+.gallery .img { height:100%; background:linear-gradient(135deg,#A8D8F0,#4BA3D9 70%,#3A8FC4); position:relative; }
+.gallery .gd { position:absolute; left:-40px; bottom:-70px; width:220px; height:220px; border-radius:50%; background:rgba(255,255,255,.12); }
+.gallery .gd2 { position:absolute; right:20px; top:-30px; width:130px; height:130px; border-radius:50%; background:rgba(255,255,255,.10); }
+.gallery .idx { position:absolute; right:14px; bottom:14px; background:rgba(0,0,0,.38); color:#fff; font-size:11px; padding:3px 9px; border-radius:99px; }
+.gallery .dots2 { position:absolute; left:0; right:0; bottom:14px; display:flex; justify-content:center; gap:5px; }
+.gallery .dots2 i { width:5px; height:5px; border-radius:99px; background:rgba(255,255,255,.6); }
+.gallery .dots2 i.on { width:14px; background:#fff; }
+
+.detail-body { background:#fff; margin-top:-16px; border-radius:18px 18px 0 0; position:relative; padding: 18px var(--s4) var(--s4); }
+.detail-body h1 { font-size:var(--t3); font-weight:700; line-height:1.35; }
+.detail-price { margin-top:10px; display:flex; align-items:baseline; gap:6px; }
+.detail-price b { font-size:28px; color:var(--brand-deep); font-weight:700; }
+.detail-price span { font-size:var(--b3); color:var(--text-3); }
+.addr { margin-top:12px; display:flex; align-items:flex-start; gap:8px; font-size:var(--b3); color:var(--text-2); line-height:1.5; }
+.addr .act { margin-left:auto; color:var(--brand); font-size:var(--cap); white-space:nowrap; display:flex; gap:12px; }
+
+.notice-bar {
+  margin: var(--s3) 0 0; padding: 11px 14px; border-radius:10px;
+  background: var(--brand-soft); color:var(--brand-deep); font-size:var(--b3);
+  display:flex; align-items:center; gap:8px;
+}
+.notice-bar b { font-weight:600; }
+
+.block { padding: var(--s4); background:#fff; margin-top:10px; }
+.block h4 { font-size:var(--b1); font-weight:700; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+.block h4::before { content:""; width:3px; height:14px; border-radius:2px; background:var(--brand); }
+.pkg { display:flex; align-items:center; gap:12px; padding:12px 0; }
+.pkg + .pkg { border-top:1px dashed var(--line); }
+.pkg .pi { width:40px; height:40px; border-radius:10px; background:var(--brand-soft); display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+.pkg .pt { flex:1; }
+.pkg .pt b { font-size:var(--b2); font-weight:600; display:block; margin-bottom:3px; }
+.pkg .pt span { font-size:var(--cap); color:var(--text-3); }
+.pkg .pp { color:var(--brand-deep); font-weight:700; font-size:var(--b2); }
+.kv { display:flex; font-size:var(--b3); color:var(--text-2); padding:7px 0; }
+.kv .k { width:74px; color:var(--text-3); flex-shrink:0; }
+.kv .v { flex:1; color:var(--text-1); }
+
+/* 底部固定 CTA */
+.cta-bar {
+  position:absolute; left:0; right:0; bottom:0; z-index:70;
+  background: rgba(255,255,255,.97); backdrop-filter: blur(20px);
+  border-top:1px solid var(--line);
+  padding: 10px var(--s4) calc(10px + var(--safe-bottom));
+  display:flex; gap:10px; align-items:center;
+}
+.cta-bar .share-btn {
+  width:48px; height:48px; border-radius:var(--r-md); flex-shrink:0;
+  border:1px solid var(--line); background:#fff; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:1px; font-size:9px; color:var(--text-2); cursor:pointer;
+}
+.cta-bar .share-btn .i { font-size:17px; }
+.cta-main { flex:1; }
+.cta-sub { font-size:10px; color:var(--text-3); text-align:center; margin-top:4px; }
+
+/* 分享面板浮层示意 */
+.sheet-mask { position:absolute; inset:0; background:rgba(26,39,51,.45); z-index:200; display:flex; align-items:flex-end; }
+.sheet { background:#fff; border-radius:18px 18px 0 0; width:100%; padding: 20px var(--s4) calc(16px + var(--safe-bottom)); }
+.sheet .st { font-size:var(--b3); color:var(--text-3); text-align:center; margin-bottom:18px; }
+.sheet .srow { display:flex; gap:22px; justify-content:center; margin-bottom:18px; }
+.sheet .si { display:flex; flex-direction:column; align-items:center; gap:7px; font-size:var(--cap); color:var(--text-2); }
+.sheet .si .b { width:52px; height:52px; border-radius:14px; background:#F4F7FA; display:flex; align-items:center; justify-content:center; font-size:23px; }
+.sheet .cancel { height:46px; border-radius:var(--r-md); background:#F4F7FA; display:flex; align-items:center; justify-content:center; font-size:var(--t4); font-weight:600; color:var(--text-2); }
+
+/* 复制链接弹层 */
+.dialog-mask { position:absolute; inset:0; background:rgba(26,39,51,.45); z-index:200; display:flex; align-items:center; justify-content:center; }
+.dialog { width:272px; background:#fff; border-radius:var(--r-lg); overflow:hidden; text-align:center; }
+.dialog .dt { padding: 22px 20px 16px; }
+.dialog .dt b { font-size:var(--b1); font-weight:600; display:block; margin-bottom:8px; }
+.dialog .dt p { font-size:var(--b3); color:var(--text-2); line-height:1.6; }
+.dialog .dacts { display:flex; border-top:1px solid var(--line); }
+.dialog .dacts div { flex:1; padding:14px; font-size:var(--t4); color:var(--text-2); }
+.dialog .dacts div + div { border-left:1px solid var(--line); color:var(--brand); font-weight:600; }
+
+.toast {
+  position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  background:rgba(26,39,51,.86); color:#fff; padding:12px 20px; border-radius:10px;
+  font-size:var(--b2); z-index:300; white-space:nowrap;
+}
+</style>
+</head>
+<body>
+
+<!-- ===================== MP-HOME 首页 ===================== -->
+<div class="phone-wrap">
+  <div class="frame-label">MP-HOME 首页<span>Banner(≥2轮播) → 找店 → 攻略 → 客服 → 推荐</span></div>
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="statusbar">
+      <span>9:41</span>
+      <span class="right">▮▮▮ ⌁ ▰</span>
+    </div>
+    <div class="navbar">荷塘月色</div>
+
+    <div class="screen">
+      <!-- Banner -->
+      <div class="mp-banner">
+        <div class="bdeco"></div><div class="bdeco2"></div>
+        <div class="cap">
+          <div class="k">垛里 · 住进千垛水乡</div>
+          <h2>苏中逛一逛</h2>
+          <p>挑一处农家小院，慢下来</p>
+        </div>
+        <div class="bdots"><i class="on"></i><i></i></div>
+      </div>
+
+      <!-- 主入口：找店 -->
+      <div class="entry-main">
+        <div class="ic">🏡</div>
+        <div class="tx">
+          <b>找苏中农家乐</b>
+          <span>苏州 · 扬州 · 泰州 已开通</span>
+        </div>
+        <div class="arrow">›</div>
+      </div>
+
+      <!-- 次入口：攻略 -->
+      <div class="entry-sub">
+        <div class="ic">📖</div>
+        <div class="tx"><b>出行攻略</b><span>路线 · 时节 · 玩法</span></div>
+        <div class="arrow">›</div>
+      </div>
+
+      <!-- 客服条 -->
+      <div class="service-bar">
+        <span class="ic">📞</span>
+        <b>客服 400-000-0000</b>
+        <span>点击拨打 ›</span>
+      </div>
+
+      <!-- 推荐店（可选） -->
+      <div class="sec-head">
+        <h3>为你推荐</h3>
+        <span class="more">更多 ›</span>
+      </div>
+      <div class="reco-scroll">
+        <div class="reco-card">
+          <div class="reco-cover" style="background:linear-gradient(135deg,#A8D8F0,#4BA3D9)">
+            <span class="tag tag-brand">已上架</span>
+          </div>
+          <div class="reco-body">
+            <b>运河观景院</b>
+            <div class="meta"><span>苏州 · 吴江</span></div>
+            <div class="p">¥328 <small>起/晚</small></div>
+          </div>
+        </div>
+        <div class="reco-card">
+          <div class="reco-cover" style="background:linear-gradient(135deg,#9FD3EC,#3A8FC4)">
+            <span class="tag tag-brand">已上架</span>
+          </div>
+          <div class="reco-body">
+            <b>竹林小屋</b>
+            <div class="meta"><span>扬州 · 邗江</span></div>
+            <div class="p">¥258 <small>起/晚</small></div>
+          </div>
+        </div>
+        <div class="reco-card">
+          <div class="reco-cover" style="background:linear-gradient(135deg,#C2E2F4,#5FA8CF)"></div>
+          <div class="reco-body">
+            <b>垛田花海民宿</b>
+            <div class="meta"><span>泰州 · 兴化</span></div>
+            <div class="p">¥398 <small>起/晚</small></div>
+          </div>
+        </div>
+      </div>
+      <div style="height:20px"></div>
+    </div>
+
+    <div class="tabbar">
+      <div class="tab on"><span class="ico">🏠</span>首页</div>
+      <div class="tab"><span class="ico">🔍</span>找店</div>
+      <div class="tab"><span class="ico">👤</span>我的</div>
+      <div class="home-indicator"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MP-LIST 找店 ===================== -->
+<div class="phone-wrap">
+  <div class="frame-label">MP-LIST 找店<span>市 Chip 仅 OPEN · 关键词 · 单列卡</span></div>
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="statusbar"><span>9:41</span><span class="right">▮▮▮ ⌁ ▰</span></div>
+    <div class="navbar">找店</div>
+
+    <div class="screen">
+      <div class="search-sticky">
+        <div class="search-box">🔍 <span>店名 / 关键词</span></div>
+      </div>
+
+      <!-- 市 Chip：仅 OPEN；南通 CLOSED 不出现在可选供给里，此处仅作禁用示意 -->
+      <div class="city-row">
+        <div class="chip on">全部已开通</div>
+        <div class="chip">苏州</div>
+        <div class="chip">扬州</div>
+        <div class="chip">泰州</div>
+      </div>
+
+      <div class="list-card">
+        <div class="lc-cover" style="background:linear-gradient(135deg,#A8D8F0,#4BA3D9)"></div>
+        <div class="lc-body">
+          <b>运河观景院</b>
+          <div class="sub">苏州 · 吴江区</div>
+          <div class="sell">临河小院 · 含早餐 · 可带宠物</div>
+          <div class="lc-foot">
+            <span class="p">¥328 <small>起/晚</small></span>
+            <span class="tel">📞 电话</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="list-card">
+        <div class="lc-cover" style="background:linear-gradient(135deg,#9FD3EC,#3A8FC4)"></div>
+        <div class="lc-body">
+          <b>竹林小屋</b>
+          <div class="sub">扬州 · 邗江区</div>
+          <div class="sell">竹林环绕 · 独院 · 家庭房</div>
+          <div class="lc-foot">
+            <span class="p">¥258 <small>起/晚</small></span>
+            <span class="tel">📞 电话</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="list-card">
+        <div class="lc-cover" style="background:linear-gradient(135deg,#C2E2F4,#5FA8CF)"></div>
+        <div class="lc-body">
+          <b>垛田花海民宿</b>
+          <div class="sub">泰州 · 兴化市</div>
+          <div class="sell">千垛景区旁 · 观景露台</div>
+          <div class="lc-foot">
+            <span class="p">¥398 <small>起/晚</small></span>
+            <span class="tel">📞 电话</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="list-card">
+        <div class="lc-cover" style="background:linear-gradient(135deg,#B5DCF0,#4BA3D9)"></div>
+        <div class="lc-body">
+          <b>水巷小筑</b>
+          <div class="sub">苏州 · 昆山市</div>
+          <div class="sell">古镇步行 5 分钟 · 含双早</div>
+          <div class="lc-foot">
+            <span class="p">¥288 <small>起/晚</small></span>
+            <span class="tel">📞 电话</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 空态示意 -->
+      <div style="margin:0 var(--s4) 20px; padding:32px 20px; text-align:center; color:var(--text-3); font-size:var(--b3); background:#fff; border-radius:var(--r-lg); border:1px dashed var(--line);">
+        <div style="font-size:28px; margin-bottom:10px; opacity:.5">🔍</div>
+        <div style="color:var(--text-2); margin-bottom:4px; font-size:var(--b2)">未找到相关门店</div>
+        <div>试试换个城市，或清空关键词</div>
+        <div style="margin-top:12px; color:var(--brand); font-size:var(--b3)">清空筛选</div>
+      </div>
+    </div>
+
+    <div class="tabbar">
+      <div class="tab"><span class="ico">🏠</span>首页</div>
+      <div class="tab on"><span class="ico">🔍</span>找店</div>
+      <div class="tab"><span class="ico">👤</span>我的</div>
+      <div class="home-indicator"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== MP-DETAIL 详情 ===================== -->
+<div class="phone-wrap">
+  <div class="frame-label">MP-DETAIL 门店详情<span>图集 · 非锁房提示 · 主 CTA 提交意向</span></div>
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="statusbar"><span>9:41</span><span class="right">▮▮▮ ⌁ ▰</span></div>
+    <div class="navbar" style="position:absolute; top:44px; left:0; right:0; z-index:80; color:#fff;">
+      <span class="back" style="color:#fff; text-shadow:0 1px 4px rgba(0,0,0,.3)">‹</span>
+      <span class="share" style="color:#fff; text-shadow:0 1px 4px rgba(0,0,0,.3)">···</span>
+    </div>
+
+    <div class="screen" style="padding-bottom:110px">
+      <!-- 图集 -->
+      <div class="gallery">
+        <div class="img"><div class="gd"></div><div class="gd2"></div></div>
+        <div class="dots2"><i class="on"></i><i></i><i></i><i></i></div>
+        <div class="idx">1 / 6</div>
+      </div>
+
+      <!-- 主体 -->
+      <div class="detail-body">
+        <h1>垛田花海民宿</h1>
+        <div class="detail-price"><b>¥398</b><span>起 / 晚 · 含双早</span></div>
+
+        <div class="addr">
+          <span>📍</span>
+          <span>泰州兴化市千垛镇东旺村 128 号<br><span style="color:var(--text-3); font-size:11px">距千垛景区步行 8 分钟</span></span>
+          <span class="act"><span>复制</span><span>导航</span></span>
+        </div>
+
+        <div class="notice-bar">
+          <span>ℹ️</span>
+          <span><b>意向不等于已锁房</b>，客服确认后才有安排</span>
+        </div>
+      </div>
+
+      <!-- 套餐 -->
+      <div class="block">
+        <h4>可咨询套餐</h4>
+        <div class="pkg">
+          <div class="pi">🌾</div>
+          <div class="pt"><b>双人水乡慢游</b><span>观景大床房 · 含双早 · 2 晚起</span></div>
+          <div class="pp">¥398<span style="font-size:10px; font-weight:400; color:var(--text-3)">/晚</span></div>
+        </div>
+        <div class="pkg">
+          <div class="pi">👨‍👩‍👧</div>
+          <div class="pt"><b>亲子垛田行</b><span>家庭房 · 含早餐 · 景区门票 2 张</span></div>
+          <div class="pp">¥528<span style="font-size:10px; font-weight:400; color:var(--text-3)">/晚</span></div>
+        </div>
+      </div>
+
+      <!-- 须知 -->
+      <div class="block">
+        <h4>入住须知</h4>
+        <div class="kv"><span class="k">入住 / 离店</span><span class="v">14:00 后 / 12:00 前</span></div>
+        <div class="kv"><span class="k">接待人数</span><span class="v">1 – 6 人 / 间</span></div>
+        <div class="kv"><span class="k">可否加床</span><span class="v">可加 1 床（¥80/晚）</span></div>
+        <div class="kv"><span class="k">宠物</span><span class="v">可带小型宠物，需提前告知</span></div>
+        <div class="kv"><span class="k">门店电话</span><span class="v" style="color:var(--brand)">138-0000-0000</span></div>
+      </div>
+
+      <div style="height:12px"></div>
+    </div>
+
+    <!-- 底部固定 CTA（避让安全区） -->
+    <div class="cta-bar">
+      <div class="share-btn"><span class="i">↗</span>分享</div>
+      <div class="share-btn"><span class="i">📞</span>电话</div>
+      <div class="cta-main">
+        <button class="btn-primary">提交意向</button>
+        <div class="cta-sub">客服确认后安排，非即时订成</div>
+      </div>
+    </div>
+    <div class="home-indicator"></div>
+  </div>
+</div>
+
+<!-- ===================== 分享面板 ===================== -->
+<div class="phone-wrap">
+  <div class="frame-label">MP-DETAIL · 分享面板<span>分享卡片 path 必须带 listingId</span></div>
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="statusbar"><span>9:41</span><span class="right">▮▮▮ ⌁ ▰</span></div>
+    <div class="navbar">门店详情</div>
+    <div class="screen" style="background:#F4F7FA"></div>
+
+    <div class="sheet-mask">
+      <div class="sheet">
+        <div class="st">转发给朋友 / 分享到</div>
+        <div class="srow">
+          <div class="si"><div class="b">💬</div>微信好友</div>
+          <div class="si"><div class="b">👥</div>群聊</div>
+          <div class="si"><div class="b">🖼️</div>生成卡片</div>
+          <div class="si"><div class="b">🔗</div>复制链接</div>
+        </div>
+        <div class="cancel">取消</div>
+      </div>
+    </div>
+    <div class="home-indicator"></div>
+  </div>
+</div>
+
+<!-- ===================== 外链复制弹层 + Toast ===================== -->
+<div class="phone-wrap">
+  <div class="frame-label">外链不可 web-view 时<span>复制链接弹层 + Toast 反馈</span></div>
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="statusbar"><span>9:41</span><span class="right">▮▮▮ ⌁ ▰</span></div>
+    <div class="navbar">首页</div>
+    <div class="screen"></div>
+
+    <div class="dialog-mask">
+      <div class="dialog">
+        <div class="dt">
+          <b>该链接需在浏览器打开</b>
+          <p>复制链接后，</p>
+          <p>在浏览器粘贴访问</p>
+        </div>
+        <div class="dacts"><div>取消</div><div>复制链接</div></div>
+      </div>
+    </div>
+    <div class="toast">已复制，请到浏览器粘贴打开</div>
+    <div class="home-indicator"></div>
+  </div>
+</div>
+
+</body>
+</html>

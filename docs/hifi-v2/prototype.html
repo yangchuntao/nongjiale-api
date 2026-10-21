@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>垛里 Duoli · 三端可点击原型（v2 水乡绿）</title>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="portal.css">
+<link rel="stylesheet" href="app.css">
+<style>
+body.prototype { display: block; }
+.rolebar {
+  position: sticky;
+  top: 0;
+  z-index: calc(var(--z-sticky) + 10);
+  background: var(--brand-900);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 20px;
+  height: 52px;
+  font-size: 13px;
+}
+.rolebar .brand { font-weight: 700; margin-right: 12px; display: flex; align-items: center; gap: 8px; }
+.rolebar .brand i { display: inline-grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 1.5px; width: 18px; height: 18px; }
+.rolebar .brand i b { background: #6FB795; }
+.rolebar .brand i b:nth-child(2) { background: #C08B2E; }
+.rolebar .brand i b:nth-child(3) { background: #4A8A93; }
+.rolebar .brand i b:nth-child(4) { background: #DFEEE6; }
+.rolebar button {
+  background: rgba(255,255,255,.1);
+  color: #C9D8CE;
+  padding: 7px 14px;
+  border-radius: 7px;
+  font-size: 13px;
+  transition: all var(--dur-fast);
+}
+.rolebar button:hover { background: rgba(255,255,255,.2); color: #fff; }
+.rolebar button.on { background: #6FB795; color: #0F1F17; font-weight: 600; }
+.rolebar .crumb { margin-left: auto; font-size: 12px; color: #8FA697; font-family: var(--font-mono); }
+
+.view { display: none; }
+.view.on { display: block; }
+
+/* iframe 承载页 */
+.frame-page { height: calc(100vh - 52px); }
+.frame-page iframe { width: 100%; height: 100%; border: 0; display: block; }
+</style>
+</head>
+<body class="prototype">
+
+<!-- 角色切换栏 -->
+<div class="rolebar" role="tablist" aria-label="端切换">
+  <span class="brand"><i aria-hidden="true"><b></b><b></b><b></b><b></b></i>垛里 · 原型</span>
+  <button class="on" role="tab" aria-selected="true" data-view="portal">门户</button>
+  <button role="tab" aria-selected="false" data-view="merchant">商家端</button>
+  <button role="tab" aria-selected="false" data-view="admin">运营端</button>
+  <span class="crumb" id="crumb">portal / home</span>
+</div>
+
+<!-- 门户：内嵌三页串联（iframe 保持每页独立可滚，页面内链接自然跳转） -->
+<section class="view on" id="view-portal" data-name="portal">
+  <div class="frame-page">
+    <iframe id="portalFrame" src="portal-home.html" title="门户"></iframe>
+  </div>
+</section>
+
+<!-- 商家端 -->
+<section class="view" id="view-merchant" data-name="merchant">
+  <div class="frame-page">
+    <iframe id="merchantFrame" src="merchant-stores.html" title="商家端"></iframe>
+  </div>
+</section>
+
+<!-- 运营端 -->
+<section class="view" id="view-admin" data-name="admin">
+  <div class="frame-page">
+    <iframe id="adminFrame" src="admin-banners.html" title="运营端"></iframe>
+  </div>
+</section>
+
+<script>
+(function () {
+  var buttons = document.querySelectorAll('.rolebar button[data-view]');
+  var crumb = document.getElementById('crumb');
+
+  function activate(name) {
+    buttons.forEach(function (b) {
+      var on = b.dataset.view === name;
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+    document.querySelectorAll('.view').forEach(function (v) {
+      v.classList.toggle('on', v.dataset.name === name);
+    });
+    crumb.textContent = name + ' / …';
+    // 重置门户 iframe 到首页
+    if (name === 'portal') {
+      document.getElementById('portalFrame').src = 'portal-home.html';
+    }
+  }
+
+  buttons.forEach(function (b) {
+    b.addEventListener('click', function () { activate(b.dataset.view); });
+  });
+
+  // 记录门户 iframe 内跳转路径（供角色栏面包屑显示）
+  ['portalFrame', 'merchantFrame', 'adminFrame'].forEach(function (id) {
+    var f = document.getElementById(id);
+    f.addEventListener('load', function () {
+      try {
+        // 只有当前可见端的 iframe 跳转才更新面包屑
+        if (!f.closest('.view').classList.contains('on')) return;
+        var p = new URL(f.src, location.href).pathname.split('/').pop() || 'home';
+        var view = f.closest('.view').dataset.name;
+        crumb.textContent = view + ' / ' + p.replace('.html', '');
+      } catch (e) { /* 同源内不会触发 */ }
+    });
+  });
+
+  // 键盘：Alt+1/2/3 切端
+  document.addEventListener('keydown', function (e) {
+    if (e.altKey && e.key === '1') activate('portal');
+    if (e.altKey && e.key === '2') activate('merchant');
+    if (e.altKey && e.key === '3') activate('admin');
+  });
+})();
+</script>
+
+</body>
+</html>

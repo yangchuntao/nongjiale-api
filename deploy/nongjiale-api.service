@@ -1,0 +1,39 @@
+[Unit]
+Description=nongjiale-api (Spring Boot)
+After=network-online.target mysql.service redis-server.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=njl
+Group=njl
+WorkingDirectory=/opt/nongjiale/api
+EnvironmentFile=/etc/nongjiale/api.env
+
+# JVM 参数写死在这里：EnvironmentFile 里的引号/空格容易被 systemd 拆错。
+# 2G 内存用 -Xmx512m；4G 可改 -Xmx1g。不要省略 -Duser.timezone，否则日期会偏 8 小时。
+ExecStart=/usr/bin/java \
+    -Xms256m -Xmx512m -XX:MaxMetaspaceSize=192m \
+    -XX:+UseG1GC -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/opt/nongjiale/api \
+    -Duser.timezone=Asia/Shanghai \
+    -Dfile.encoding=UTF-8 \
+    -jar /opt/nongjiale/api/app.jar
+
+# Java 进程收到 SIGTERM 正常退出时返回 143，不标记为失败
+SuccessExitStatus=143
+Restart=always
+RestartSec=5
+LimitNOFILE=65535
+
+# 基础加固：不给提权、私有 /tmp、只读系统目录
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=nongjiale-api
+
+[Install]
+WantedBy=multi-user.target

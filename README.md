@@ -2,6 +2,16 @@
 
 `nongjiale-api` 是苏中农家乐垂直平台的后端。MVP-0 已包含门户、商家和运营审核。没有支付、锁房和佣金计算。
 
+## 文档导航
+
+| 文档 | 读者 | 内容 |
+|------|------|------|
+| `docs/DEPLOYMENT.md` | 运维 / 后端 | 百度云轻量服务器从零部署：环境、MySQL、Redis、systemd、Nginx、HTTPS、备份回滚、常见坑 |
+| `docs/USER-GUIDE.md` | 运营 / 商家 / 客服 | 三端操作教程：登录、入驻审核、上下架、意向跟进、开城、Banner、错误码与 FAQ |
+| `docs/API-INDEX.md` | 前端 / 联调 | 69 个路由的索引，含鉴权与请求体速查 |
+| `docs/ADMIN-API.md` | 前端 | 运营接口字段表 |
+| `deploy/` | 运维 | `api.env.example`、systemd 单元、Nginx 站点、发布与备份脚本 |
+
 ## 技术栈
 
 - Java 17（本机可用 21 编译，发布目标是 17）
