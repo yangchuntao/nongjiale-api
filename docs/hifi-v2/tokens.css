@@ -782,18 +782,35 @@ button { background: none; border: none; cursor: pointer; }
   padding: var(--s-5) var(--s-4) var(--s-4);
   border-bottom: 1px solid var(--border);
 }
+/* 四格田方标（与门户 brandmark 同款） */
+.side__brand .mark {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 2.5px;
+  width: 34px;
+  height: 34px;
+  margin-bottom: var(--s-3);
+}
+.side__brand .mark i { border-radius: 1.5px; }
+.side__brand .mark i:nth-child(1) { background: var(--brand-700); }
+.side__brand .mark i:nth-child(2) { background: var(--brand-400); }
+.side__brand .mark i:nth-child(3) { background: var(--brand-500); }
+.side__brand .mark i:nth-child(4) { background: var(--gold-500); }
 .side__brand .name {
   font-family: var(--font-serif);
-  font-size: var(--fs-500);
+  font-size: 22px;
   font-weight: 600;
-  letter-spacing: -.01em;
+  letter-spacing: .02em;
   color: var(--text-1);
+  line-height: 1.15;
 }
 .side__brand .role {
-  font-size: var(--fs-100);
+  font-family: var(--font-serif);
+  font-size: var(--fs-200);
   color: var(--text-3);
-  letter-spacing: .08em;
-  margin-top: 3px;
+  letter-spacing: .14em;
+  margin-top: 4px;
 }
 .side__nav { padding: var(--s-3) var(--s-2); flex: 1; }
 .side__group {
