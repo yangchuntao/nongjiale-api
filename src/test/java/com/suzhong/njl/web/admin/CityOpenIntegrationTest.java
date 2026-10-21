@@ -425,6 +425,19 @@ class CityOpenIntegrationTest {
         assertThat(defaults.path("rows").get(0).path("intentCount").asLong()).isEqualTo(summed);
         assertThat(defaults.path("rows").get(0).path("cityName").asText()).isEqualTo("合计");
 
+        // 按省筛选：该省下全部启用市，目标市行计数不变
+        JsonNode byProvince = ok(getJson("/api/admin/metrics/city-intents?window=ALL&province=江苏省", token));
+        boolean found = false;
+        for (int i = 1; i < byProvince.path("rows").size(); i++) {
+            JsonNode row = byProvince.path("rows").get(i);
+            if ("=盐城,指标".equals(row.path("cityName").asText())) {
+                found = true;
+                assertRow(row, city.getId(), "=盐城,指标", 7, 1, 3, false);
+            }
+        }
+        assertThat(found).as("按省筛选后应包含指标市").isTrue();
+        assertThat(byProvince.path("rows").get(0).path("cityName").asText()).isEqualTo("合计");
+
         MvcResult csvResult = mockMvc.perform(get("/api/admin/metrics/city-intents/export")
                         .param("window", "ALL")
                         .param("cityId", String.valueOf(city.getId()))

@@ -45,17 +45,19 @@ public class AdminCityMetricsController {
      * <p>返回的第一行是「合计」，其后按地区排序号、ID 升序排列各市；已确认只统计
      * {@code CONFIRMED}，已入住只统计 {@code CHECKED_IN}。
      *
-     * @param window 统计窗口，取值 {@code 7}、{@code 30}、{@code ALL}；空白或未传按 {@code 7} 处理，
-     *               其他值返回 400「参数不正确」
-     * @param cityId 可选，限定单个市级地区；不是启用中的市返回 404「城市不存在」
+     * @param window   统计窗口，取值 {@code 7}、{@code 30}、{@code ALL}；空白或未传按 {@code 7} 处理，
+     *                 其他值返回 400「参数不正确」
+     * @param cityId   可选，限定单个市级地区；不是启用中的市返回 404「城市不存在」
+     * @param province 可选，按省名筛选该省下全部启用市；与 cityId 同时传时以 cityId 为准
      * @return 窗口代码、统计起始时间（{@code ALL} 为 null）与汇总行 + 各市行
      */
-    @Operation(summary = "城市意向汇总", description = "按滚动时间窗统计，首行为合计；窗口仅支持 7、30、ALL，空白按 7 处理。")
+    @Operation(summary = "城市意向汇总", description = "按滚动时间窗统计，首行为合计；窗口仅支持 7、30、ALL，支持按市或按省筛选。")
     @GetMapping("/city-intents")
     public ApiResponse<CityIntentMetricsResponse> summary(
             @RequestParam(required = false) String window,
-            @RequestParam(required = false) Long cityId) {
-        return ApiResponse.ok(adminCityMetricsService.summary(window, cityId));
+            @RequestParam(required = false) Long cityId,
+            @RequestParam(required = false) String province) {
+        return ApiResponse.ok(adminCityMetricsService.summary(window, cityId, province));
     }
 
     /**
@@ -64,8 +66,9 @@ public class AdminCityMetricsController {
      * <p>筛选与汇总接口完全一致，列固定为「市,意向数,已确认,已入住」，含合计行；
      * 文件带 UTF-8 BOM，Excel 直接打开不乱码。响应不走统一 JSON 信封。
      *
-     * @param window 统计窗口，取值 {@code 7}、{@code 30}、{@code ALL}，空白按 {@code 7} 处理
-     * @param cityId 可选，限定单个市级地区
+     * @param window   统计窗口，取值 {@code 7}、{@code 30}、{@code ALL}，空白按 {@code 7} 处理
+     * @param cityId   可选，限定单个市级地区
+     * @param province 可选，按省名筛选
      * @return {@code text/csv} 字节流，文件名 {@code city-intents.csv}
      * @throws com.suzhong.njl.web.ApiException 窗口非法 400；城市不存在 404
      */
@@ -73,8 +76,9 @@ public class AdminCityMetricsController {
     @GetMapping(value = "/city-intents/export", produces = "text/csv")
     public ResponseEntity<byte[]> export(
             @RequestParam(required = false) String window,
-            @RequestParam(required = false) Long cityId) {
-        byte[] body = adminCityMetricsService.export(window, cityId);
+            @RequestParam(required = false) Long cityId,
+            @RequestParam(required = false) String province) {
+        byte[] body = adminCityMetricsService.export(window, cityId, province);
         ContentDisposition disposition = ContentDisposition.attachment().filename("city-intents.csv").build();
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, disposition.toString())
