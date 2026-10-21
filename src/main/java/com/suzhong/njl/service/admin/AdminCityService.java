@@ -31,7 +31,9 @@ import com.suzhong.njl.mapper.RegionMapper;
 import com.suzhong.njl.mapper.RegionOpenChecklistMapper;
 import com.suzhong.njl.mapper.StoreMapper;
 import com.suzhong.njl.service.city.CityRules;
+import com.suzhong.njl.service.support.PageQuery;
 import com.suzhong.njl.web.ApiException;
+import com.suzhong.njl.web.PageResult;
 import com.suzhong.njl.web.admin.dto.ChecklistPatchRequest;
 import com.suzhong.njl.web.admin.dto.CityChecklistView;
 import com.suzhong.njl.web.admin.dto.CityDetailResponse;
@@ -85,21 +87,49 @@ public class AdminCityService {
     }
 
     /**
-     * 查询开城列表，不分页。
+     * 分页查询开城列表，支持状态 / 省 / 市名筛选。
      *
-     * <p>流程：取全部启用的市 → 批量加载地区、清单与实时计数 → 逐市组装。
-     * 只含 {@code enabled=true} 且层级为市的节点，按 {@code sortOrder}、id 升序；
-     * 供给/攻略计数只算启用地区内的上架非测试门店与已发布攻略。
+     * <p>流程：取全部启用的市（市级行数有限，先在内存按条件过滤出 total）→
+     * 按页切片 → 只对当页的市做批量计数与清单加载 → 组装返回。
+     * 计数只算当页，避免请求随城市数线性放大。
      *
-     * @return 各市的开通态、实时计数与清单最近操作时间；没有清单行时时间为 null
+     * @param page     页码，null 取默认 1
+     * @param pageSize 每页条数，null 取默认 20
+     * @param status   可选，{@code OPEN}/{@code CLOSED}；其他取值按不过滤处理
+     * @param province 可选，按省名精确匹配；空白按不过滤处理
+     * @param keyword  可选，匹配省名、市名或 slug 的包含关系；空白按不过滤处理
+     * @return 分页结果，按 {@code sortOrder}、id 升序
      */
-    public List<CitySummaryResponse> list() {
+    public PageResult<CitySummaryResponse> list(
+            Integer page, Integer pageSize, String status, String province, String keyword) {
+        PageQuery pageQuery = PageQuery.of(page, pageSize);
         List<Region> cities = enabledCities();
         Map<Long, Region> byId = allRegions();
-        Map<Long, RegionOpenChecklist> checks = checklists(cities);
-        Map<Long, Counts> counts = countByCity(cities);
-        List<CitySummaryResponse> items = new ArrayList<>(cities.size());
+        // 状态取值宽松处理：非法值按不过滤，与前端下拉只有两态的约定一致
+        String statusFilter = "OPEN".equals(status) || "CLOSED".equals(status) ? status : null;
+        String provinceFilter = blankToNull(province);
+        String keywordFilter = blankToNull(keyword);
+        List<Region> matched = new ArrayList<>();
         for (Region city : cities) {
+            String provinceName = provinceName(city, byId);
+            if (statusFilter != null && !statusFilter.equals(CityRules.effective(city.getOpenStatus()).code())) {
+                continue;
+            }
+            if (provinceFilter != null && !provinceFilter.equals(provinceName)) {
+                continue;
+            }
+            if (keywordFilter != null && !matchesKeyword(city, provinceName, keywordFilter)) {
+                continue;
+            }
+            matched.add(city);
+        }
+        int from = Math.min(pageQuery.offset(), matched.size());
+        int to = Math.min(from + pageQuery.pageSize(), matched.size());
+        List<Region> pageCities = matched.subList(from, to);
+        Map<Long, RegionOpenChecklist> checks = checklists(pageCities);
+        Map<Long, Counts> counts = countByCity(pageCities);
+        List<CitySummaryResponse> items = new ArrayList<>(pageCities.size());
+        for (Region city : pageCities) {
             RegionOpenChecklist checklist = checks.get(city.getId());
             Counts count = counts.get(city.getId());
             items.add(new CitySummaryResponse(
@@ -112,7 +142,22 @@ public class AdminCityService {
                     count.articleCount(),
                     checklist == null ? null : checklist.getUpdatedAt()));
         }
-        return items;
+        return new PageResult<>(items, matched.size(), pageQuery.page(), pageQuery.pageSize());
+    }
+
+    /** 关键字匹配省名、市名或 slug（包含关系）；省名缺失时按空串处理。 */
+    private boolean matchesKeyword(Region city, String provinceName, String keyword) {
+        String haystack = (provinceName == null ? "" : provinceName) + city.getName() + city.getSlug();
+        return haystack.contains(keyword);
+    }
+
+    /** 空白串转 null，便于统一按「未传」处理。 */
+    private String blankToNull(String value) {
+        if (value == null) {
+            return null;
+        }
+        String text = value.trim();
+        return text.isEmpty() ? null : text;
     }
 
     /**

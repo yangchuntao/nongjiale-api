@@ -9,10 +9,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.suzhong.njl.service.admin.AdminCityService;
 import com.suzhong.njl.web.ApiResponse;
+import com.suzhong.njl.web.PageResult;
 import com.suzhong.njl.web.admin.dto.ChecklistPatchRequest;
 import com.suzhong.njl.web.admin.dto.CityDetailResponse;
 import com.suzhong.njl.web.admin.dto.CitySummaryResponse;
@@ -45,17 +47,27 @@ public class AdminCityController {
     }
 
     /**
-     * {@code GET /api/admin/cities} — 开城列表。
+     * {@code GET /api/admin/cities} — 开城列表（分页 + 筛选）。
      *
      * <p>只返回启用中的市级地区，按地区排序号、ID 升序；供给量与攻略量为实时统计，
-     * 供给只计已上架且非测试数据的门店。
+     * 供给只计已上架且非测试数据的门店。计数只对当页城市进行。
      *
-     * @return 市级摘要列表，含开通状态、供给数、攻略数与清单更新时间
+     * @param page     页码，从 1 开始，默认 1
+     * @param pageSize 每页条数，默认 20，上限 100
+     * @param status   可选，{@code OPEN}/{@code CLOSED}；其他取值不过滤
+     * @param province 可选，按省名精确匹配
+     * @param keyword  可选，匹配省名、市名或 slug
+     * @return 分页的市级摘要，含开通状态、供给数、攻略数与清单更新时间
      */
-    @Operation(summary = "开城列表", description = "只返回启用中的市级地区，供给只计已上架且非测试门店，数据实时统计。")
+    @Operation(summary = "开城列表", description = "分页返回启用中的市级地区，支持状态/省/关键字筛选，供给只计已上架且非测试门店。")
     @GetMapping
-    public ApiResponse<List<CitySummaryResponse>> list() {
-        return ApiResponse.ok(adminCityService.list());
+    public ApiResponse<PageResult<CitySummaryResponse>> list(
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer pageSize,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String province,
+            @RequestParam(required = false) String keyword) {
+        return ApiResponse.ok(adminCityService.list(page, pageSize, status, province, keyword));
     }
 
     /**

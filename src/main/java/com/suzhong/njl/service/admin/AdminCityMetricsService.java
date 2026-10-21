@@ -13,17 +13,13 @@ import java.util.Set;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.suzhong.njl.domain.entity.BookingIntent;
 import com.suzhong.njl.domain.entity.Region;
-import com.suzhong.njl.domain.entity.Store;
-import com.suzhong.njl.domain.enums.IntentStatus;
 import com.suzhong.njl.domain.enums.MetricsWindow;
 import com.suzhong.njl.domain.enums.RegionLevel;
 import com.suzhong.njl.mapper.BookingIntentMapper;
+import com.suzhong.njl.mapper.RegionIntentAggregate;
 import com.suzhong.njl.mapper.RegionMapper;
-import com.suzhong.njl.mapper.StoreMapper;
 import com.suzhong.njl.service.city.CityRules;
 import com.suzhong.njl.web.ApiException;
 import com.suzhong.njl.web.admin.dto.CityIntentMetricRow;
@@ -50,17 +46,14 @@ import com.suzhong.njl.web.admin.dto.CityIntentMetricsResponse;
 public class AdminCityMetricsService {
 
     private final RegionMapper regionMapper;
-    private final StoreMapper storeMapper;
     private final BookingIntentMapper bookingIntentMapper;
     private final Clock applicationClock;
 
     public AdminCityMetricsService(
             RegionMapper regionMapper,
-            StoreMapper storeMapper,
             BookingIntentMapper bookingIntentMapper,
             Clock applicationClock) {
         this.regionMapper = regionMapper;
-        this.storeMapper = storeMapper;
         this.bookingIntentMapper = bookingIntentMapper;
         this.applicationClock = applicationClock;
     }
@@ -69,7 +62,8 @@ public class AdminCityMetricsService {
      * 汇总指定时间窗内的城市意向指标。
      *
      * <p>流程：解析并校验窗口 → 确定统计范围（单个市或全部启用市）→ 计算时间下界 →
-     * 查窗口内意向 → 批量补门店与地区 → 按归属市归并计数 → 首行放合计、其后放各市明细。
+     * SQL 按门店地区聚合窗口内意向（GROUP BY 下推，不再全量拉意向实体）→
+     * 把地区聚合行经 {@link CityRules#owningCityId} 归属到市 → 首行放合计、其后放各市明细。
      *
      * @param windowRaw 时间窗参数，取 {@code 7}、{@code 30}、{@code ALL}；null 或空白默认 {@code 7}
      * @param cityId    可选，限定单个市；为 null 时统计全部 {@code enabled=true} 的市
@@ -81,7 +75,7 @@ public class AdminCityMetricsService {
         MetricsWindow window = parseWindow(windowRaw);
         List<Region> cities = selectedCities(cityId);
         OffsetDateTime from = window.from(applicationClock);
-        Map<Long, long[]> tally = tally(intentsSince(from), cityIds(cities));
+        Map<Long, long[]> tally = tally(bookingIntentMapper.aggregateByRegion(from == null ? null : from.toLocalDateTime()), cityIds(cities));
         List<CityIntentMetricRow> rows = new ArrayList<>(cities.size() + 1);
         long intentTotal = 0;
         long confirmedTotal = 0;
@@ -153,66 +147,38 @@ public class AdminCityMetricsService {
         return List.of(city);
     }
 
-    /** 查窗口内的意向；{@code ALL} 时 {@code from} 为 null，不加时间条件。 */
-    private List<BookingIntent> intentsSince(OffsetDateTime from) {
-        LambdaQueryWrapper<BookingIntent> query = Wrappers.lambdaQuery();
-        if (from != null) {
-            query.ge(BookingIntent::getCreatedAt, from.toLocalDateTime());
-        }
-        return bookingIntentMapper.selectList(query);
-    }
-
     /**
-     * 把意向按归属市归并成 [意向数, 已确认, 已入住] 三元组。
+     * 把按地区聚合的意向行归并到市，得到 [意向数, 已确认, 已入住] 三元组。
      *
-     * <p>未匹配到目标市（门店缺失、地区挂省、归属市不在本次范围）的记录直接丢弃。
+     * <p>未匹配到目标市（地区缺失、挂省、归属市不在本次范围）的聚合行直接丢弃。
      */
-    private Map<Long, long[]> tally(List<BookingIntent> intents, Set<Long> cityIds) {
+    private Map<Long, long[]> tally(List<RegionIntentAggregate> aggregates, Set<Long> cityIds) {
         Map<Long, long[]> tally = new HashMap<>();
         // 先为零填充，保证没有意向的市也出现在结果里
         for (Long cityId : cityIds) {
             tally.put(cityId, new long[3]);
         }
-        if (intents.isEmpty() || cityIds.isEmpty()) {
+        if (aggregates.isEmpty() || cityIds.isEmpty()) {
             return tally;
         }
-        Set<Long> storeIds = new HashSet<>();
-        for (BookingIntent intent : intents) {
-            if (intent.getStoreId() != null) {
-                storeIds.add(intent.getStoreId());
-            }
-        }
-        if (storeIds.isEmpty()) {
-            return tally;
-        }
-        List<Store> stores = storeMapper.selectList(Wrappers.<Store>lambdaQuery().in(Store::getId, storeIds));
-        Map<Long, Store> storeById = new HashMap<>();
         Set<Long> regionIds = new HashSet<>();
-        for (Store store : stores) {
-            storeById.put(store.getId(), store);
-            if (store.getRegionId() != null) {
-                regionIds.add(store.getRegionId());
+        for (RegionIntentAggregate aggregate : aggregates) {
+            if (aggregate.getRegionId() != null) {
+                regionIds.add(aggregate.getRegionId());
             }
         }
         Map<Long, Region> regionById = loadRegions(regionIds);
-        for (BookingIntent intent : intents) {
-            Store store = storeById.get(intent.getStoreId());
-            if (store == null) {
-                continue;
-            }
-            Long owner = CityRules.owningCityId(regionById.get(store.getRegionId()), regionById);
+        for (RegionIntentAggregate aggregate : aggregates) {
+            Long owner = CityRules.owningCityId(regionById.get(aggregate.getRegionId()), regionById);
             // 无法归属到本次统计市的意向不计入任何市，也不进合计，避免总数对不上明细
             if (owner == null || !tally.containsKey(owner)) {
                 continue;
             }
             long[] counts = tally.get(owner);
-            counts[0]++;
-            // 已改期只计入意向数，不计入已确认；已确认与已入住按当前状态互斥统计
-            if (intent.getStatus() == IntentStatus.CONFIRMED) {
-                counts[1]++;
-            } else if (intent.getStatus() == IntentStatus.CHECKED_IN) {
-                counts[2]++;
-            }
+            counts[0] += aggregate.getIntentCount();
+            // 已改期只计入意向数，不计入已确认；已确认与已入住在 SQL 里按当前状态互斥统计
+            counts[1] += aggregate.getConfirmedCount();
+            counts[2] += aggregate.getCheckedInCount();
         }
         return tally;
     }

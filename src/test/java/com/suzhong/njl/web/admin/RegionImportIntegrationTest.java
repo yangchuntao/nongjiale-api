@@ -241,11 +241,15 @@ class RegionImportIntegrationTest {
         regionImportService.syncFromResource();
         String token = adminToken();
 
-        JsonNode cities = ok(call("GET", "/api/admin/cities", null, token, 200));
+        // 同步全国区划后启用市可能超过 100 个，翻页找苏州市
         boolean hasSuzhou = false;
-        for (JsonNode city : cities) {
-            if ("苏州市".equals(city.path("name").asText())) {
-                hasSuzhou = true;
+        for (int pageNo = 1; pageNo <= 10 && !hasSuzhou; pageNo++) {
+            JsonNode cities = ok(call("GET", "/api/admin/cities?page=" + pageNo + "&pageSize=100", null, token, 200))
+                    .path("items");
+            for (JsonNode city : cities) {
+                if ("苏州市".equals(city.path("name").asText())) {
+                    hasSuzhou = true;
+                }
             }
         }
         assertThat(hasSuzhou).as("同步后苏州市应出现在开城列表，运营才点得进详情页").isTrue();

@@ -91,7 +91,7 @@ class CityOpenIntegrationTest {
     @Test
     void seedCitiesStayOpenWithManualChecksAndLiveCounts() throws Exception {
         String token = adminToken();
-        JsonNode list = ok(getJson("/api/admin/cities", token));
+        JsonNode list = ok(getJson("/api/admin/cities", token)).path("items");
         assertThat(slugs(list)).contains("yangzhou", "taizhou", "nantong");
         JsonNode yangzhou = bySlug(list, "yangzhou");
         assertThat(yangzhou.path("provinceName").asText()).isEqualTo("江苏省");
@@ -130,7 +130,7 @@ class CityOpenIntegrationTest {
     void rejectsOpenWhenChecklistOrCountsAreShort() throws Exception {
         String token = adminToken();
         Region city = insertCity("yancheng", "盐城市", provinceId(), true, null, 40);
-        JsonNode listed = bySlug(ok(getJson("/api/admin/cities", token)), "yancheng");
+        JsonNode listed = bySlug(ok(getJson("/api/admin/cities", token)).path("items"), "yancheng");
         assertThat(listed.path("openStatus").asText()).isEqualTo("CLOSED");
 
         long before = auditCount(AuditAction.CITY_OPEN, city.getId());
@@ -455,7 +455,7 @@ class CityOpenIntegrationTest {
         String token = adminToken();
         long adminId = adminId(token);
         Region disabled = insertCity("disabled-city", "停用市", provinceId(), false, RegionOpenStatus.OPEN, 70);
-        assertThat(slugs(ok(getJson("/api/admin/cities", token)))).doesNotContain("disabled-city");
+        assertThat(slugs(ok(getJson("/api/admin/cities", token)).path("items"))).doesNotContain("disabled-city");
         JsonNode detail = call("GET", "/api/admin/cities/" + disabled.getId(), null, token, 400);
         assertThat(detail.path("message").asText()).isEqualTo("地区不可用");
         JsonNode open = call("POST", "/api/admin/cities/" + disabled.getId() + "/open", "{\"version\":0}", token, 400);
@@ -468,7 +468,7 @@ class CityOpenIntegrationTest {
         assertThat(missing.path("message").asText()).isEqualTo("城市不存在");
 
         Region orphan = insertCity("orphan-city", "无省城市", null, true, RegionOpenStatus.CLOSED, 71);
-        JsonNode orphanRow = bySlug(ok(getJson("/api/admin/cities", token)), "orphan-city");
+        JsonNode orphanRow = bySlug(ok(getJson("/api/admin/cities", token)).path("items"), "orphan-city");
         assertThat(orphanRow.path("provinceName").isNull()).isTrue();
 
         SiteConfig stores = siteConfigMapper.selectById(SiteConfigKey.OPEN_CITY_MIN_STORES.code());
@@ -506,6 +506,55 @@ class CityOpenIntegrationTest {
         assertThat(provinceStores.path("destinationStatus").asText()).isEqualTo("NONE");
         assertThat(provinceStores.path("emptyHint").isNull()).isTrue();
         assertThat(names(provinceStores.path("items"))).contains("表弟店");
+    }
+
+    @Test
+    void cityListPaginatesFiltersAndQueueCounts() throws Exception {
+        String token = adminToken();
+
+        // 分页：pageSize=2 切两页，total 一致且两页不重叠
+        JsonNode page1 = ok(getJson("/api/admin/cities?page=1&pageSize=2", token));
+        assertThat(page1.path("page").asInt()).isEqualTo(1);
+        assertThat(page1.path("pageSize").asInt()).isEqualTo(2);
+        assertThat(page1.path("items").size()).isEqualTo(2);
+        long total = page1.path("total").asLong();
+        assertThat(total).isGreaterThanOrEqualTo(3);
+        JsonNode page2 = ok(getJson("/api/admin/cities?page=2&pageSize=2", token));
+        assertThat(page2.path("total").asLong()).isEqualTo(total);
+        assertThat(slugs(page2.path("items")).stream().distinct().count()).isEqualTo(2);
+        assertThat(slugs(page1.path("items"))).doesNotContainAnyElementsOf(slugs(page2.path("items")));
+        // 越界分页参数返回 400
+        JsonNode badPage = call("GET", "/api/admin/cities?page=0", null, token, 400);
+        assertThat(badPage.path("message").asText()).isEqualTo("分页参数不正确");
+
+        // 状态筛选
+        JsonNode openOnly = ok(getJson("/api/admin/cities?status=OPEN&pageSize=100", token));
+        assertThat(openOnly.path("items").size()).isGreaterThanOrEqualTo(1);
+        for (JsonNode row : openOnly.path("items")) {
+            assertThat(row.path("openStatus").asText()).isEqualTo("OPEN");
+        }
+
+        // 省筛选与关键字筛选（中文直接写进模板，由 MockMvc 统一编码；不能用 URLEncoder 预编码，会被二次编码）
+        JsonNode jiangsu = ok(getJson("/api/admin/cities?province=江苏省&pageSize=100", token));
+        assertThat(slugs(jiangsu.path("items"))).contains("yangzhou");
+        for (JsonNode row : jiangsu.path("items")) {
+            assertThat(row.path("provinceName").asText()).isEqualTo("江苏省");
+        }
+        JsonNode keyword = ok(getJson("/api/admin/cities?keyword=yangzhou&pageSize=100", token));
+        assertThat(slugs(keyword.path("items"))).containsExactly("yangzhou");
+
+        // 待办队列计数：与直接按状态 count 库内的口径一致
+        JsonNode counts = ok(getJson("/api/admin/queue-counts", token));
+        assertThat(counts.path("intents").asLong()).isEqualTo(countOrZero(
+                bookingIntentMapper.selectCount(Wrappers.<BookingIntent>lambdaQuery().eq(BookingIntent::getStatus, IntentStatus.PENDING))));
+        assertThat(counts.path("merchantApplies").asLong()).isGreaterThanOrEqualTo(0);
+        assertThat(counts.path("shelfApplications").asLong()).isGreaterThanOrEqualTo(0);
+
+        mockMvc.perform(get("/api/admin/queue-counts")).andExpect(status().isUnauthorized());
+    }
+
+    private long countOrZero(Long value) {
+        return value == null ? 0 : value;
     }
 
     private void assertRow(
