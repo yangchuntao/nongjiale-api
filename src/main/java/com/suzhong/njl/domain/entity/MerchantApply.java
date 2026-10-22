@@ -46,6 +46,9 @@ public class MerchantApply {
     /** 资质图片 URL 文本，可空；当前门户提交接口不接收该字段，主要由运营补录或历史数据使用。 */
     private String licenseUrls;
 
+    /** 来源，{@code PORTAL}=商家在门户自填（默认），{@code ADMIN}=运营代录入；入库时写入，不可变。 */
+    private String source;
+
     /** 审核状态，枚举 {@link ReviewStatus}：{@code PENDING} 待审、{@code APPROVED} 已通过、{@code REJECTED} 已驳回。 */
     private ReviewStatus status;
 
@@ -127,6 +130,14 @@ public class MerchantApply {
 
     public void setLicenseUrls(String licenseUrls) {
         this.licenseUrls = licenseUrls;
+    }
+
+    public String getSource() {
+        return source;
+    }
+
+    public void setSource(String source) {
+        this.source = source;
     }
 
     public ReviewStatus getStatus() {

@@ -20,6 +20,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
  * @param regionId         意向地区 ID，可空，对应 {@code region.id}
  * @param description      商家介绍，可空，最长 1000 字
  * @param licenseUrls      资质图片 URL 文本，可空；门户提交接口不接收，多为历史数据或运营补录
+ * @param source           来源，{@code PORTAL}=商家自填（历史数据默认），{@code ADMIN}=运营代录入
  * @param status           审核状态，取值见 {@link ReviewStatus}：PENDING、APPROVED、REJECTED
  * @param rejectReason     驳回原因，仅已驳回时非空
  * @param reviewedBy       审核人运营 ID，未审核时为 null
@@ -45,6 +46,8 @@ public record MerchantApplyItem(
         String description,
         @Schema(description = "资质图片 URL 文本，可空；门户提交接口不接收，多为历史数据或运营补录")
         String licenseUrls,
+        @Schema(description = "来源：PORTAL=商家自填，ADMIN=运营代录入")
+        String source,
         @Schema(description = "审核状态，取值 PENDING、APPROVED、REJECTED")
         ReviewStatus status,
         @Schema(description = "驳回原因，仅已驳回时非空")

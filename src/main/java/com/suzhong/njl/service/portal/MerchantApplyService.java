@@ -27,6 +27,12 @@ import com.suzhong.njl.web.portal.dto.MerchantApplyResponse;
 @Service
 public class MerchantApplyService {
 
+    /** 来源：商家在门户自填（历史数据默认值）。 */
+    public static final String SOURCE_PORTAL = "PORTAL";
+
+    /** 来源：运营在后台代商家录入。 */
+    public static final String SOURCE_ADMIN = "ADMIN";
+
     private final MerchantApplyMapper merchantApplyMapper;
     private final RegionMapper regionMapper;
 
@@ -36,15 +42,27 @@ public class MerchantApplyService {
     }
 
     /**
-     * 提交入驻申请。
-     *
-     * <p>流程：按需校验地区 → 校验联系电话格式 → 组装并插入待审记录。
+     * 提交入驻申请（门户自填入口）。
      *
      * @param request 入驻资料：主体名、联系人、电话、拟开门店名、地区、简介
      * @return 新记录 ID 与状态（固定 PENDING）
      * @throws ApiException 地区不存在或不可用 400「地区不存在」；电话格式不对 400「联系电话格式不正确」
      */
     public MerchantApplyResponse submit(MerchantApplyRequest request) {
+        return submit(request, SOURCE_PORTAL);
+    }
+
+    /**
+     * 提交入驻申请，可指定来源。
+     *
+     * <p>流程：按需校验地区 → 校验联系电话格式 → 组装并插入待审记录。
+     *
+     * @param request 入驻资料：主体名、联系人、电话、拟开门店名、地区、简介
+     * @param source  来源标记，{@link #SOURCE_PORTAL} 或 {@link #SOURCE_ADMIN}
+     * @return 新记录 ID 与状态（固定 PENDING）
+     * @throws ApiException 地区不存在或不可用 400「地区不存在」；电话格式不对 400「联系电话格式不正确」
+     */
+    public MerchantApplyResponse submit(MerchantApplyRequest request, String source) {
         if (request.regionId() != null) {
             Region region = regionMapper.selectById(request.regionId());
             // 只用 enabled 判定：入驻阶段允许选择尚未开城的市，避免商家无法提前提交
@@ -63,6 +81,7 @@ public class MerchantApplyService {
         apply.setPlannedStoreName(request.plannedStoreName());
         apply.setRegionId(request.regionId());
         apply.setDescription(request.description());
+        apply.setSource(source == null || source.isBlank() ? SOURCE_PORTAL : source);
         // 新申请一律待审；通过后由运营端开通账号并（可选）代建门店
         apply.setStatus(ReviewStatus.PENDING);
         merchantApplyMapper.insert(apply);

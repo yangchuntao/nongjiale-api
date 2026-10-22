@@ -25,6 +25,7 @@ import com.suzhong.njl.domain.enums.ReviewStatus;
 import com.suzhong.njl.mapper.MerchantApplyMapper;
 import com.suzhong.njl.mapper.MerchantOrgMapper;
 import com.suzhong.njl.mapper.MerchantUserMapper;
+import com.suzhong.njl.service.portal.MerchantApplyService;
 import com.suzhong.njl.service.support.PageQuery;
 import com.suzhong.njl.web.ApiException;
 import com.suzhong.njl.web.PageResult;
@@ -33,6 +34,8 @@ import com.suzhong.njl.web.admin.dto.MerchantApplyItem;
 import com.suzhong.njl.web.admin.dto.PlainPasswordRequest;
 import com.suzhong.njl.web.admin.dto.RejectMerchantApplyResponse;
 import com.suzhong.njl.web.admin.dto.RejectReasonRequest;
+import com.suzhong.njl.web.portal.dto.MerchantApplyRequest;
+import com.suzhong.njl.web.portal.dto.MerchantApplyResponse;
 
 /**
  * 商家入驻审核服务（运营端，{@code /api/admin/merchant-applies}）。
@@ -56,6 +59,7 @@ public class AdminMerchantApplyService {
     private final PasswordEncoder passwordEncoder;
     private final AuditRecorder auditRecorder;
     private final Clock applicationClock;
+    private final MerchantApplyService merchantApplyService;
 
     public AdminMerchantApplyService(
             MerchantApplyMapper merchantApplyMapper,
@@ -63,13 +67,30 @@ public class AdminMerchantApplyService {
             MerchantUserMapper merchantUserMapper,
             PasswordEncoder passwordEncoder,
             AuditRecorder auditRecorder,
-            Clock applicationClock) {
+            Clock applicationClock,
+            MerchantApplyService merchantApplyService) {
         this.merchantApplyMapper = merchantApplyMapper;
         this.merchantOrgMapper = merchantOrgMapper;
         this.merchantUserMapper = merchantUserMapper;
         this.passwordEncoder = passwordEncoder;
         this.auditRecorder = auditRecorder;
         this.applicationClock = applicationClock;
+        this.merchantApplyService = merchantApplyService;
+    }
+
+    /**
+     * 运营代商家录入入驻申请。
+     *
+     * <p>复用门户提交的全部校验（地区存在且启用、电话格式），落一条 {@code PENDING} 申请，
+     * 来源标记 {@code ADMIN}，后续与商家自填申请走同一条审核流（通过/驳回）。
+     * 允许重复提交，与门户行为一致。
+     *
+     * @param request 入驻资料：主体名（必填）、联系人、电话、拟开门店名、地区、简介
+     * @return 新记录 ID 与状态（固定 PENDING）
+     * @throws com.suzhong.njl.web.ApiException 主体名称为空 400；地区不存在 400；电话格式不对 400
+     */
+    public MerchantApplyResponse create(MerchantApplyRequest request) {
+        return merchantApplyService.submit(request, MerchantApplyService.SOURCE_ADMIN);
     }
 
     /**
@@ -231,6 +252,7 @@ public class AdminMerchantApplyService {
                 apply.getRegionId(),
                 apply.getDescription(),
                 apply.getLicenseUrls(),
+                apply.getSource(),
                 apply.getStatus(),
                 apply.getRejectReason(),
                 apply.getReviewedBy(),

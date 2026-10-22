@@ -115,8 +115,101 @@ class AdminApiIntegrationTest {
     }
 
     @Test
-    void approveCreatesMerchantLoginAndSecondReviewConflicts() throws Exception {
+    void adminCanCreateApplyOnBehalfOfMerchant() throws Exception {
         String admin = adminToken();
+        long regionId = regionId();
+
+        JsonNode created = postJson("/api/admin/merchant-applies", """
+                {"orgName":"代录农庄","contactName":"赵六","contactPhone":"13700008222",
+                 "plannedStoreName":"代录门店","regionId":%d,"description":"电话口头登记"}
+                """.formatted(regionId), admin);
+        assertThat(created.path("code").asInt()).isZero();
+        assertThat(created.path("data").path("status").asText()).isEqualTo("PENDING");
+        long applyId = created.path("data").path("id").asLong();
+        assertThat(applyId).isPositive();
+
+        // 来源标记 ADMIN，其余字段与提交一致
+        mockMvc.perform(get("/api/admin/merchant-applies")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + admin)
+                        .param("status", "PENDING")
+                        .param("pageSize", "100"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.items[?(@.id == " + applyId + ")].source").value(hasItem("ADMIN")))
+                .andExpect(jsonPath("$.data.items[?(@.id == " + applyId + ")].orgName").value(hasItem("代录农庄")));
+
+        // 代录的申请与自填申请走同一审核流
+        JsonNode approved = postJson("/api/admin/merchant-applies/" + applyId + "/approve", """
+                {"password":"merchant12"}
+                """, admin);
+        assertThat(approved.path("code").asInt()).isZero();
+        assertThat(approved.path("data").path("status").asText()).isEqualTo("APPROVED");
+    }
+
+    @Test
+    void adminCreateApplyValidatesSameRulesAsPortal() throws Exception {
+        String admin = adminToken();
+        long regionId = regionId();
+
+        // 主体名称必填
+        mockMvc.perform(post("/api/admin/merchant-applies")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + admin)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"orgName":"  ","contactPhone":"13700008333"}
+                                """))
+                .andExpect(status().isBadRequest());
+
+        // 电话格式不对
+        mockMvc.perform(post("/api/admin/merchant-applies")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + admin)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"orgName":"格式错误农庄","contactPhone":"12345"}
+                                """))
+                .andExpect(status().isBadRequest());
+
+        // 地区不存在
+        mockMvc.perform(post("/api/admin/merchant-applies")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + admin)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"orgName":"地区错误农庄","regionId":999999}
+                                """))
+                .andExpect(status().isBadRequest());
+
+        // 只有主体名称也可以提交（其余字段均可空），且地区合法时通过
+        JsonNode minimal = postJson("/api/admin/merchant-applies", """
+                {"orgName":"最小农庄","regionId":%d}
+                """.formatted(regionId), admin);
+        assertThat(minimal.path("code").asInt()).isZero();
+        assertThat(minimal.path("data").path("status").asText()).isEqualTo("PENDING");
+    }
+
+    @Test
+    void merchantAndAnonymousCannotCreateApplyOnBehalf() throws Exception {
+        // 未登录
+        mockMvc.perform(post("/api/admin/merchant-applies")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"orgName":"越权农庄"}
+                                """))
+                .andExpect(status().isUnauthorized());
+
+        // 商家令牌
+        long orgId = insertOrg("代录越权商家", MerchantOrgStatus.ACTIVE);
+        insertUser(orgId, "13700008444", true, "merchant12");
+        String merchantToken = merchantLogin("13700008444", "merchant12");
+        mockMvc.perform(post("/api/admin/merchant-applies")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + merchantToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"orgName":"越权农庄"}
+                                """))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void approveCreatesMerchantLoginAndSecondReviewConflicts() throws Exception {        String admin = adminToken();
         long regionId = regionId();
         long pendingId = submitApply(regionId, "13700008111", "待开通农庄");
 

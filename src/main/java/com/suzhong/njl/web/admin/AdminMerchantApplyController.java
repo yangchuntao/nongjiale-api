@@ -18,6 +18,8 @@ import com.suzhong.njl.web.admin.dto.MerchantApplyItem;
 import com.suzhong.njl.web.admin.dto.PlainPasswordRequest;
 import com.suzhong.njl.web.admin.dto.RejectMerchantApplyResponse;
 import com.suzhong.njl.web.admin.dto.RejectReasonRequest;
+import com.suzhong.njl.web.portal.dto.MerchantApplyRequest;
+import com.suzhong.njl.web.portal.dto.MerchantApplyResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -62,6 +64,23 @@ public class AdminMerchantApplyController {
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer pageSize) {
         return ApiResponse.ok(adminMerchantApplyService.list(status, page, pageSize));
+    }
+
+    /**
+     * {@code POST /api/admin/merchant-applies} — 运营代商家录入入驻申请。
+     *
+     * <p>复用门户提交的请求体与校验（主体名称必填、地区存在且启用、电话格式），
+     * 落一条 {@code PENDING} 申请并在来源上标记 {@code ADMIN}，后续与商家自填申请
+     * 走同一条审核流。允许重复提交。
+     *
+     * @param request 入驻资料：主体名（必填 ≤128 字）、联系人、电话、拟开门店名、地区、简介
+     * @return 新申请 ID 与状态（固定 PENDING）
+     * @throws com.suzhong.njl.web.ApiException 主体名称为空 400；地区不存在 400；电话格式不对 400
+     */
+    @Operation(summary = "代商家录入入驻申请", description = "校验规则与门户提交一致；落 PENDING 申请并标记来源 ADMIN。")
+    @PostMapping
+    public ApiResponse<MerchantApplyResponse> create(@Valid @RequestBody MerchantApplyRequest request) {
+        return ApiResponse.ok(adminMerchantApplyService.create(request));
     }
 
     /**
